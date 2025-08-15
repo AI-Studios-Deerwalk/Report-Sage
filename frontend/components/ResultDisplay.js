@@ -13,11 +13,29 @@ export default function ResultDisplay({ results }) {
   const hasOverallSummary = results.overall_summary !== undefined;
   const categorizedResults = results.categorized_results || {};
   const phaseSummary = results.phase_summary || {};
+  const isBatchShape =
+    categorizedResults.errors ||
+    categorizedResults.warnings;
 
   return (
     <div style={{ marginTop: '20px' }}>
       <h2 style={{ color: '#333', marginBottom: '20px' }}>Analysis Results</h2>
       
+      {/* Overall Summary */}
+      {hasOverallSummary && (
+        <div style={{
+          padding: '20px',
+          backgroundColor: '#eef6ff',
+          borderRadius: '12px',
+          marginBottom: '20px',
+          border: '1px solid #b6daff',
+          whiteSpace: 'pre-line',
+          color: '#0c3c78'
+        }}>
+          {results.overall_summary}
+        </div>
+      )}
+
       {/* Phase Summary */}
       {Object.keys(phaseSummary).length > 0 && (
         <div style={{ 
@@ -62,8 +80,77 @@ export default function ResultDisplay({ results }) {
         </div>
       )}
 
+      {/* New batch shape: errors, warnings */}
+      {isBatchShape && (
+        <div>
+          {categorizedResults.errors && categorizedResults.errors.length > 0 && (
+            <div style={{ 
+              padding: '25px', 
+              border: '2px solid #dc3545', 
+              borderRadius: '12px',
+              backgroundColor: '#fff5f5',
+              marginBottom: '20px'
+            }}>
+              <h3 style={{ color: '#dc3545', marginTop: 0, marginBottom: '20px', fontSize: '1.5rem' }}>
+                🚨 Errors ({categorizedResults.errors.length})
+              </h3>
+              {categorizedResults.errors.map((item, i) => (
+                <div key={i} style={{ 
+                  marginBottom: '10px',
+                  padding: '12px',
+                  backgroundColor: '#fff',
+                  borderRadius: '6px',
+                  border: '1px solid #ffcdd2',
+                  fontSize: '14px',
+                  lineHeight: '1.4',
+                  color: '#721c24'
+                }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                    📄 Page {item.page}
+                  </div>
+                  <div>→ {item.text}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {categorizedResults.warnings && categorizedResults.warnings.length > 0 && (
+            <div style={{ 
+              padding: '25px', 
+              border: '2px solid #ffc107', 
+              borderRadius: '12px',
+              backgroundColor: '#fffbf0',
+              marginBottom: '20px'
+            }}>
+              <h3 style={{ color: '#ffc107', marginTop: 0, marginBottom: '20px', fontSize: '1.5rem' }}>
+                ⚠️ Warnings ({categorizedResults.warnings.length})
+              </h3>
+              {categorizedResults.warnings.map((item, i) => (
+                <div key={i} style={{ 
+                  marginBottom: '10px',
+                  padding: '12px',
+                  backgroundColor: '#fff',
+                  borderRadius: '6px',
+                  border: '1px solid #ffeaa7',
+                  fontSize: '14px',
+                  lineHeight: '1.4',
+                  color: '#856404'
+                }}>
+                  <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                    📄 Page {item.page}
+                  </div>
+                  <div>{item.text}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+
+        </div>
+      )}
+
       {/* Phase 1: Structure Errors - Red */}
-      {categorizedResults.structure && categorizedResults.structure.length > 0 && (
+      {!isBatchShape && categorizedResults.structure && categorizedResults.structure.length > 0 && (
         <div style={{ 
           padding: '25px', 
           border: '2px solid #dc3545', 
@@ -98,7 +185,7 @@ export default function ResultDisplay({ results }) {
       )}
 
       {/* Phase 2: Grammar & Spelling Errors - Yellow */}
-      {categorizedResults.grammar && categorizedResults.grammar.length > 0 && (
+      {!isBatchShape && categorizedResults.grammar && categorizedResults.grammar.length > 0 && (
         <div style={{ 
           padding: '25px', 
           border: '2px solid #ffc107', 
@@ -142,7 +229,7 @@ export default function ResultDisplay({ results }) {
       )}
 
       {/* Phase 3: Content Enhancement Suggestions - Blue */}
-      {categorizedResults.enhancement && categorizedResults.enhancement.length > 0 && (
+      {!isBatchShape && categorizedResults.enhancement && categorizedResults.enhancement.length > 0 && (
         <div style={{ 
           padding: '25px', 
           border: '2px solid #17a2b8', 
@@ -205,6 +292,8 @@ export default function ResultDisplay({ results }) {
           </p>
         </div>
       )}
+
+
     </div>
   );
 }

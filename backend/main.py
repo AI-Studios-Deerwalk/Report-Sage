@@ -84,7 +84,6 @@ Check for violations in these categories:
 
 For each violation found, specify the category and provide a clear description.
 If no violations found, respond: No TU format violations detected on this page."""
-    /
     try:
         ai_response = ask_ollama_fast(
             prompt, 
@@ -266,7 +265,7 @@ async def analyze_pdf_batch(file: UploadFile = File(...), max_pages: int | None 
             logging.info(f"Limiting analysis to first {len(pages)} pages due to max_pages={max_pages}")
         
         # Create a single batch prompt for all pages with categorization
-        batch_prompt = """Analyze the following pages for TU format violations and provide focused feedback in FOUR categories:
+        batch_prompt = """Analyze the following pages for TU format violations and provide focused feedback in TWO categories:
 
 ERROR (Critical issues - use [ERROR] prefix):
 - Structure problems (missing sections, wrong order)
@@ -281,21 +280,9 @@ WARNING (Important issues - use [WARNING] prefix):
 - Flow problems
 - Inconsistent formatting
 
-SUGGESTION (Improvements - use [SUGGESTION] prefix):
-- How to improve writing, organization, clarity
-- Better ways to present information
-- Style improvements
-
-IDEA (Future possibilities - use [IDEA] prefix):
-- Related projects you could work on
-- Extensions of current work
-- Potential applications
-
-IMPORTANT: Provide ONLY the most important feedback:
+IMPORTANT: Provide ONLY the most critical feedback:
 - List ALL ERRORS found (critical issues)
 - List ALL WARNINGS found (grammar/flow issues)
-- Provide ONLY 3-5 SUGGESTIONS total (how to improve)
-- Provide ONLY 3-5 IDEAS total (future projects)
 
 Format: Page X: [CATEGORY] Description
 If no violations: Page X: No TU format violations detected.
@@ -308,7 +295,7 @@ Pages to analyze:
             text = page_data['text'][:400]  # Shorter text per page for batch processing
             batch_prompt += f"--- PAGE {page_num} ---\n{text}\n\n"
         
-        batch_prompt += "Check each page for: page numbering, margins, font (Times New Roman 12pt), spacing (1.5), headings format, citations (IEEE), grammar, flow, and structure.\n\nProvide ONLY the most critical feedback:\n- ALL ERRORS (structure, citations, formatting issues)\n- ALL WARNINGS (grammar, flow issues)\n- ONLY 3-5 SUGGESTIONS total (how to improve)\n- ONLY 3-5 IDEAS total (future projects)\n\nBe concise and focus on the most important issues.\n\nIMPORTANT: Each error/warning/suggestion/idea should be ONE SHORT SENTENCE only."
+        batch_prompt += "Check each page for: page numbering, margins, font (Times New Roman 12pt), spacing (1.5), headings format, citations (IEEE), grammar, flow, and structure.\n\nProvide ONLY the most critical feedback:\n- ALL ERRORS (structure, citations, formatting issues)\n- ALL WARNINGS (grammar, flow issues)\n\nBe concise and focus on the most important issues.\n\nIMPORTANT: Each error/warning should be ONE SHORT SENTENCE only."
         
         logging.info(f"Sending batch analysis request for {len(pages)} pages")
         
@@ -323,9 +310,7 @@ Pages to analyze:
         # Parse the batch response with categorization
         categorized_results = {
             "errors": [],
-            "warnings": [],
-            "suggestions": [],
-            "ideas": []
+            "warnings": []
         }
         
         page_results = []
@@ -365,12 +350,7 @@ Pages to analyze:
                         elif '[WARNING]' in violation_text:
                             warning_msg = violation_text.split('[WARNING]')[1].strip()
                             current_violations.append(f"[WARNING] {warning_msg}")
-                        elif '[SUGGESTION]' in violation_text:
-                            suggestion_msg = violation_text.split('[SUGGESTION]')[1].strip()
-                            current_violations.append(f"[SUGGESTION] {suggestion_msg}")
-                        elif '[IDEA]' in violation_text:
-                            idea_msg = violation_text.split('[IDEA]')[1].strip()
-                            current_violations.append(f"[IDEA] {idea_msg}")
+
                         else:
                             current_violations.append(violation_text)
             elif line and current_page and 'No TU format violations detected' not in line:
@@ -381,12 +361,7 @@ Pages to analyze:
                 elif '[WARNING]' in line:
                     warning_msg = line.split('[WARNING]')[1].strip()
                     current_violations.append(f"[WARNING] {warning_msg}")
-                elif '[SUGGESTION]' in line:
-                    suggestion_msg = line.split('[SUGGESTION]')[1].strip()
-                    current_violations.append(f"[SUGGESTION] {suggestion_msg}")
-                elif '[IDEA]' in line:
-                    idea_msg = line.split('[IDEA]')[1].strip()
-                    current_violations.append(f"[IDEA] {idea_msg}")
+
                 else:
                     current_violations.append(line)
         
@@ -457,72 +432,17 @@ Pages to analyze:
                             categorized_violation["text"] = violation.strip()
                         categorized_violation["type"] = "warning"
                         categorized_results["warnings"].append(categorized_violation)
-                    elif "[SUGGESTION]" in violation or any(word in violation_lower for word in ["suggestion", "improvement", "better", "alternative", "consider", "could", "should", "recommend"]):
-                        if "[SUGGESTION]" in violation:
-                            categorized_violation["text"] = violation.replace("[SUGGESTION]", "").strip()
-                        else:
-                            categorized_violation["text"] = violation.strip()
-                        categorized_violation["type"] = "suggestion"
-                        categorized_results["suggestions"].append(categorized_violation)
-                    elif "[IDEA]" in violation or any(word in violation_lower for word in ["idea", "future", "related", "extension", "similar project", "could work on", "potential", "further"]):
-                        if "[IDEA]" in violation:
-                            categorized_violation["text"] = violation.replace("[IDEA]", "").strip()
-                        else:
-                            categorized_violation["text"] = violation.strip()
-                        categorized_violation["type"] = "idea"
-                        categorized_results["ideas"].append(categorized_violation)
+
                     else:
                         # Default to error if no category specified but it's clearly a violation
                         if "no tu format violations detected" not in violation_lower:
                             categorized_violation["type"] = "error"
                             categorized_results["errors"].append(categorized_violation)
         
-        # Limit suggestions and ideas to 3-5 total each
-        if len(categorized_results["suggestions"]) > 5:
-            categorized_results["suggestions"] = categorized_results["suggestions"][:5]
-        
-        if len(categorized_results["ideas"]) > 5:
-            categorized_results["ideas"] = categorized_results["ideas"][:5]
-        
-        # Generate fallback suggestions and ideas if none were provided (limited to 3-5 total)
-        if not categorized_results["suggestions"] and page_results:
-            generic_suggestions = [
-                "Consider adding more detailed explanations to improve clarity",
-                "Review the formatting consistency throughout this section", 
-                "Add more specific examples to strengthen your arguments",
-                "Consider reorganizing content for better flow",
-                "Add transitional phrases to improve readability"
-            ]
-            
-            for i, suggestion in enumerate(generic_suggestions[:3]):  # Limit to 3 suggestions
-                categorized_results["suggestions"].append({
-                    "page": "general",
-                    "text": suggestion,
-                    "type": "suggestion"
-                })
-        
-        if not categorized_results["ideas"] and page_results:
-            generic_ideas = [
-                "This topic could be extended to include related research areas",
-                "Consider developing this into a larger research project", 
-                "This work could be applied to similar problems in other domains",
-                "Future work could explore advanced implementations",
-                "This research could be extended to include comparative studies"
-            ]
-            
-            for i, idea in enumerate(generic_ideas[:3]):  # Limit to 3 ideas
-                categorized_results["ideas"].append({
-                    "page": "general",
-                    "text": idea,
-                    "type": "idea"
-                })
-        
         # Count total issues
         total_errors = len(categorized_results["errors"])
         total_warnings = len(categorized_results["warnings"])
-        total_suggestions = len(categorized_results["suggestions"])
-        total_ideas = len(categorized_results["ideas"])
-        total_issues = total_errors + total_warnings + total_suggestions + total_ideas
+        total_issues = total_errors + total_warnings
         
         # Create overall summary
         if total_issues > 0:
@@ -530,7 +450,7 @@ Pages to analyze:
 
 📊 SUMMARY:
 • Pages Analyzed: {len(page_results)}
-• Errors: {total_errors} | Warnings: {total_warnings} | Suggestions: {total_suggestions} | Ideas: {total_ideas}
+• Errors: {total_errors} | Warnings: {total_warnings}
 
 Focus on fixing ERRORS first, then address WARNINGS."""
         else:
