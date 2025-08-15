@@ -84,7 +84,7 @@ Check for violations in these categories:
 
 For each violation found, specify the category and provide a clear description.
 If no violations found, respond: No TU format violations detected on this page."""
-    
+    /
     try:
         ai_response = ask_ollama_fast(
             prompt, 
