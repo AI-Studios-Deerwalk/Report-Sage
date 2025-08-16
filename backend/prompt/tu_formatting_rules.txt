@@ -1,0 +1,51 @@
+TU FORMAT STANDARDS AND RULES:
+
+DOCUMENT STRUCTURE:
+- Cover page (page 1) - no page number displayed
+- Table of contents
+- Main content sections in logical order
+- References section
+- Appendices (if applicable)
+
+FORMATTING REQUIREMENTS:
+- Font: Times New Roman, 12pt throughout document
+- Line spacing: 1.5 throughout document
+- Margins: 1 inch (2.54 cm) on all sides
+- Page numbering: Start from page 2, bottom center or top right
+- Paragraph indentation: 0.5 inch first line indent
+
+HEADINGS AND SECTIONS:
+- Main headings: Bold, centered, 12pt Times New Roman
+- Subheadings: Bold, left-aligned, 12pt Times New Roman
+- Consistent numbering system (1., 1.1, 1.1.1)
+- Proper spacing before and after headings
+
+CITATIONS AND REFERENCES:
+- IEEE citation style required
+- In-text citations: [1], [2], [3] etc.
+- Reference list: Numbered, IEEE format
+- All sources must be properly cited
+- No missing or incomplete citations
+
+TABLE OF CONTENTS:
+- Must include all main sections and subsections
+- Page numbers must be accurate
+- Proper dot leaders between titles and page numbers
+- Consistent formatting throughout
+
+CONTENT REQUIREMENTS:
+- Clear, academic writing style
+- Proper grammar and spelling
+- Logical flow between sections
+- Adequate detail and explanation
+- Professional language throughout
+
+COMMON VIOLATIONS TO CHECK:
+- Missing or incorrect page numbers
+- Wrong font type or size
+- Incorrect margins or spacing
+- Poor citation format
+- Missing sections in table of contents
+- Inconsistent heading styles
+- Grammar and spelling errors
+- Poor document flow and organization

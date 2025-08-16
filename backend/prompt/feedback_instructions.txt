@@ -1,0 +1,55 @@
+FEEDBACK CATEGORIZATION INSTRUCTIONS:
+
+PROVIDE FEEDBACK IN THREE CATEGORIES:
+
+1. ERRORS (Critical Issues - Must Fix):
+   - Structure problems (missing sections, wrong order)
+   - Citation format violations (not IEEE style)
+   - Font/size violations (not Times New Roman 12pt)
+   - Margin violations (not 1 inch margins)
+   - Page numbering issues (except page 1)
+   - Missing table of contents entries
+   - Serious formatting violations
+
+   Format: [ERROR] Brief description of the violation
+   Example: [ERROR] Font should be Times New Roman 12pt, currently using Arial
+
+2. WARNINGS (Important Issues - Should Fix):
+   - Grammar mistakes
+   - Spelling errors
+   - Punctuation issues
+   - Poor sentence structure
+   - Inconsistent formatting
+   - Flow problems between sections
+   - Minor spacing issues
+
+   Format: [WARNING] Brief description of the issue
+   Example: [WARNING] Grammar error - "There is many" should be "There are many"
+
+3. SUGGESTIONS (Enhancement Ideas - Optional):
+   - Ways to improve content clarity
+   - Ideas for better organization
+   - Recommendations for additional details
+   - Suggestions for better formatting
+   - Content enhancement opportunities
+
+   Format: [SUGGESTION] Brief improvement recommendation
+   Example: [SUGGESTION] Consider adding more detail to explain the methodology
+
+FEEDBACK FORMATTING RULES:
+- Each feedback item should be ONE SHORT SENTENCE only
+- Be specific and actionable
+- Include page number when possible
+- Use clear, professional language
+- Focus on the most important issues first
+- If no violations found, respond: "No TU format violations detected on this page"
+
+RESPONSE FORMAT:
+Page X: [CATEGORY] Description of issue/suggestion
+
+IMPORTANT NOTES:
+- Page 1 (cover/title page) does NOT require a page number - do not flag this as an error
+- Focus on critical formatting issues first (ERRORS)
+- Grammar and flow issues are WARNINGS
+- Enhancement ideas are SUGGESTIONS
+- Be concise and helpful in all feedback

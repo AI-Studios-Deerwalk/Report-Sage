@@ -3,18 +3,22 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 import logging
 import asyncio
+import re
 from concurrent.futures import ThreadPoolExecutor
+from dotenv import load_dotenv
 from utils.pdf_reader import extract_text_with_pages
 from utils.ollama_client import ask_ollama_fast
-from utils.rules_loader import load_rules
-from utils.error_categorizer import ErrorCategorizer
+from prompt import prompt_manager, result_formatter
 
-# Configuration
-ANALYSIS_TIMEOUT_SECONDS = 60  # Reduced from 300 to 60 seconds
-MAX_TOKENS_PER_PAGE = 128
-TEMPERATURE = 0.1
-DEFAULT_MAX_PAGES = 10  # Default number of pages to analyze
-MAX_WORKERS = 3  # Number of parallel workers for analysis
+# Load environment variables
+load_dotenv()
+
+# Configuration from environment variables
+ANALYSIS_TIMEOUT_SECONDS = int(os.getenv("ANALYSIS_TIMEOUT_SECONDS", 60))
+TEMPERATURE = float(os.getenv("TEMPERATURE", 0.1))
+# No worker limits - process everything simultaneously
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+TEMP_DIR = os.getenv("TEMP_DIR", "temp")
 
 app = FastAPI()
 
@@ -23,14 +27,48 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Allow frontend origin
+    allow_origins=CORS_ORIGINS,  # Allow frontend origins from env
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods
     allow_headers=["*"],  # Allow all headers
 )
 
-# Global executor for parallel processing
-executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
+# Dynamic executor - creates workers based on document size
+
+
+class ErrorCategorizer:
+    """Simple error categorizer for TU format violations"""
+    
+    @staticmethod
+    def categorize_all_errors(errors_with_pages):
+        """Categorize errors into structure, grammar, and enhancement phases"""
+        categorized = {
+            "structure": [],
+            "grammar": [],
+            "enhancement": []
+        }
+        
+        for error in errors_with_pages:
+            text_lower = error['text'].lower()
+            
+            # Categorize based on keywords
+            if any(word in text_lower for word in ['structure', 'format', 'alignment', 'citation', 'numbering', 'margin', 'font']):
+                categorized["structure"].append(error)
+            elif any(word in text_lower for word in ['grammar', 'spelling', 'language', 'tense', 'punctuation']):
+                categorized["grammar"].append(error)
+            else:
+                categorized["enhancement"].append(error)
+        
+        return categorized
+    
+    @staticmethod
+    def get_phase_summary(categorized_errors):
+        """Get summary of errors by phase"""
+        return {
+            "phase_1_structure": len(categorized_errors["structure"]),
+            "phase_2_grammar": len(categorized_errors["grammar"]),
+            "phase_3_enhancement": len(categorized_errors["enhancement"])
+        }
 
 @app.get("/")
 async def root():
@@ -42,52 +80,22 @@ async def health_check():
         "status": "healthy",
         "config": {
             "timeout_seconds": ANALYSIS_TIMEOUT_SECONDS,
-            "max_tokens": MAX_TOKENS_PER_PAGE,
             "temperature": TEMPERATURE,
-            "model": "llama3.2:3b",
-            "max_workers": MAX_WORKERS
+            "model": os.getenv("OLLAMA_MODEL", "llama3.2:3b"),
+            "max_workers": "unlimited (dynamic)"
         }
     }
 
-def analyze_single_page(page_data, rules):
+def analyze_single_page(page_data):
     """Analyze a single page - optimized for parallel processing"""
     page = page_data['page']
     text = page_data['text']
     
-    # Enhanced prompt to identify different types of violations
-    prompt = f"""Analyze this page for TU format violations and categorize them:
-
-Page {page} content:
-{text[:600]}...
-
-Check for violations in these categories:
-
-1. STRUCTURE ERRORS (Critical):
-   - Page numbering issues
-   - Font not Times New Roman 12pt
-   - Incorrect margins or spacing
-   - Missing section titles in table of contents
-   - Wrong positioning of elements
-   - Flow problems (wrong order of sections)
-
-2. GRAMMAR/SPELLING ERRORS:
-   - Grammar mistakes
-   - Spelling errors
-   - Punctuation issues
-   - Poor sentence structure
-
-3. CONTENT ENHANCEMENT SUGGESTIONS:
-   - Ways to improve content
-   - Suggestions for better formatting
-   - Ideas for adding more details
-   - Recommendations for enhancement
-
-For each violation found, specify the category and provide a clear description.
-If no violations found, respond: No TU format violations detected on this page."""
+    # Get prompt from template
+    prompt = prompt_manager.get_single_page_analysis_prompt(page, text)
     try:
         ai_response = ask_ollama_fast(
-            prompt, 
-            max_tokens=MAX_TOKENS_PER_PAGE, 
+            prompt,
             temperature=TEMPERATURE, 
             timeout_seconds=ANALYSIS_TIMEOUT_SECONDS
         )
@@ -97,13 +105,13 @@ If no violations found, respond: No TU format violations detected on this page."
         return {"page": page, "analysis": f"Error: {str(e)}", "success": False}
 
 @app.post("/analyze")
-async def analyze_pdf(file: UploadFile = File(...), max_pages: int | None = DEFAULT_MAX_PAGES):
+async def analyze_pdf(file: UploadFile = File(...)):
     try:
         if not file.filename:
             return {"error": "No file provided"}
         
-        file_path = f"temp/{file.filename}"
-        os.makedirs("temp", exist_ok=True)
+        file_path = f"{TEMP_DIR}/{file.filename}"
+        os.makedirs(TEMP_DIR, exist_ok=True)
         
         with open(file_path, "wb") as f:
             f.write(await file.read())
@@ -111,30 +119,25 @@ async def analyze_pdf(file: UploadFile = File(...), max_pages: int | None = DEFA
 
         pages = extract_text_with_pages(file_path)
         logging.info(f"Extracted {len(pages)} pages from PDF")
-        if max_pages is not None and isinstance(max_pages, int) and max_pages > 0:
-            pages = pages[:max_pages]
-            logging.info(f"Limiting analysis to first {len(pages)} pages due to max_pages={max_pages}")
         
-        rules = load_rules()
-
-        # Parallel processing of pages
-        logging.info(f"Starting parallel analysis of {len(pages)} pages with {MAX_WORKERS} workers")
+        # Parallel processing of pages - ALL PAGES SIMULTANEOUSLY
+        logging.info(f"Starting simultaneous analysis of ALL {len(pages)} pages")
         
-        # Create tasks for parallel execution
-        loop = asyncio.get_event_loop()
-        tasks = []
-        
-        for page_data in pages:
-            task = loop.run_in_executor(
-                executor, 
-                analyze_single_page, 
-                page_data, 
-                rules
-            )
-            tasks.append(task)
-        
-        # Wait for all tasks to complete
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        # Create dynamic executor with enough workers for all pages
+        with ThreadPoolExecutor(max_workers=len(pages)) as dynamic_executor:
+            loop = asyncio.get_event_loop()
+            tasks = []
+            
+            for page_data in pages:
+                task = loop.run_in_executor(
+                    dynamic_executor, 
+                    analyze_single_page, 
+                    page_data
+                )
+                tasks.append(task)
+            
+            # Wait for all tasks to complete
+            results = await asyncio.gather(*tasks, return_exceptions=True)
         
         # Process results
         all_error_messages = []
@@ -198,61 +201,26 @@ async def analyze_pdf(file: UploadFile = File(...), max_pages: int | None = DEFA
         categorized_errors = ErrorCategorizer.categorize_all_errors(errors_with_pages)
         phase_summary = ErrorCategorizer.get_phase_summary(categorized_errors)
         
-        # Create overall summary with the new format
-        if all_error_messages:
-            # Count errors by phase
-            structure_count = len(categorized_errors["structure"])
-            grammar_count = len(categorized_errors["grammar"])
-            enhancement_count = len(categorized_errors["enhancement"])
-            
-            overall_summary = f"""TU FORMAT ANALYSIS COMPLETE
-
-📊 SUMMARY:
-• Total Pages Analyzed: {len(successful_results)}
-• Total Issues Found: {len(all_error_messages)}
-
-🔍 PHASE BREAKDOWN:
-• Phase 1 (Structure): {structure_count} critical issues
-• Phase 2 (Grammar): {grammar_count} language issues  
-• Phase 3 (Enhancement): {enhancement_count} improvement suggestions
-
-💡 RECOMMENDATIONS:
-• Address Phase 1 issues first (critical structure problems)
-• Fix Phase 2 grammar and spelling errors
-• Consider Phase 3 suggestions for content improvement"""
-        else:
-            overall_summary = f"""TU FORMAT ANALYSIS COMPLETE
-
-📊 SUMMARY:
-• Total Pages Analyzed: {len(successful_results)}
-• Total Issues Found: 0
-• Compliance Rate: 100%
-
-✅ EXCELLENT! No TU format violations detected.
-
-Your document appears to follow TU format standards correctly."""
-        
-        return {
-            "overall_summary": overall_summary,
-            "total_pages_analyzed": len(successful_results),
-            "total_errors_found": len(all_error_messages),
-            "categorized_results": categorized_errors,
-            "phase_summary": phase_summary,
-            "results": successful_results
-        }
+        # Create formatted analysis summary
+        return result_formatter.create_analysis_summary(
+            successful_results, 
+            all_error_messages, 
+            categorized_errors, 
+            phase_summary
+        )
     except Exception as e:
         logging.exception("Analysis failed")
         return {"error": f"Analysis failed: {str(e)}"}
 
 @app.post("/analyze-batch")
-async def analyze_pdf_batch(file: UploadFile = File(...), max_pages: int | None = DEFAULT_MAX_PAGES):
+async def analyze_pdf_batch(file: UploadFile = File(...)):
     """Batch analysis endpoint - processes all pages in a single request for maximum speed"""
     try:
         if not file.filename:
             return {"error": "No file provided"}
         
-        file_path = f"temp/{file.filename}"
-        os.makedirs("temp", exist_ok=True)
+        file_path = f"{TEMP_DIR}/{file.filename}"
+        os.makedirs(TEMP_DIR, exist_ok=True)
         
         with open(file_path, "wb") as f:
             f.write(await file.read())
@@ -260,49 +228,16 @@ async def analyze_pdf_batch(file: UploadFile = File(...), max_pages: int | None 
 
         pages = extract_text_with_pages(file_path)
         logging.info(f"Extracted {len(pages)} pages from PDF")
-        if max_pages is not None and isinstance(max_pages, int) and max_pages > 0:
-            pages = pages[:max_pages]
-            logging.info(f"Limiting analysis to first {len(pages)} pages due to max_pages={max_pages}")
+
         
-        # Create a single batch prompt for all pages with categorization
-        batch_prompt = """Analyze the following pages for TU format violations and provide focused feedback in TWO categories:
-
-ERROR (Critical issues - use [ERROR] prefix):
-- Structure problems (missing sections, wrong order)
-- Citation format issues (not IEEE style)
-- Alignment problems
-- Page numbering issues
-- Font/size violations
-- Margin violations
-
-WARNING (Important issues - use [WARNING] prefix):
-- Grammar mistakes
-- Flow problems
-- Inconsistent formatting
-
-IMPORTANT: Provide ONLY the most critical feedback:
-- List ALL ERRORS found (critical issues)
-- List ALL WARNINGS found (grammar/flow issues)
-
-Format: Page X: [CATEGORY] Description
-If no violations: Page X: No TU format violations detected.
-
-Pages to analyze:
-"""
-        
-        for page_data in pages:
-            page_num = page_data['page']
-            text = page_data['text'][:400]  # Shorter text per page for batch processing
-            batch_prompt += f"--- PAGE {page_num} ---\n{text}\n\n"
-        
-        batch_prompt += "Check each page for: page numbering, margins, font (Times New Roman 12pt), spacing (1.5), headings format, citations (IEEE), grammar, flow, and structure.\n\nProvide ONLY the most critical feedback:\n- ALL ERRORS (structure, citations, formatting issues)\n- ALL WARNINGS (grammar, flow issues)\n\nBe concise and focus on the most important issues.\n\nIMPORTANT: Each error/warning should be ONE SHORT SENTENCE only."
+        # Get batch prompt from template
+        batch_prompt = prompt_manager.get_batch_analysis_prompt(pages)
         
         logging.info(f"Sending batch analysis request for {len(pages)} pages")
         
         # Use the fast Ollama function for batch processing
         ai_response = ask_ollama_fast(
             batch_prompt,
-            max_tokens=len(pages) * 80,  # More tokens for categorized response
             temperature=TEMPERATURE,
             timeout_seconds=ANALYSIS_TIMEOUT_SECONDS * 2  # Longer timeout for batch
         )
@@ -374,28 +309,97 @@ Pages to analyze:
                 "violations": current_violations
             })
         
-        # If no pages were parsed, try alternative parsing
+        # If no pages were parsed, try alternative parsing using page markers
         if not page_results:
             logging.warning("No pages parsed from AI response, trying alternative parsing...")
-            # Try to parse any violations from the response
-            all_text = ai_response.lower()
             
-            # Look for common violation indicators
-            violation_indicators = [
-                "error", "violation", "problem", "issue", "incorrect", "wrong", "missing",
-                "warning", "suggestion", "improvement", "idea", "recommendation"
-            ]
+            # Split by page markers (--- PAGE X ---)
+            page_sections = re.split(r'---\s*PAGE\s+(\d+)\s*---', ai_response, flags=re.IGNORECASE)
             
-            has_violations = any(indicator in all_text for indicator in violation_indicators)
+            # Process each page section
+            for i in range(1, len(page_sections), 2):  # Skip the first empty section, process pairs (page_num, content)
+                if i + 1 < len(page_sections):
+                    page_num = int(page_sections[i])
+                    page_content = page_sections[i + 1].strip()
+                    
+                    # Skip empty content
+                    if not page_content:
+                        continue
+                    
+                    # Extract violations from this page's content
+                    violations = []
+                    lines = page_content.split('\n')
+                    
+                    for line in lines:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        
+                        # Skip introductory text
+                        if line.lower().startswith(('here is', 'after analyzing', 'analysis of')):
+                            continue
+                            
+                        # Check if it's a violation line (contains ERROR or WARNING)
+                        if any(keyword in line.upper() for keyword in ['ERROR:', 'WARNING:', 'VIOLATION']):
+                            # Clean up the line and extract the violation
+                            clean_line = line
+                            # Remove prefixes like "ERROR:", "WARNING:", etc.
+                            for prefix in ['ERROR:', 'WARNING:', 'VIOLATION:']:
+                                clean_line = clean_line.replace(prefix, '').strip()
+                            
+                            if clean_line and len(clean_line) > 5:  # Only add substantial violations
+                                violations.append(clean_line)
+                        
+                        # Also check for lines that describe issues without explicit prefixes
+                        elif any(keyword in line.lower() for keyword in ['missing', 'incorrect', 'wrong', 'should be', 'problem', 'issue', 'mistake', 'error']):
+                            if len(line) > 10:  # Only add substantial violations
+                                violations.append(line)
+                    
+                    # Create page result
+                    if violations:
+                        analysis_text = "\n".join([f"• {v}" for v in violations])
+                    else:
+                        analysis_text = "No TU format violations detected on this page."
+                    
+                    page_results.append({
+                        "page": page_num,
+                        "analysis": analysis_text,
+                        "success": True,
+                        "violations": violations
+                    })
             
-            if has_violations:
-                # Create a single page result with the full response
-                page_results.append({
-                    "page": 1,
-                    "analysis": f"Page 1: {ai_response}",
-                    "success": True,
-                    "violations": [ai_response]
-                })
+            # If still no pages parsed, fall back to simple text parsing
+            if not page_results:
+                logging.warning("No page markers found, trying simple text parsing...")
+                # Try to parse any violations from the response
+                all_text = ai_response.lower()
+                
+                # Look for common violation indicators
+                violation_indicators = [
+                    "error", "violation", "problem", "issue", "incorrect", "wrong", "missing",
+                    "warning", "suggestion", "improvement", "idea", "recommendation"
+                ]
+                
+                has_violations = any(indicator in all_text for indicator in violation_indicators)
+                
+                if has_violations:
+                    # Create a single page result with cleaned up response
+                    clean_text = ai_response.strip()
+                    # Remove common introductory phrases
+                    intro_phrases = [
+                        "Here is the analysis of each page for TU format violations:",
+                        "After analyzing",
+                        "The analysis shows"
+                    ]
+                    for phrase in intro_phrases:
+                        clean_text = clean_text.replace(phrase, "").strip()
+                    
+                    page_results.append({
+                        "page": 1,
+                        "analysis": clean_text,
+                        "success": True,
+                        "violations": [clean_text]
+                    })
         
         # Categorize violations from all pages
         for page_result in page_results:
@@ -473,3 +477,20 @@ Your document follows TU format standards correctly."""
     except Exception as e:
         logging.exception("Batch analysis failed")
         return {"error": f"Batch analysis failed: {str(e)}"}
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    # Fast reload configuration - optimized for speed
+    reload_enabled = os.getenv("RELOAD", "true").lower() == "true"
+    
+    uvicorn.run(
+        "main:app",
+        host=os.getenv("HOST", "0.0.0.0"),
+        port=int(os.getenv("PORT", 8000)),
+        reload=reload_enabled,
+        # OPTIMIZED RELOAD SETTINGS FOR SPEED:
+        reload_dirs=["backend"] if reload_enabled else None,  # Only watch backend directory
+        reload_delay=0.25,  # Faster reload detection (default is 1.0)
+        log_level=os.getenv("LOG_LEVEL", "info")
+    )
