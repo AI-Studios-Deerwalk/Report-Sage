@@ -1,14 +1,29 @@
 import axios from "axios";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  FaCloudUploadAlt, 
+  FaFilePdf, 
+  FaCheckCircle, 
+  FaSpinner, 
+  FaExclamationCircle,
+  FaTimes 
+} from "react-icons/fa";
 
 export default function FileUpload({ setResults }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [progress, setProgress] = useState({ current: 0, total: 0, percentage: 0 });
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
+    processFile(selectedFile);
+  };
+
+  const processFile = (selectedFile) => {
     if (selectedFile && selectedFile.type !== 'application/pdf') {
       setError("Please select a PDF file");
       setFile(null);
@@ -16,6 +31,31 @@ export default function FileUpload({ setResults }) {
     }
     setFile(selectedFile);
     setError(null);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const droppedFile = e.dataTransfer.files[0];
+    processFile(droppedFile);
+  };
+
+  const removeFile = () => {
+    setFile(null);
+    setError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const upload = async () => {
@@ -84,144 +124,194 @@ export default function FileUpload({ setResults }) {
   };
 
   return (
-    <div>
-      <h2 style={{ 
-        marginTop: 0, 
-        marginBottom: '20px', 
-        color: '#2c3e50',
-        fontSize: '1.5rem'
-      }}>
-        Upload PDF for Analysis
-      </h2>
-      
-      <div style={{ marginBottom: '20px' }}>
-        <input 
-          type="file" 
-          accept=".pdf"
-          onChange={handleFileChange}
-          style={{
-            display: 'block',
-            width: '100%',
-            padding: '10px',
-            border: '2px dashed #ddd',
-            borderRadius: '8px',
-            backgroundColor: '#f8f9fa',
-            cursor: 'pointer'
-          }}
-        />
-        {file && (
-          <p style={{ 
-            marginTop: '10px', 
-            color: '#28a745', 
-            fontSize: '14px',
-            marginBottom: 0
-          }}>
-            ✓ Selected: {file.name}
-          </p>
-        )}
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Upload PDF for Analysis
+        </h2>
+        <p className="text-gray-600">
+          Drag and drop your PDF file or click to browse
+        </p>
       </div>
       
-      <button 
-        onClick={upload} 
+      {/* File Upload Area */}
+      <div
+        className={`
+          relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer
+          ${isDragOver 
+            ? 'border-primary-400 bg-primary-50 scale-105' 
+            : file 
+              ? 'border-success-400 bg-success-50' 
+              : 'border-gray-300 bg-gray-50 hover:border-primary-400 hover:bg-primary-50'
+          }
+        `}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+        
+        <AnimatePresence mode="wait">
+          {!file ? (
+            <motion.div
+              key="upload"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-4"
+            >
+              <motion.div
+                animate={{ 
+                  y: isDragOver ? -10 : 0,
+                  scale: isDragOver ? 1.1 : 1
+                }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <FaCloudUploadAlt className="mx-auto h-16 w-16 text-gray-400" />
+              </motion.div>
+              <div>
+                <p className="text-lg font-medium text-gray-900">
+                  {isDragOver ? 'Drop your PDF here' : 'Choose PDF file'}
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  or drag and drop it here
+                </p>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="file-selected"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="space-y-4"
+            >
+              <div className="flex items-center justify-center space-x-3">
+                <FaFilePdf className="h-8 w-8 text-red-500" />
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-gray-900 truncate">{file.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {(file.size / (1024 * 1024)).toFixed(2)} MB
+                  </p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFile();
+                  }}
+                  className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                >
+                  <FaTimes className="h-4 w-4 text-gray-500" />
+                </button>
+              </div>
+              <div className="flex items-center justify-center space-x-1 text-success-600">
+                <FaCheckCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">Ready to analyze</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Analyze Button */}
+      <motion.button
+        whileHover={{ scale: file && !loading ? 1.02 : 1 }}
+        whileTap={{ scale: file && !loading ? 0.98 : 1 }}
+        onClick={upload}
         disabled={loading || !file}
-        style={{
-          backgroundColor: loading || !file ? '#6c757d' : '#007bff',
-          color: 'white',
-          border: 'none',
-          padding: '12px 24px',
-          borderRadius: '6px',
-          fontSize: '16px',
-          cursor: loading || !file ? 'not-allowed' : 'pointer',
-          width: '100%',
-          transition: 'background-color 0.2s'
-        }}
+        className={`
+          w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200
+          ${loading || !file
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-gradient-to-r from-primary-600 to-purple-600 text-white hover:from-primary-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
+          }
+        `}
       >
         {loading ? (
-          <span>
-            <span style={{ marginRight: '8px' }}>⏳</span>
-            Analyzing... Please wait
-          </span>
+          <div className="flex items-center justify-center space-x-3">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            >
+              <FaSpinner className="h-5 w-5" />
+            </motion.div>
+            <span>Analyzing Document...</span>
+          </div>
         ) : (
-          "Analyze PDF"
+          <div className="flex items-center justify-center space-x-2">
+            <FaCloudUploadAlt className="h-5 w-5" />
+            <span>Analyze PDF</span>
+          </div>
         )}
-      </button>
-      
-      {loading && (
-        <div style={{ 
-          marginTop: '15px', 
-          textAlign: 'center',
-          color: '#6c757d'
-        }}>
-          {/* Progress Bar */}
-          <div style={{ 
-            width: '100%', 
-            height: '8px', 
-            backgroundColor: '#e9ecef',
-            borderRadius: '4px',
-            overflow: 'hidden',
-            marginBottom: '10px'
-          }}>
-            <div style={{
-              width: `${progress.percentage}%`,
-              height: '100%',
-              backgroundColor: progress.percentage === 100 ? '#28a745' : '#007bff',
-              transition: 'width 0.3s ease-in-out',
-              borderRadius: '4px'
-            }}></div>
-          </div>
-          
-          {/* Percentage Display */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '10px'
-          }}>
-            <span style={{ fontSize: '14px', fontWeight: 'bold' }}>
-              {getProgressMessage(progress.percentage)}
-            </span>
-            <span style={{ 
-              fontSize: '16px', 
-              fontWeight: 'bold',
-              color: progress.percentage === 100 ? '#28a745' : '#007bff'
-            }}>
-              {Math.round(progress.percentage)}%
-            </span>
-          </div>
-          
-          {/* Estimated Time */}
-          <p style={{ 
-            marginTop: '5px', 
-            fontSize: '12px',
-            color: '#6c757d'
-          }}>
-            {progress.percentage < 100 
-              ? `Estimated time remaining: ${Math.max(1, Math.round((100 - progress.percentage) / 10))} seconds`
-              : "Analysis completed successfully!"
-            }
-          </p>
-        </div>
-      )}
-      
-      {error && (
-        <div style={{ 
-          color: '#dc3545', 
-          marginTop: '15px', 
-          padding: '10px', 
-          backgroundColor: '#f8d7da', 
-          border: '1px solid #f5c6cb',
-          borderRadius: '4px'
-        }}>
-          {error}
-        </div>
-      )}
-      
-      <style jsx>{`
-        @keyframes loading {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
+      </motion.button>
+
+      {/* Progress Section */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="space-y-4 pt-4 border-t border-gray-200"
+          >
+            {/* Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-medium text-gray-700">
+                  {getProgressMessage(progress.percentage)}
+                </span>
+                <span className="font-bold text-primary-600">
+                  {Math.round(progress.percentage)}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress.percentage}%` }}
+                  transition={{ duration: 0.3 }}
+                  className={`h-full rounded-full ${
+                    progress.percentage === 100 
+                      ? 'bg-gradient-to-r from-success-500 to-success-600' 
+                      : 'progress-bar'
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* Time Estimate */}
+            <div className="text-center">
+              <p className="text-sm text-gray-500">
+                {progress.percentage < 100 
+                  ? `Estimated time remaining: ${Math.max(1, Math.round((100 - progress.percentage) / 10))} seconds`
+                  : "Analysis completed successfully!"
+                }
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Error Message */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="flex items-center space-x-3 p-4 bg-error-50 border border-error-200 rounded-xl"
+          >
+            <FaExclamationCircle className="h-5 w-5 text-error-500 flex-shrink-0" />
+            <p className="text-error-700 font-medium">{error}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

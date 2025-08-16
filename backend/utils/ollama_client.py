@@ -1,10 +1,15 @@
 import requests
 import json
+import os
+from dotenv import load_dotenv
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "llama3.2:3b"  # Much faster than 8b model
+# Load environment variables
+load_dotenv()
 
-def ask_ollama(prompt: str, max_tokens: int = 128, temperature: float = 0.1, timeout_seconds: int = 60, stream: bool = False) -> str:
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
+MODEL_NAME = os.getenv("OLLAMA_MODEL", "llama3.2:3b")  # Much faster than 8b model
+
+def ask_ollama(prompt: str, max_tokens: int = -1, temperature: float = 0.1, timeout_seconds: int = 60, stream: bool = False) -> str:
     payload = {
         "model": MODEL_NAME,
         "prompt": prompt,
@@ -42,6 +47,6 @@ def ask_ollama(prompt: str, max_tokens: int = 128, temperature: float = 0.1, tim
     except Exception as e:
         return f"Error during analysis: {str(e)}"
 
-def ask_ollama_fast(prompt: str, max_tokens: int = 128, temperature: float = 0.1, timeout_seconds: int = 30) -> str:
+def ask_ollama_fast(prompt: str, max_tokens: int = -1, temperature: float = 0.1, timeout_seconds: int = 30) -> str:
     """Optimized version for faster responses - uses non-streaming and shorter timeout"""
     return ask_ollama(prompt, max_tokens, temperature, timeout_seconds, stream=False)
