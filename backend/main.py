@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 from utils.pdf_reader import extract_text_with_pages
 from utils.ollama_client import ask_ollama_fast
 from prompt import prompt_manager, result_formatter
+from database import init_database, check_database_health
+from routes import api_router
 
 # Load environment variables
 load_dotenv()
@@ -24,6 +26,19 @@ app = FastAPI()
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on startup"""
+    try:
+        # Just initialize the database manager, tables should be created via migrations
+        from database.connection import db_manager
+        db_manager.initialize()
+        logging.info("Database connection initialized successfully")
+        logging.info("Note: Use 'alembic upgrade head' to apply database migrations")
+    except Exception as e:
+        logging.error(f"Failed to initialize database: {e}")
+        # Continue without database for now
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -32,6 +47,9 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all methods
     allow_headers=["*"],  # Allow all headers
 )
+
+# Include API routes
+app.include_router(api_router)
 
 # Dynamic executor - creates workers based on document size
 
@@ -48,13 +66,17 @@ class ErrorCategorizer:
             "enhancement": []
         }
         
+        # Get keywords from centralized prompt manager
+        structure_keywords = prompt_manager.get_structure_keywords()
+        grammar_keywords = prompt_manager.get_grammar_keywords()
+        
         for error in errors_with_pages:
             text_lower = error['text'].lower()
             
-            # Categorize based on keywords
-            if any(word in text_lower for word in ['structure', 'format', 'alignment', 'citation', 'numbering', 'margin', 'font']):
+            # Categorize based on keywords from prompt manager
+            if any(word in text_lower for word in structure_keywords):
                 categorized["structure"].append(error)
-            elif any(word in text_lower for word in ['grammar', 'spelling', 'language', 'tense', 'punctuation']):
+            elif any(word in text_lower for word in grammar_keywords):
                 categorized["grammar"].append(error)
             else:
                 categorized["enhancement"].append(error)
@@ -76,8 +98,12 @@ async def root():
 
 @app.get("/health")
 async def health_check():
+    # Check database health
+    db_healthy = await check_database_health()
+    
     return {
-        "status": "healthy",
+        "status": "healthy" if db_healthy else "unhealthy",
+        "database": "connected" if db_healthy else "disconnected",
         "config": {
             "timeout_seconds": ANALYSIS_TIMEOUT_SECONDS,
             "temperature": TEMPERATURE,
@@ -155,27 +181,11 @@ async def analyze_pdf(file: UploadFile = File(...)):
                 ai_response = result["analysis"]
                 page_number = result["page"]
                 
-                # Check if violations were found and extract them
-                if "No TU format violations detected" not in ai_response:
+                # Check if violations were found using dynamic phrase from feedback instructions
+                no_violations_phrase = prompt_manager.get_no_violations_phrase()
+                if no_violations_phrase not in ai_response:
                     # Clean up the response to extract only error messages
                     violations = ai_response.strip()
-                    
-                    # Remove common introductory phrases
-                    phrases_to_remove = [
-                        f"After analyzing page {result['page']}",
-                        f"After analyzing the content of page {result['page']}",
-                        f"After analyzing the provided content for Page {result['page']}",
-                        "I have identified the following violations of TU format standards:",
-                        "I found the following violations of TU format standards:",
-                        "the following TU format standard violations were found:",
-                        "Violations found:",
-                        "No other violations were detected on this page.",
-                        "No other violations of TU format standards were detected on this page.",
-                        "No TU format violations detected on this page."
-                    ]
-                    
-                    for phrase in phrases_to_remove:
-                        violations = violations.replace(phrase, "")
                     
                     # Split by numbered points and clean up
                     lines = violations.split('\n')
@@ -264,7 +274,7 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
                 if current_page:
                     page_results.append({
                         "page": current_page,
-                        "analysis": f"Page {current_page}: " + ('; '.join(current_violations) if current_violations else "No TU format violations detected."),
+                        "analysis": f"Page {current_page}: " + ('; '.join(current_violations) if current_violations else prompt_manager.get_no_violations_phrase()),
                         "success": True,
                         "violations": current_violations
                     })
@@ -275,7 +285,7 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
                 current_violations = []
                 
                 # Check if this page has violations
-                if ':' in line and 'No TU format violations detected' not in line:
+                if ':' in line and prompt_manager.get_no_violations_phrase() not in line:
                     violation_text = line.split(':', 1)[1].strip()
                     if violation_text:
                         # Extract specific error message
@@ -288,7 +298,7 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
 
                         else:
                             current_violations.append(violation_text)
-            elif line and current_page and 'No TU format violations detected' not in line:
+            elif line and current_page and prompt_manager.get_no_violations_phrase() not in line:
                 # Check if line contains categorized content
                 if '[ERROR]' in line:
                     error_msg = line.split('[ERROR]')[1].strip()
@@ -304,7 +314,7 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
         if current_page:
             page_results.append({
                 "page": current_page,
-                "analysis": f"Page {current_page}: " + ('; '.join(current_violations) if current_violations else "No TU format violations detected."),
+                "analysis": f"Page {current_page}: " + ('; '.join(current_violations) if current_violations else prompt_manager.get_no_violations_phrase()),
                 "success": True,
                 "violations": current_violations
             })
@@ -359,7 +369,7 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
                     if violations:
                         analysis_text = "\n".join([f"• {v}" for v in violations])
                     else:
-                        analysis_text = "No TU format violations detected on this page."
+                        analysis_text = prompt_manager.get_no_violations_phrase()
                     
                     page_results.append({
                         "page": page_num,
@@ -374,25 +384,15 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
                 # Try to parse any violations from the response
                 all_text = ai_response.lower()
                 
-                # Look for common violation indicators
-                violation_indicators = [
-                    "error", "violation", "problem", "issue", "incorrect", "wrong", "missing",
-                    "warning", "suggestion", "improvement", "idea", "recommendation"
-                ]
+                # Get violation indicators from feedback instructions
+                violation_indicators = prompt_manager.get_violation_indicators()
                 
                 has_violations = any(indicator in all_text for indicator in violation_indicators)
                 
                 if has_violations:
                     # Create a single page result with cleaned up response
                     clean_text = ai_response.strip()
-                    # Remove common introductory phrases
-                    intro_phrases = [
-                        "Here is the analysis of each page for TU format violations:",
-                        "After analyzing",
-                        "The analysis shows"
-                    ]
-                    for phrase in intro_phrases:
-                        clean_text = clean_text.replace(phrase, "").strip()
+                    # Text is cleaned as per feedback instructions
                     
                     page_results.append({
                         "page": 1,
@@ -414,7 +414,7 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
                     # More flexible categorization
                     violation_lower = violation.lower()
                     
-                    if "[ERROR]" in violation or any(word in violation_lower for word in ["error", "violation", "problem", "incorrect", "wrong", "missing", "structure", "citation", "alignment", "page numbering", "font", "margin"]):
+                    if "[ERROR]" in violation or any(word in violation_lower for word in prompt_manager.get_error_keywords()):
                         if "[ERROR]" in violation:
                             # Extract just the error message after [ERROR]
                             error_text = violation.replace("[ERROR]", "").strip()
@@ -429,7 +429,7 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
                             categorized_violation["text"] = error_text
                         categorized_violation["type"] = "error"
                         categorized_results["errors"].append(categorized_violation)
-                    elif "[WARNING]" in violation or any(word in violation_lower for word in ["warning", "grammar", "flow", "formatting", "inconsistent"]):
+                    elif "[WARNING]" in violation or any(word in violation_lower for word in prompt_manager.get_warning_keywords()):
                         if "[WARNING]" in violation:
                             categorized_violation["text"] = violation.replace("[WARNING]", "").strip()
                         else:
@@ -439,7 +439,7 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
 
                     else:
                         # Default to error if no category specified but it's clearly a violation
-                        if "no tu format violations detected" not in violation_lower:
+                        if prompt_manager.get_no_violations_phrase().lower() not in violation_lower:
                             categorized_violation["type"] = "error"
                             categorized_results["errors"].append(categorized_violation)
         

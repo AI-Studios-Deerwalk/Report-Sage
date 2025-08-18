@@ -1,5 +1,5 @@
+import React, { useState, useRef } from "react";
 import axios from "axios";
-import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FaCloudUploadAlt, 
@@ -10,20 +10,32 @@ import {
   FaTimes 
 } from "react-icons/fa";
 
-export default function FileUpload({ setResults }) {
-  const [file, setFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [progress, setProgress] = useState({ current: 0, total: 0, percentage: 0 });
-  const [isDragOver, setIsDragOver] = useState(false);
-  const fileInputRef = useRef(null);
+interface FileUploadProps {
+  setResults: (results: any) => void;
+}
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    processFile(selectedFile);
+interface ProgressState {
+  current: number;
+  total: number;
+  percentage: number;
+}
+
+export default function FileUpload({ setResults }: FileUploadProps) {
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<ProgressState>({ current: 0, total: 0, percentage: 0 });
+  const [isDragOver, setIsDragOver] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      processFile(selectedFile);
+    }
   };
 
-  const processFile = (selectedFile) => {
+  const processFile = (selectedFile: File) => {
     if (selectedFile && selectedFile.type !== 'application/pdf') {
       setError("Please select a PDF file");
       setFile(null);
@@ -33,21 +45,23 @@ export default function FileUpload({ setResults }) {
     setError(null);
   };
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragOver(true);
   };
 
-  const handleDragLeave = (e) => {
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragOver(false);
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragOver(false);
     const droppedFile = e.dataTransfer.files[0];
-    processFile(droppedFile);
+    if (droppedFile) {
+      processFile(droppedFile);
+    }
   };
 
   const removeFile = () => {
@@ -95,7 +109,7 @@ export default function FileUpload({ setResults }) {
       setProgress(prev => ({ ...prev, percentage: 100 }));
       
       setResults(res.data);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Upload error:", err);
       if (err.response) {
         setError(`Server error: ${err.response.status} - ${err.response.data?.detail || 'Unknown error'}`);
@@ -114,7 +128,7 @@ export default function FileUpload({ setResults }) {
     }
   };
 
-  const getProgressMessage = (percentage) => {
+  const getProgressMessage = (percentage: number): string => {
     if (percentage < 20) return "Uploading PDF file...";
     if (percentage < 40) return "Extracting text from pages...";
     if (percentage < 60) return "Analyzing format compliance...";
