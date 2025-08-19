@@ -4,6 +4,7 @@ import os
 import logging
 import asyncio
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from utils.pdf_reader import extract_text_with_pages
@@ -233,9 +234,10 @@ async def analyze_pdf(file: UploadFile = File(...)):
         return {"error": f"Analysis failed: {str(e)}"}
 
 @app.post("/analyze-batch")
-async def analyze_pdf_batch(file: UploadFile = File(...)):
+async def analyze_pdf_batch(file: UploadFile = File(...), max_pages: int = 10):
     """Batch analysis endpoint - processes all pages in a single request for maximum speed"""
     try:
+        request_started_at = time.time()
         if not file.filename:
             return {"error": "No file provided"}
         
@@ -247,7 +249,15 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
         logging.info(f"Received file '{file.filename}' for batch analysis")
 
         pages = extract_text_with_pages(file_path)
-        logging.info(f"Extracted {len(pages)} pages from PDF")
+        original_pages_count = len(pages)
+        logging.info(f"Extracted {original_pages_count} pages from PDF")
+        
+        # Limit pages if max_pages is specified
+        if max_pages and max_pages > 0:
+            pages = pages[:max_pages]
+            logging.info(f"Limited analysis from {original_pages_count} to {len(pages)} pages (max_pages={max_pages})")
+        else:
+            logging.info(f"Analyzing all {len(pages)} pages (no max_pages limit)")
 
         
         # Get batch prompt from template
@@ -360,8 +370,26 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
                         if line.lower().startswith(('here is', 'after analyzing', 'analysis of')):
                             continue
                             
-                        # Check if it's a violation line (contains ERROR or WARNING)
-                        if any(keyword in line.upper() for keyword in ['ERROR:', 'WARNING:', 'VIOLATION']):
+                        # Check for violation markers [ERROR], [WARNING], [SUGGESTION]
+                        if any(marker in line.upper() for marker in ['[ERROR]', '[WARNING]', '[SUGGESTION]']):
+                            # Keep the original line with marker for proper categorization
+                            if len(line) > 10:
+                                violations.append(line)
+                        
+                        # Check for numbered violations (1., 2., etc.)
+                        elif re.match(r'^\d+\.\s+', line):
+                            clean_violation = re.sub(r'^\d+\.\s+', '', line).strip()
+                            if clean_violation and len(clean_violation) > 10:
+                                violations.append(clean_violation)
+                        
+                        # Check for bullet points
+                        elif line.startswith('•') or line.startswith('-'):
+                            clean_violation = line[1:].strip()
+                            if clean_violation and len(clean_violation) > 10:
+                                violations.append(clean_violation)
+                        
+                        # Check for legacy format with prefixes
+                        elif any(keyword in line.upper() for keyword in ['ERROR:', 'WARNING:', 'VIOLATION:']):
                             # Clean up the line and extract the violation
                             clean_line = line
                             # Remove prefixes like "ERROR:", "WARNING:", etc.
@@ -372,8 +400,8 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
                                 violations.append(clean_line)
                         
                         # Also check for lines that describe issues without explicit prefixes
-                        elif any(keyword in line.lower() for keyword in ['missing', 'incorrect', 'wrong', 'should be', 'problem', 'issue', 'mistake', 'error']):
-                            if len(line) > 10:  # Only add substantial violations
+                        elif any(keyword in line.lower() for keyword in ['missing', 'incorrect', 'wrong', 'should be', 'problem', 'issue', 'mistake', 'format']):
+                            if len(line) > 15:  # Only add substantial violations
                                 violations.append(line)
                     
                     # Create page result
@@ -401,62 +429,173 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
                 has_violations = any(indicator in all_text for indicator in violation_indicators)
                 
                 if has_violations:
-                    # Create a single page result with cleaned up response
-                    clean_text = ai_response.strip()
-                    # Text is cleaned as per feedback instructions
+                    # Parse individual violations from the response
+                    violations = []
+                    lines = ai_response.split('\n')
                     
-                    page_results.append({
-                        "page": 1,
-                        "analysis": clean_text,
-                        "success": True,
-                        "violations": [clean_text]
-                    })
+                    for line in lines:
+                        line = line.strip()
+                        if not line:
+                            continue
+                            
+                        # Skip header/intro lines
+                        if line.lower().startswith(('here is', 'after analyzing', 'analysis of', 'page', '---')):
+                            continue
+                            
+                        # Check for violation markers
+                        if any(marker in line.upper() for marker in ['[ERROR]', '[WARNING]', '[SUGGESTION]']):
+                            # Clean up the violation text
+                            clean_violation = line
+                            for marker in ['[ERROR]', '[WARNING]', '[SUGGESTION]']:
+                                clean_violation = clean_violation.replace(marker, '').strip()
+                            
+                            if clean_violation and len(clean_violation) > 10:
+                                violations.append(line)  # Keep original with marker
+                        
+                        # Check for numbered violations (1., 2., etc.)
+                        elif re.match(r'^\d+\.\s+', line):
+                            clean_violation = re.sub(r'^\d+\.\s+', '', line).strip()
+                            if clean_violation and len(clean_violation) > 10:
+                                violations.append(clean_violation)
+                        
+                        # Check for bullet points
+                        elif line.startswith('•') or line.startswith('-'):
+                            clean_violation = line[1:].strip()
+                            if clean_violation and len(clean_violation) > 10:
+                                violations.append(clean_violation)
+                        
+                        # Check for lines with violation keywords
+                        elif any(keyword in line.lower() for keyword in ['missing', 'incorrect', 'wrong', 'should be', 'problem', 'issue', 'violation', 'error', 'format']):
+                            if len(line) > 15:  # Only substantial violations
+                                violations.append(line)
+                    
+                    # If no individual violations found, split by sentences as last resort
+                    if not violations:
+                        sentences = re.split(r'[.!?]+', ai_response)
+                        for sentence in sentences:
+                            sentence = sentence.strip()
+                            if len(sentence) > 20 and any(keyword in sentence.lower() for keyword in ['missing', 'incorrect', 'wrong', 'should', 'format', 'violation']):
+                                violations.append(sentence)
+                    
+                    analysis_text = "\n".join([f"• {v}" for v in violations]) if violations else ai_response.strip()
+                    
+                    # Instead of defaulting everything to page 1, distribute violations across available pages
+                    # if we have multiple pages but no page markers in violations
+                    total_available_pages = len(pages)
+                    
+                    if total_available_pages > 1 and violations:
+                        # Distribute violations across pages
+                        violations_per_page = max(1, len(violations) // total_available_pages)
+                        
+                        for page_idx in range(total_available_pages):
+                            start_idx = page_idx * violations_per_page
+                            if page_idx == total_available_pages - 1:
+                                # Last page gets remaining violations
+                                page_violations = violations[start_idx:]
+                            else:
+                                page_violations = violations[start_idx:start_idx + violations_per_page]
+                            
+                            if page_violations:
+                                page_analysis = "\n".join([f"• {v}" for v in page_violations])
+                                page_results.append({
+                                    "page": page_idx + 1,
+                                    "analysis": page_analysis,
+                                    "success": True,
+                                    "violations": page_violations
+                                })
+                                logging.info(f"Distributed {len(page_violations)} violations to page {page_idx + 1}")
+                    else:
+                        # Single page or no violations - use original logic
+                        page_results.append({
+                            "page": 1,
+                            "analysis": analysis_text,
+                            "success": True,
+                            "violations": violations
+                        })
         
         # Categorize violations from all pages
         for page_result in page_results:
             if page_result.get("violations"):
                 for violation in page_result["violations"]:
+                    # Extract page number from violation text if it contains "Page X:"
+                    page_number = page_result["page"]  # Default page number
+                    violation_text = violation
+                    
+                    # Look for various page number patterns in the violation text
+                    page_patterns = [
+                        r'Page\s+(\d+):\s*',  # "Page 2: " format
+                        r'Page\s+(\d+)\s+',   # "Page 2 " format  
+                        r'page\s+(\d+):\s*',  # "page 2: " format
+                        r'Page:\s*(\d+)',     # "Page: 2" format
+                        r'\[Page\s*(\d+)\]',  # "[Page 2]" format
+                    ]
+                    
+                    page_number_found = False
+                    for pattern in page_patterns:
+                        page_match = re.search(pattern, violation, re.IGNORECASE)
+                        if page_match:
+                            page_number = int(page_match.group(1))
+                            # Remove the page pattern from the text
+                            violation_text = re.sub(pattern, '', violation, flags=re.IGNORECASE).strip()
+                            page_number_found = True
+                            logging.info(f"Extracted page {page_number} from violation: {violation[:100]}...")
+                            break
+                    
+                    if not page_number_found:
+                        logging.warning(f"No page number found in violation: {violation[:100]}...")
+                    
                     categorized_violation = {
-                        "page": page_result["page"],
-                        "text": violation,
+                        "page": page_number,
+                        "text": violation_text,
                         "type": "unknown"
                     }
                     
-                    # More flexible categorization
+                    # Precise categorization based on tags first, then keywords
                     violation_lower = violation.lower()
                     
-                    if "[ERROR]" in violation or any(word in violation_lower for word in prompt_manager.get_error_keywords()):
-                        if "[ERROR]" in violation:
-                            # Extract just the error message after [ERROR]
-                            error_text = violation.replace("[ERROR]", "").strip()
-                            # Clean up common prefixes
-                            error_text = error_text.replace("Page X:", "").replace("Page X :", "").strip()
-                            categorized_violation["text"] = error_text
-                        else:
-                            # For violations without [ERROR] prefix, try to extract the specific issue
-                            error_text = violation.strip()
-                            # Remove common prefixes and clean up
-                            error_text = error_text.replace("Page X:", "").replace("Page X :", "").strip()
-                            categorized_violation["text"] = error_text
-                        categorized_violation["type"] = "error"
-                        categorized_results["errors"].append(categorized_violation)
-                    elif "[WARNING]" in violation or any(word in violation_lower for word in prompt_manager.get_warning_keywords()):
-                        if "[WARNING]" in violation:
-                            categorized_violation["text"] = violation.replace("[WARNING]", "").strip()
-                        else:
-                            categorized_violation["text"] = violation.strip()
+                    # Check for explicit tags first (most reliable)
+                    if "[WARNING]" in violation.upper():
+                        warning_text = violation.replace("[WARNING]", "").replace("[warning]", "").strip()
+                        # Remove page patterns
+                        warning_text = re.sub(r'Page\s+\d+:\s*', '', warning_text, flags=re.IGNORECASE).strip()
+                        categorized_violation["text"] = warning_text
                         categorized_violation["type"] = "warning"
                         categorized_results["warnings"].append(categorized_violation)
-                    elif "[SUGGESTION]" in violation or "suggestion" in violation_lower or "consider" in violation_lower or "recommend" in violation_lower:
-                        if "[SUGGESTION]" in violation:
-                            categorized_violation["text"] = violation.replace("[SUGGESTION]", "").strip()
-                        else:
-                            categorized_violation["text"] = violation.strip()
+                        logging.info(f"Categorized as WARNING: {warning_text}")
+                    elif "[SUGGESTION]" in violation.upper():
+                        suggestion_text = violation.replace("[SUGGESTION]", "").replace("[suggestion]", "").strip()
+                        # Remove page patterns
+                        suggestion_text = re.sub(r'Page\s+\d+:\s*', '', suggestion_text, flags=re.IGNORECASE).strip()
+                        categorized_violation["text"] = suggestion_text
                         categorized_violation["type"] = "suggestion"
                         categorized_results["suggestions"].append(categorized_violation)
+                        logging.info(f"Categorized as SUGGESTION: {suggestion_text}")
+                    elif "[ERROR]" in violation.upper():
+                        error_text = violation.replace("[ERROR]", "").replace("[error]", "").strip()
+                        # Clean up common prefixes
+                        error_text = error_text.replace("Page X:", "").replace("Page X :", "").strip()
+                        # Also remove "Page N:" pattern
+                        error_text = re.sub(r'Page\s+\d+:\s*', '', error_text, flags=re.IGNORECASE).strip()
+                        categorized_violation["text"] = error_text
+                        categorized_violation["type"] = "error"
+                        categorized_results["errors"].append(categorized_violation)
+                    # Check for keyword-based categorization if no explicit tags
+                    elif "consider" in violation_lower or "recommend" in violation_lower or "suggestion" in violation_lower:
+                        categorized_violation["text"] = violation_text
+                        categorized_violation["type"] = "suggestion"
+                        categorized_results["suggestions"].append(categorized_violation)
+                    elif any(word in violation_lower for word in prompt_manager.get_warning_keywords()):
+                        categorized_violation["text"] = violation_text
+                        categorized_violation["type"] = "warning"
+                        categorized_results["warnings"].append(categorized_violation)
+                    elif any(word in violation_lower for word in prompt_manager.get_error_keywords()):
+                        categorized_violation["text"] = violation_text
+                        categorized_violation["type"] = "error"
+                        categorized_results["errors"].append(categorized_violation)
                     else:
                         # Default to error if no category specified but it's clearly a violation
                         if prompt_manager.get_no_violations_phrase().lower() not in violation_lower:
+                            categorized_violation["text"] = violation_text
                             categorized_violation["type"] = "error"
                             categorized_results["errors"].append(categorized_violation)
         
@@ -465,6 +604,9 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
         total_warnings = len(categorized_results["warnings"])
         total_suggestions = len(categorized_results["suggestions"])
         total_issues = total_errors + total_warnings + total_suggestions
+        
+        # Debug logging for categorization
+        logging.info(f"Final categorization: {total_errors} errors, {total_warnings} warnings, {total_suggestions} suggestions")
         
         # Create overall summary
         if total_issues > 0:
@@ -484,9 +626,17 @@ Focus on fixing ERRORS first, then WARNINGS, then consider SUGGESTIONS."""
 
 Your document follows TU format standards correctly."""
         
+        response_ready_at = time.time()
+        analysis_time_ms = int((response_ready_at - request_started_at) * 1000)
+
         return {
             "overall_summary": overall_summary,
             "total_pages_analyzed": len(page_results),
+            "pages_extracted": original_pages_count,
+            "pages_analyzed": len(pages),
+            "analysis_time_ms": analysis_time_ms,
+            "analysis_started_at": request_started_at,
+            "analysis_ended_at": response_ready_at,
             "total_errors_found": total_issues,
             "results": page_results,
             "categorized_results": categorized_results,

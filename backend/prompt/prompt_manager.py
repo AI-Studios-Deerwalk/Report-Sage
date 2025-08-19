@@ -212,9 +212,18 @@ ANALYZE AGAINST THESE RULES:
             return None
         
         # Use feedback instructions content directly
-        analysis_instruction = f"""You are a TU format analyzer. Analyze {len(pages)} pages and find format violations.
+        analysis_instruction = f"""You are analyzing a TU academic document for FORMAT COMPLIANCE. Analyze {len(pages)} pages for formatting violations.
 
 {self.feedback_instructions}
+
+SPECIFIC FORMAT REQUIREMENTS TO CHECK:
+- Font: Times New Roman 12pt throughout
+- Margins: 1" top/bottom, 1.25" left, 1" right
+- Line spacing: 1.5 throughout
+- Page numbering: Roman for preliminary, Arabic for main content
+- Headings: Chapter 16pt bold centered, Section 14pt bold left
+- Citations: IEEE numbered format [1], [2], etc.
+- Required sections: Cover, Table of Contents, References
 
 PAGES TO ANALYZE:
 """
@@ -222,16 +231,25 @@ PAGES TO ANALYZE:
         # Add page content
         for page_data in pages:
             page_num = page_data['page']
-            text = page_data['text'][:500]
+            text = page_data['text'][:800]  # Increased limit for better analysis
             analysis_instruction += f"""
 --- PAGE {page_num} ---
-{text}{"..." if len(text) > 500 else ""}
+{text}{"..." if len(text) > 800 else ""}
 """
         
         analysis_instruction += f"""
 
-ANALYZE AGAINST THESE RULES:
-{self.analysis_rules}"""
+CRITICAL: Each violation MUST include the page number where it was found.
+FORMAT: [CATEGORY] Page X: Description of violation
+
+EXAMPLES:
+[ERROR] Page 2: Font uses Arial instead of required Times New Roman 12pt
+[WARNING] Page 5: Table caption should be above table, currently below
+[SUGGESTION] Page 8: Consider adding more space between sections
+
+FOCUS ON: Document formatting, layout, fonts, spacing, headings, citations, page structure.
+IGNORE: Content topics, software features, business logic.
+RETURN: Only formatting violations with page numbers in the specified format."""
         
         return analysis_instruction
 

@@ -1,40 +1,45 @@
-FEEDBACK CATEGORIZATION INSTRUCTIONS:
+ACADEMIC DOCUMENT FORMAT ANALYSIS INSTRUCTIONS:
+
+You are analyzing a TU (Tribhuvan University) academic document for format compliance. Focus on DOCUMENT FORMATTING, not content analysis.
 
 PROVIDE FEEDBACK IN THREE CATEGORIES:
 
-1. ERRORS (Critical Issues - Must Fix):
-   - Structure problems (missing sections, wrong order)
-   - Citation format violations (not IEEE style)
-   - Font/size violations (not Times New Roman 12pt)
-   - Margin violations (not 1 inch margins)
-   - Page numbering issues (except page 1)
-   - Missing table of contents entries
-   - Serious formatting violations
+1. ERRORS (Critical Format Issues - Must Fix):
+   - Font violations: Document must use Times New Roman 12pt throughout
+   - Margin violations: Must be 1 inch top/bottom, 1.25 inch left, 1 inch right  
+   - Page numbering: Roman numerals for preliminary pages, Arabic for main content
+   - Missing required sections: Cover page, Table of Contents, References, etc.
+   - Heading format: Chapter headings 16pt bold centered, section headings 14pt bold left
+   - Line spacing: Must be 1.5 throughout document
+   - Citation format: Must use IEEE numbered citation style [1], [2], etc.
 
-   Format: [ERROR] Brief description of the violation
-   Example: [ERROR] Font should be Times New Roman 12pt, currently using Arial
+   Format: [ERROR] Specific formatting violation found
+   Example: [ERROR] Text uses Arial font instead of required Times New Roman 12pt
+   Example: [ERROR] Missing IEEE citation format, found APA style instead
 
-2. WARNINGS (Important Issues - Should Fix):
-   - Grammar mistakes
-   - Spelling errors
-   - Punctuation issues
-   - Poor sentence structure
-   - Inconsistent formatting
-   - Flow problems between sections
-   - Minor spacing issues
+2. WARNINGS (Formatting Issues - Should Fix):
+   - Inconsistent spacing between sections
+   - Table/figure caption formatting issues
+   - Minor margin inconsistencies  
+   - Grammar and spelling errors in text
+   - Inconsistent heading numbering
+   - Poor table/figure alignment
 
-   Format: [WARNING] Brief description of the issue
-   Example: [WARNING] Grammar error - "There is many" should be "There are many"
+   Format: [WARNING] Specific formatting inconsistency
+   Example: [WARNING] Table caption should be above table, currently below
+   Example: [WARNING] Inconsistent spacing before chapter headings
 
-3. SUGGESTIONS (Enhancement Ideas - Optional):
-   - Ways to improve content clarity
-   - Ideas for better organization
-   - Recommendations for additional details
-   - Suggestions for better formatting
-   - Content enhancement opportunities
+3. SUGGESTIONS (Format Improvements - Optional):
+   - Better formatting for tables and figures
+   - Improved document organization
+   - Enhanced readability suggestions
+   - Additional formatting consistency improvements
 
-   Format: [SUGGESTION] Brief improvement recommendation
-   Example: [SUGGESTION] Consider adding more detail to explain the methodology
+   Format: [SUGGESTION] Specific improvement recommendation  
+   Example: [SUGGESTION] Consider adding more space between sections for better readability
+   Example: [SUGGESTION] Table formatting could be improved with better borders
+
+IMPORTANT: Look for actual FORMATTING and STRUCTURE issues, not software features or content topics. Focus on document appearance, layout, fonts, spacing, citations, and academic format compliance.
 
 FEEDBACK FORMATTING RULES:
 - Each feedback item should be ONE SHORT SENTENCE only
@@ -45,11 +50,23 @@ FEEDBACK FORMATTING RULES:
 - If no violations found, respond: "No TU format violations detected on this page"
 
 RESPONSE FORMAT:
-Page X: [CATEGORY] Description of issue/suggestion
+Each violation MUST include the page number where it was found:
+
+[ERROR] Page X: Specific description of the formatting violation
+[WARNING] Page X: Specific description of the grammar/style issue  
+[SUGGESTION] Page X: Specific recommendation for improvement
+
+EXAMPLES:
+[ERROR] Page 2: Font uses Arial instead of required Times New Roman 12pt
+[WARNING] Page 5: Table caption formatting is inconsistent
+[SUGGESTION] Page 8: Consider adding more space between sections for better readability
 
 IMPORTANT NOTES:
+- Each issue must be on its own line
+- MANDATORY: Include "Page X:" before each description
 - Page 1 (cover/title page) does NOT require a page number - do not flag this as an error
 - Focus on critical formatting issues first (ERRORS)
 - Grammar and flow issues are WARNINGS
 - Enhancement ideas are SUGGESTIONS
 - Be concise and helpful in all feedback
+- Limit each description to one clear, actionable sentence

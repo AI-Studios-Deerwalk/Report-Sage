@@ -79,6 +79,59 @@ export function AnalysisResults({ results = mockResults, onBack }: AnalysisResul
 
   const { errors, warnings, suggestions, fileName, totalPages, analysisTime } = results
 
+  const handleExport = () => {
+    try {
+      const lines: string[] = []
+      const safeFileName = (fileName || "document")
+        .toString()
+        .replace(/\.[^/.]+$/, "")
+        .replace(/[^a-z0-9-_]+/gi, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$|^$/g, "") || "report"
+
+      const totalIssues = errors.length + warnings.length + suggestions.length
+      lines.push("TU Format Analysis Report")
+      lines.push("============================")
+      lines.push("")
+      lines.push(`File Name: ${fileName || "document"}`)
+      lines.push(`Pages: ${totalPages ?? "—"}`)
+      lines.push(`Analysis Time: ${analysisTime ?? "—"}`)
+      lines.push(`Total Issues: ${totalIssues}`)
+      lines.push("")
+
+      const pushSection = (title: string, items: AnalysisItem[]) => {
+        if (!items || items.length === 0) return
+        lines.push(`${title} (${items.length})`)
+        lines.push("-".repeat(title.length + 4))
+        items.forEach((item, idx) => {
+          const where: string[] = []
+          if (typeof item.page === "number") where.push(`Page ${item.page}`)
+          if (typeof item.line === "number") where.push(`Line ${item.line}`)
+          const whereStr = where.length ? ` [${where.join(", ")}]` : ""
+          lines.push(`${idx + 1}. ${item.message}${whereStr}`)
+        })
+        lines.push("")
+      }
+
+      pushSection("Errors", errors)
+      pushSection("Warnings", warnings)
+      pushSection("Suggestions", suggestions)
+
+      const content = lines.join("\n")
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `${safeFileName || "report"}-analysis.txt`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      // noop – exporting is best-effort
+    }
+  }
+
   const getIcon = (severity: string) => {
     switch (severity) {
       case "error":
@@ -108,13 +161,26 @@ export function AnalysisResults({ results = mockResults, onBack }: AnalysisResul
   const getCardBorder = (severity: string) => {
     switch (severity) {
       case "error":
-        return "border-l-4 border-l-red-500"
+        return "border-l-[6px] border-l-red-500"
       case "warning":
-        return "border-l-4 border-l-orange-500"
+        return "border-l-[6px] border-l-orange-500"
       case "suggestion":
-        return "border-l-4 border-l-blue-500"
+        return "border-l-[6px] border-l-blue-500"
       default:
         return ""
+    }
+  }
+
+  const getTagClasses = (severity: string) => {
+    switch (severity) {
+      case "error":
+        return "bg-red-100 text-red-700"
+      case "warning":
+        return "bg-orange-100 text-orange-700"
+      case "suggestion":
+        return "bg-blue-100 text-blue-700"
+      default:
+        return "bg-muted text-muted-foreground"
     }
   }
 
@@ -122,11 +188,14 @@ export function AnalysisResults({ results = mockResults, onBack }: AnalysisResul
     if (items.length === 0) return null
 
     return (
-      <Card className={`p-6 ${getCardBorder(severity)}`}>
+      <Card className={`p-6 border-2 border-gray-300 rounded-lg ${getCardBorder(severity)}`}>
         <div className="flex items-center gap-3 mb-4">
           {getIcon(severity)}
           <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-          <Badge variant="secondary" className="ml-auto">
+          <Badge
+            variant="secondary"
+            className={`ml-auto text-xs px-2 py-0.5 rounded-full ${getTagClasses(severity)}`}
+          >
             {items.length}
           </Badge>
         </div>
@@ -139,10 +208,10 @@ export function AnalysisResults({ results = mockResults, onBack }: AnalysisResul
                 {(item.page || item.line) && (
                   <div className="flex gap-2 mt-1">
                     {item.page && (
-                      <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">Page {item.page}</span>
+                      <Badge variant="secondary" className={`text-[10px] px-2 py-0.5 rounded ${getTagClasses(severity)}`}>Page {item.page}</Badge>
                     )}
                     {item.line && (
-                      <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">Line {item.line}</span>
+                      <Badge variant="secondary" className={`text-[10px] px-2 py-0.5 rounded ${getTagClasses(severity)}`}>Line {item.line}</Badge>
                     )}
                   </div>
                 )}
@@ -161,28 +230,29 @@ export function AnalysisResults({ results = mockResults, onBack }: AnalysisResul
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground hover:text-foreground">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={onBack}
+            className="px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded-lg shadow-sm"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Upload
           </Button>
         </div>
-        <Button variant="outline" className="gap-2 bg-transparent">
+        <Button
+          variant="outline"
+          onClick={handleExport}
+          className="gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-foreground hover:bg-gray-50 shadow-sm"
+        >
           <Download className="h-4 w-4" />
           Export Report
         </Button>
       </div>
 
       {/* Analysis Summary */}
-      <Card className="p-6 bg-gradient-to-r from-green-50 to-green-100 border-green-200">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-green-600 rounded-full">
-            <CheckCircle className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">Analysis Complete</h2>
-            <p className="text-muted-foreground">Document analysis finished successfully</p>
-          </div>
-        </div>
+      <Card className="p-6 bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-100 rounded-lg">
+       
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
           <div className="text-center">
@@ -206,7 +276,7 @@ export function AnalysisResults({ results = mockResults, onBack }: AnalysisResul
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4 border-l-4 border-l-red-500">
+        <Card className="p-4 border-2 border-gray-300 rounded-lg border-l-[6px] border-l-red-500">
           <div className="flex items-center gap-3">
             <AlertCircle className="h-5 w-5 text-red-500" />
             <div>
@@ -215,7 +285,7 @@ export function AnalysisResults({ results = mockResults, onBack }: AnalysisResul
             </div>
           </div>
         </Card>
-        <Card className="p-4 border-l-4 border-l-orange-500">
+        <Card className="p-4 border-2 border-gray-300 rounded-lg border-l-[6px] border-l-orange-500">
           <div className="flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 text-orange-500" />
             <div>
@@ -224,7 +294,7 @@ export function AnalysisResults({ results = mockResults, onBack }: AnalysisResul
             </div>
           </div>
         </Card>
-        <Card className="p-4 border-l-4 border-l-blue-500">
+        <Card className="p-4 border-2 border-gray-300 rounded-lg border-l-[6px] border-l-blue-500">
           <div className="flex items-center gap-3">
             <Lightbulb className="h-5 w-5 text-blue-500" />
             <div>

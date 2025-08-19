@@ -109,11 +109,10 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
       formData.append("file", firstFile)
       
       const res = await axios.post(
-        "http://localhost:8000/analyze-batch",
+        "http://localhost:8000/analyze-batch?max_pages=10",
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
-          params: { max_pages: 10 }
+          headers: { "Content-Type": "multipart/form-data" }
         }
       )
       
@@ -130,7 +129,12 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
 
       // Persist results and navigate to results page
       try {
-        localStorage.setItem("analysisResults", JSON.stringify(res.data))
+        const resultData = {
+          ...res.data,
+          fileName: firstFile.name,
+          analysisStartTime: Date.now()
+        }
+        localStorage.setItem("analysisResults", JSON.stringify(resultData))
       } catch (_) {
         // ignore storage errors
       }
@@ -161,100 +165,98 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
 
   return (
     <div className="space-y-6">
-      {/* Upload Area */}
+      {/* Upload Area + Uploaded Files inside the same card */}
       <Card className="w-full border-2 border-dashed border-green-300 bg-white transition-colors">
-        <div {...getRootProps()} className={`p-12 text-center cursor-pointer ${isDragActive ? "bg-[#F9FCF9]/20" : ""}`}>
-          <input {...getInputProps()} />
-          <div className="flex flex-col items-center gap-4">
-            <div className="p-4 bg-green-100 rounded-full">
-              {loading ? (
-                <Loader2 className="h-8 w-8 text-green-600 animate-spin" />
-              ) : (
-                <Upload className="h-8 w-8 text-green-600" />
-              )}
-            </div>
-            <div>
-              <p className="text-lg font-medium text-foreground mb-1">
-                {loading ? "Analyzing PDF..." : "Upload a file or drag and drop"}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {loading 
-                  ? getProgressMessage(progress.percentage)
-                  : isDragActive 
-                    ? "Drop files here..." 
-                    : "PDF files only"
-                }
-              </p>
-            </div>
-            {!loading && (
-              <Button variant="outline" className="mt-2 bg-transparent">
-                Choose Files
-              </Button>
-            )}
-            {loading && (
-              <div className="w-full max-w-xs mt-4">
-                <Progress value={progress.percentage} className="w-full" />
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  {Math.round(progress.percentage)}% complete
+        {/* Drop zone (hidden after at least one file is uploaded) */}
+        {uploadedFiles.length === 0 && (
+          <div {...getRootProps()} className={`p-12 text-center cursor-pointer ${isDragActive ? "bg-[#F9FCF9]/20" : ""}`}>
+            <input {...getInputProps()} />
+            <div className="flex flex-col items-center gap-4">
+              <div className="p-4 bg-green-100 rounded-full">
+                {loading ? (
+                  <Loader2 className="h-8 w-8 text-green-600 animate-spin" />
+                ) : (
+                  <Upload className="h-8 w-8 text-green-600" />
+                )}
+              </div>
+              <div>
+                <p className="text-lg font-medium text-foreground mb-1">
+                  {loading ? "Analyzing PDF..." : "Upload a file or drag and drop"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {loading 
+                    ? getProgressMessage(progress.percentage)
+                    : isDragActive 
+                      ? "Drop files here..." 
+                      : "PDF files only"
+                  }
                 </p>
               </div>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      {/* Uploaded Files List */}
-      {uploadedFiles.length > 0 && !loading && (
-        <div className="space-y-3">
-          <h3 className="text-lg font-medium text-foreground">Uploaded Files</h3>
-          <div className="space-y-2">
-            {uploadedFiles.map((uploadedFile) => (
-              <Card key={uploadedFile.id} className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium text-foreground">{uploadedFile.file.name}</p>
-                      <p className="text-sm text-muted-foreground">{formatFileSize(uploadedFile.file.size)}</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeFile(uploadedFile.id)}
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-          <div className="flex gap-3 pt-4">
-            <Button 
-              onClick={analyzeFiles}
-              disabled={loading}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                "Submit Files"
+              {!loading && (
+                <Button variant="outline" className="mt-2 bg-transparent">
+                  Choose Files
+                </Button>
               )}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setUploadedFiles([])}
-              disabled={loading}
-            >
-              Clear All
-            </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Uploaded Files (inside the card, below the drop zone) */}
+        {uploadedFiles.length > 0 && (
+          <div className="p-12 bg-white min-h-[320px]">
+            <h3 className="text-lg font-medium text-foreground mb-6">Uploaded Files</h3>
+            {/* Progress moved below Analyze button */}
+            <div className="space-y-2">
+              {uploadedFiles.map((uploadedFile) => (
+                <Card key={uploadedFile.id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium text-foreground">{uploadedFile.file.name}</p>
+                        <p className="text-sm text-muted-foreground">{formatFileSize(uploadedFile.file.size)}</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile(uploadedFile.id)}
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+            <div className="flex flex-col items-center pt-6">
+              <Button 
+                onClick={analyzeFiles}
+                disabled={loading}
+                size="lg"
+                className="bg-green-600 hover:bg-green-700 text-white text-lg px-10 min-w-[180px] rounded-lg shadow-md hover:shadow-lg transition-shadow"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  "Analyze"
+                )}
+              </Button>
+              {loading && (
+                <div className="w-full max-w-xs mt-3">
+                  <p className="text-xs text-muted-foreground text-center">
+                    {Math.round(progress.percentage)}% - {getProgressMessage(progress.percentage)}
+                  </p>
+                  <Progress value={progress.percentage} className="w-full mt-2" />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </Card>
 
       {/* Error Message */}
       {error && (
