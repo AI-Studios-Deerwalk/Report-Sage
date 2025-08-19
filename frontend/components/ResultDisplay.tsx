@@ -1,3 +1,4 @@
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FaCheckCircle, 
@@ -11,8 +12,45 @@ import {
   FaCog
 } from "react-icons/fa";
 
-export default function ResultDisplay({ results }) {
-  if (!results || results.length === 0) {
+interface ResultItem {
+  text: string;
+  page: number;
+}
+
+interface CategorizedResults {
+  errors?: ResultItem[];
+  warnings?: ResultItem[];
+  suggestions?: ResultItem[];
+  enhancement?: ResultItem[];
+  structure?: ResultItem[];
+  grammar?: ResultItem[];
+}
+
+interface PhaseSummaryItem {
+  icon: string;
+  title: string;
+  count: number;
+  color: string;
+}
+
+interface PhaseSummary {
+  [key: string]: PhaseSummaryItem;
+}
+
+interface Results {
+  overall_summary?: string;
+  categorized_results?: CategorizedResults;
+  phase_summary?: PhaseSummary;
+  total_errors_found?: number;
+  total_pages_analyzed?: number;
+}
+
+interface ResultDisplayProps {
+  results: Results | null;
+}
+
+export default function ResultDisplay({ results }: ResultDisplayProps) {
+  if (!results || Object.keys(results).length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -33,8 +71,8 @@ export default function ResultDisplay({ results }) {
   }
 
   // Helper function to group items by page
-  const groupByPage = (items) => {
-    const grouped = {};
+  const groupByPage = (items: ResultItem[]) => {
+    const grouped: { [key: number]: ResultItem[] } = {};
     items.forEach(item => {
       const page = item.page;
       if (!grouped[page]) {
@@ -53,6 +91,77 @@ export default function ResultDisplay({ results }) {
     categorizedResults.errors ||
     categorizedResults.warnings ||
     categorizedResults.suggestions;
+
+  const renderResultSection = (
+    items: ResultItem[],
+    title: string,
+    icon: React.ReactNode,
+    colorClass: string,
+    bgColorClass: string,
+    borderColorClass: string,
+    delay: number
+  ) => (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay }}
+      className={`glass-effect rounded-2xl p-6 border-2 ${borderColorClass} ${bgColorClass}`}
+    >
+      <div className="flex items-center space-x-3 mb-6">
+        <div className={`w-8 h-8 ${colorClass.replace('text-', 'bg-').replace('-600', '-100')} rounded-full flex items-center justify-center`}>
+          {icon}
+        </div>
+        <h3 className={`text-xl font-bold ${colorClass.replace('-600', '-700')}`}>
+          {title} ({items.length})
+        </h3>
+      </div>
+      <div className="space-y-3">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: delay + 0.1 }}
+          className={`bg-white rounded-lg p-4 border ${borderColorClass.replace('border-', 'border-').replace('-300', '-200')} hover-lift`}
+        >
+          <div className="flex items-start space-x-3">
+            <FaFileAlt className={`h-4 w-4 ${colorClass.replace('-600', '-500')} mt-1 flex-shrink-0`} />
+            <div className="flex-1">
+              <div className="space-y-3">
+                {items.map((item, index) => {
+                  // Extract section tag if it exists (e.g., [COVER], [TABLE OF CONTENTS])
+                  const sectionMatch = item.text.match(/^\[([^\]]+)\]/);
+                  const sectionTag = sectionMatch ? sectionMatch[1] : null;
+                  const remainingText = sectionTag ? item.text.replace(/^\[[^\]]+\]\s*/, '') : item.text;
+                  
+                  return (
+                    <div key={index} className={`flex items-start space-x-3 p-3 ${colorClass.replace('text-', 'bg-').replace('-600', '-25')} rounded-lg border-l-4 ${borderColorClass.replace('border-', 'border-').replace('-300', '-400')} hover:${colorClass.replace('text-', 'bg-').replace('-600', '-50')} transition-colors`}>
+                      <div className={`flex-shrink-0 w-6 h-6 ${colorClass.replace('text-', 'bg-').replace('-600', '-500')} text-white rounded-full flex items-center justify-center text-sm font-bold`}>
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          {sectionTag && (
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass.replace('text-', 'bg-').replace('-600', '-100')} ${colorClass.replace('-600', '-800')} border ${borderColorClass.replace('border-', 'border-').replace('-300', '-200')}`}>
+                              {sectionTag}
+                            </span>
+                          )}
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
+                            Page {item.page}
+                          </span>
+                        </div>
+                        <p className={`${colorClass.replace('-600', '-800')} text-sm leading-relaxed font-medium`}>
+                          {remainingText}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
+  );
 
   return (
     <motion.div
@@ -128,257 +237,53 @@ export default function ResultDisplay({ results }) {
       {/* New batch shape: errors, warnings, suggestions */}
       {isBatchShape && (
         <div className="space-y-6">
-          {categorizedResults.errors && categorizedResults.errors.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="glass-effect rounded-2xl p-6 border-2 border-error-300 bg-gradient-to-br from-error-50 to-red-50"
-            >
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-8 h-8 bg-error-100 rounded-full flex items-center justify-center">
-                  <FaTimesCircle className="h-5 w-5 text-error-600" />
-                </div>
-                <h3 className="text-xl font-bold text-error-700">
-                  Critical Errors ({categorizedResults.errors.length})
-                </h3>
-              </div>
-              <div className="space-y-3">
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                    className="bg-white rounded-lg p-4 border border-error-200 hover-lift"
-                  >
-                    <div className="flex items-start space-x-3">
-                      <FaFileAlt className="h-4 w-4 text-error-500 mt-1 flex-shrink-0" />
-                      <div className="flex-1">
-                      <div className="space-y-3">
-                        {categorizedResults.errors.map((error, errorIndex) => {
-                          // Extract section tag if it exists (e.g., [COVER], [TABLE OF CONTENTS])
-                          const sectionMatch = error.text.match(/^\[([^\]]+)\]/);
-                          const sectionTag = sectionMatch ? sectionMatch[1] : null;
-                          const remainingText = sectionTag ? error.text.replace(/^\[[^\]]+\]\s*/, '') : error.text;
-                          
-                          return (
-                            <div key={errorIndex} className="flex items-start space-x-3 p-3 bg-error-25 rounded-lg border-l-4 border-error-400 hover:bg-error-50 transition-colors">
-                              <div className="flex-shrink-0 w-6 h-6 bg-error-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                {errorIndex + 1}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-wrap items-center gap-2 mb-2">
-                                  {sectionTag && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-100 text-error-800 border border-error-200">
-                                      {sectionTag}
-                                    </span>
-                                  )}
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
-                                    Page {error.page}
-                                  </span>
-                                </div>
-                                <p className="text-error-800 text-sm leading-relaxed font-medium">
-                                  {remainingText}
-                                </p>
-                        </div>
-                            </div>
-                          );
-                        })}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-              </div>
-            </motion.div>
-          )}
+          {categorizedResults.errors && categorizedResults.errors.length > 0 &&
+            renderResultSection(
+              categorizedResults.errors,
+              "Critical Errors",
+              <FaTimesCircle className="h-5 w-5 text-error-600" />,
+              "text-error-600",
+              "bg-gradient-to-br from-error-50 to-red-50",
+              "border-error-300",
+              0.3
+            )
+          }
 
-          {categorizedResults.warnings && categorizedResults.warnings.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              className="glass-effect rounded-2xl p-6 border-2 border-warning-300 bg-gradient-to-br from-warning-50 to-yellow-50"
-            >
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-8 h-8 bg-warning-100 rounded-full flex items-center justify-center">
-                  <FaExclamationTriangle className="h-5 w-5 text-warning-600" />
-                </div>
-                <h3 className="text-xl font-bold text-warning-700">
-                  Warnings ({categorizedResults.warnings.length})
-                </h3>
-              </div>
-              <div className="space-y-3">
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                    className="bg-white rounded-lg p-4 border border-warning-200 hover-lift"
-                  >
-                    <div className="flex items-start space-x-3">
-                      <FaFileAlt className="h-4 w-4 text-warning-500 mt-1 flex-shrink-0" />
-                      <div className="flex-1">
-                      <div className="space-y-3">
-                        {categorizedResults.warnings.map((warning, warningIndex) => {
-                          // Extract section tag if it exists (e.g., [COVER], [TABLE OF CONTENTS])
-                          const sectionMatch = warning.text.match(/^\[([^\]]+)\]/);
-                          const sectionTag = sectionMatch ? sectionMatch[1] : null;
-                          const remainingText = sectionTag ? warning.text.replace(/^\[[^\]]+\]\s*/, '') : warning.text;
-                          
-                          return (
-                            <div key={warningIndex} className="flex items-start space-x-3 p-3 bg-warning-25 rounded-lg border-l-4 border-warning-400 hover:bg-warning-50 transition-colors">
-                              <div className="flex-shrink-0 w-6 h-6 bg-warning-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                {warningIndex + 1}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-wrap items-center gap-2 mb-2">
-                                  {sectionTag && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800 border border-warning-200">
-                                      {sectionTag}
-                                    </span>
-                                  )}
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
-                                    Page {warning.page}
-                                  </span>
-                                </div>
-                                <p className="text-warning-800 text-sm leading-relaxed font-medium">
-                                  {remainingText}
-                                </p>
-                        </div>
-                            </div>
-                          );
-                        })}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-              </div>
-            </motion.div>
-          )}
+          {categorizedResults.warnings && categorizedResults.warnings.length > 0 &&
+            renderResultSection(
+              categorizedResults.warnings,
+              "Warnings",
+              <FaExclamationTriangle className="h-5 w-5 text-warning-600" />,
+              "text-warning-600",
+              "bg-gradient-to-br from-warning-50 to-yellow-50",
+              "border-warning-300",
+              0.4
+            )
+          }
 
-          {categorizedResults.suggestions && categorizedResults.suggestions.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-              className="glass-effect rounded-2xl p-6 border-2 border-success-300 bg-gradient-to-br from-success-50 to-green-50"
-            >
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-8 h-8 bg-success-100 rounded-full flex items-center justify-center">
-                  <FaLightbulb className="h-5 w-5 text-success-600" />
-                </div>
-                <h3 className="text-xl font-bold text-success-700">
-                  Suggestions ({categorizedResults.suggestions.length})
-                </h3>
-              </div>
-              <div className="space-y-3">
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                    className="bg-white rounded-lg p-4 border border-success-200 hover-lift"
-                  >
-                    <div className="flex items-start space-x-3">
-                      <FaFileAlt className="h-4 w-4 text-success-500 mt-1 flex-shrink-0" />
-                      <div className="flex-1">
-                      <div className="space-y-3">
-                        {categorizedResults.suggestions.map((suggestion, suggestionIndex) => {
-                          // Extract section tag if it exists (e.g., [COVER], [TABLE OF CONTENTS])
-                          const sectionMatch = suggestion.text.match(/^\[([^\]]+)\]/);
-                          const sectionTag = sectionMatch ? sectionMatch[1] : null;
-                          const remainingText = sectionTag ? suggestion.text.replace(/^\[[^\]]+\]\s*/, '') : suggestion.text;
-                          
-                          return (
-                            <div key={suggestionIndex} className="flex items-start space-x-3 p-3 bg-success-25 rounded-lg border-l-4 border-success-400 hover:bg-success-50 transition-colors">
-                              <div className="flex-shrink-0 w-6 h-6 bg-success-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                {suggestionIndex + 1}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-wrap items-center gap-2 mb-2">
-                                  {sectionTag && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800 border border-success-200">
-                                      {sectionTag}
-                                    </span>
-                                  )}
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
-                                    Page {suggestion.page}
-                                  </span>
-                                </div>
-                                <p className="text-success-800 text-sm leading-relaxed font-medium">
-                                  {remainingText}
-                                </p>
-                        </div>
-                            </div>
-                          );
-                        })}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-              </div>
-            </motion.div>
-          )}
+          {categorizedResults.suggestions && categorizedResults.suggestions.length > 0 &&
+            renderResultSection(
+              categorizedResults.suggestions,
+              "Suggestions",
+              <FaLightbulb className="h-5 w-5 text-success-600" />,
+              "text-success-600",
+              "bg-gradient-to-br from-success-50 to-green-50",
+              "border-success-300",
+              0.5
+            )
+          }
 
-          {categorizedResults.enhancement && categorizedResults.enhancement.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-              className="glass-effect rounded-2xl p-6 border-2 border-success-300 bg-gradient-to-br from-success-50 to-green-50"
-            >
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-8 h-8 bg-success-100 rounded-full flex items-center justify-center">
-                  <FaLightbulb className="h-5 w-5 text-success-600" />
-                </div>
-                <h3 className="text-xl font-bold text-success-700">
-                  Enhancement Suggestions ({categorizedResults.enhancement.length})
-                </h3>
-              </div>
-              <div className="space-y-3">
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                    className="bg-white rounded-lg p-4 border border-success-200 hover-lift"
-                  >
-                    <div className="flex items-start space-x-3">
-                      <FaFileAlt className="h-4 w-4 text-success-500 mt-1 flex-shrink-0" />
-                      <div className="flex-1">
-                      <div className="space-y-3">
-                        {categorizedResults.enhancement.map((enhancement, enhancementIndex) => {
-                          // Extract section tag if it exists (e.g., [COVER], [TABLE OF CONTENTS])
-                          const sectionMatch = enhancement.text.match(/^\[([^\]]+)\]/);
-                          const sectionTag = sectionMatch ? sectionMatch[1] : null;
-                          const remainingText = sectionTag ? enhancement.text.replace(/^\[[^\]]+\]\s*/, '') : enhancement.text;
-                          
-                          return (
-                            <div key={enhancementIndex} className="flex items-start space-x-3 p-3 bg-success-25 rounded-lg border-l-4 border-success-400 hover:bg-success-50 transition-colors">
-                              <div className="flex-shrink-0 w-6 h-6 bg-success-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                {enhancementIndex + 1}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-wrap items-center gap-2 mb-2">
-                                  {sectionTag && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800 border border-success-200">
-                                      {sectionTag}
-                                    </span>
-                                  )}
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
-                                    Page {enhancement.page}
-                                  </span>
-                                </div>
-                                <p className="text-success-800 text-sm leading-relaxed font-medium">
-                                  {remainingText}
-                                </p>
-                        </div>
-                            </div>
-                          );
-                        })}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-              </div>
-            </motion.div>
-          )}
+          {categorizedResults.enhancement && categorizedResults.enhancement.length > 0 &&
+            renderResultSection(
+              categorizedResults.enhancement,
+              "Enhancement Suggestions",
+              <FaLightbulb className="h-5 w-5 text-success-600" />,
+              "text-success-600",
+              "bg-gradient-to-br from-success-50 to-green-50",
+              "border-success-300",
+              0.5
+            )
+          }
         </div>
       )}
 
@@ -426,8 +331,8 @@ export default function ResultDisplay({ results }) {
                     marginBottom: '12px',
                     transition: 'background-color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#ffebee'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#fff8f8'}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#ffebee')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#fff8f8')}
                   >
                     <div style={{
                       flexShrink: 0,
@@ -483,12 +388,12 @@ export default function ResultDisplay({ results }) {
                       }}>
                         {remainingText}
                       </p>
-              </div>
+                    </div>
                   </div>
                 );
               })}
-              </div>
             </div>
+          </div>
         </div>
       )}
 
@@ -534,10 +439,10 @@ export default function ResultDisplay({ results }) {
                     marginBottom: '12px',
                     transition: 'background-color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#fffbf0'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#fffdf7'}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fffbf0')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#fffdf7')}
                   >
-              <div style={{ 
+                    <div style={{ 
                       flexShrink: 0,
                       width: '24px',
                       height: '24px',
@@ -581,22 +486,22 @@ export default function ResultDisplay({ results }) {
                         }}>
                           Page {error.page}
                         </span>
-              </div>
+                      </div>
                       <p style={{
                         color: '#856404',
-                    fontSize: '14px',
-                    lineHeight: '1.5',
+                        fontSize: '14px',
+                        lineHeight: '1.5',
                         fontWeight: '500',
                         margin: 0
-                  }}>
+                      }}>
                         {remainingText}
                       </p>
                     </div>
                   </div>
                 );
               })}
-              </div>
             </div>
+          </div>
         </div>
       )}
 
@@ -642,10 +547,10 @@ export default function ResultDisplay({ results }) {
                     marginBottom: '12px',
                     transition: 'background-color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f0fff4'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#f8fff9'}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f0fff4')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f8fff9')}
                   >
-              <div style={{ 
+                    <div style={{ 
                       flexShrink: 0,
                       width: '24px',
                       height: '24px',
@@ -689,26 +594,24 @@ export default function ResultDisplay({ results }) {
                         }}>
                           Page {error.page}
                         </span>
-              </div>
+                      </div>
                       <p style={{
                         color: '#155724',
-                    fontSize: '14px',
-                    lineHeight: '1.5',
+                        fontSize: '14px',
+                        lineHeight: '1.5',
                         fontWeight: '500',
                         margin: 0
-                  }}>
+                      }}>
                         {remainingText}
                       </p>
                     </div>
                   </div>
                 );
               })}
-              </div>
             </div>
+          </div>
         </div>
       )}
-
-      
 
       {/* No Issues Message */}
       {hasOverallSummary && results.total_errors_found === 0 && (

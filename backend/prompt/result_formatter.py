@@ -4,6 +4,7 @@ Handles formatting of TU format analysis results and summaries
 """
 
 import logging
+from . import prompt_manager
 
 
 class ResultFormatter:
@@ -54,7 +55,7 @@ class ResultFormatter:
 • Total Issues Found: 0
 • Compliance Rate: 100%
 
-✅ EXCELLENT! No TU format violations detected.
+✅ EXCELLENT! {prompt_manager.prompt_manager.get_no_violations_phrase()}
 
 Your document appears to follow TU format standards correctly."""
             

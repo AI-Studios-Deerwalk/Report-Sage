@@ -1,51 +1,201 @@
-TU FORMAT STANDARDS AND RULES:
+# TU ACADEMIC DOCUMENT FORMATTING STANDARDS AND GUIDELINES
 
-DOCUMENT STRUCTURE:
-- Cover page (page 1) - no page number displayed
-- Table of contents
-- Main content sections in logical order
-- References section
-- Appendices (if applicable)
+## DOCUMENT STRUCTURE AND FLOW
 
-FORMATTING REQUIREMENTS:
-- Font: Times New Roman, 12pt throughout document
-- Line spacing: 1.5 throughout document
-- Margins: 1 inch (2.54 cm) on all sides
-- Page numbering: Start from page 2, bottom center or top right
-- Paragraph indentation: 0.5 inch first line indent
+### Project Proposal Structure
+1. **Cover Page**
+2. **Introduction**
+3. **Problem Statement**
+4. **Objectives**
+5. **Methodology**
+   - 5.1 Requirement Identification
+     - 5.1.1 Study of Existing System/Literature Review
+     - 5.1.2 Requirement Analysis
+   - 5.2 Feasibility Study
+     - 5.2.1 Technical Feasibility
+     - 5.2.2 Operational Feasibility
+     - 5.2.3 Economic Feasibility
+     - 5.2.4 Schedule Feasibility (Gantt Chart)
+   - 5.3 High Level System Design
+6. **Expected Outcomes**
+7. **References**
 
-HEADINGS AND SECTIONS:
-- Main headings: Bold, centered, 12pt Times New Roman
-- Subheadings: Bold, left-aligned, 12pt Times New Roman
-- Consistent numbering system (1., 1.1, 1.1.1)
-- Proper spacing before and after headings
+### Project Report Structure
+1. **Cover & Title Page**
+2. **Certificate Page**
+   - Supervisor Recommendation
+   - Head/Program Coordinator, Supervisor, Internal and External Examiners' Approval Letter
+3. **Acknowledgement**
+4. **Abstract Page**
+5. **Table of Contents**
+6. **List of Abbreviations, List of Figures, List of Tables**
+7. **Main Report** (see detailed chapter structure below)
+8. **References**
+9. **Bibliography** (if applicable)
+10. **Appendices** (Screenshots, Code Snippets, Supervisor Visit Logs)
 
-CITATIONS AND REFERENCES:
-- IEEE citation style required
-- In-text citations: [1], [2], [3] etc.
-- Reference list: Numbered, IEEE format
-- All sources must be properly cited
-- No missing or incomplete citations
+### Main Report Chapter Structure
 
-TABLE OF CONTENTS:
-- Must include all main sections and subsections
-- Page numbers must be accurate
-- Proper dot leaders between titles and page numbers
-- Consistent formatting throughout
+#### Chapter 1: Introduction
+- 1.1 Introduction
+- 1.2 Problem Statement
+- 1.3 Objectives
+- 1.4 Scope and Limitations
+- 1.5 Development Methodology
+- 1.6 Report Organization
 
-CONTENT REQUIREMENTS:
-- Clear, academic writing style
-- Proper grammar and spelling
-- Logical flow between sections
-- Adequate detail and explanation
-- Professional language throughout
+#### Chapter 2: Background Study and Literature Review
+- 2.1 Background Study (Fundamental theories, concepts, and terminologies)
+- 2.2 Literature Review (Similar/relevant projects and research)
 
-COMMON VIOLATIONS TO CHECK:
-- Missing or incorrect page numbers
-- Wrong font type or size
-- Incorrect margins or spacing
-- Poor citation format
-- Missing sections in table of contents
-- Inconsistent heading styles
-- Grammar and spelling errors
-- Poor document flow and organization
+#### Chapter 3: System Analysis
+- 3.1 System Analysis
+  - 3.1.1 Requirement Analysis
+    - Functional Requirements (Use case diagrams/descriptions)
+    - Non-functional Requirements
+  - 3.1.2 Feasibility Analysis
+    - Technical Feasibility
+    - Operational Feasibility
+    - Economic Feasibility
+    - Schedule Feasibility
+  - 3.1.3 System Analysis Approach
+    - **Structured Approach:** Data modeling (ER Diagrams), Process modeling (DFD)
+    - **Object-Oriented Approach:** Object modeling (Class/Object Diagrams), Dynamic modeling (State/Sequence Diagrams), Process modeling (Activity Diagrams)
+
+#### Chapter 4: System Design
+- 4.1 Design Approach
+  - **Structured Approach:** Database Design, Forms/Report Design, Interface Design
+  - **Object-Oriented Approach:** Refined diagrams, Component Diagrams, Deployment Diagrams
+- 4.2 Algorithm Details
+
+#### Chapter 5: Implementation and Testing
+- 5.1 Implementation
+  - 5.1.1 Tools Used (CASE tools, Programming languages, Database platforms)
+  - 5.1.2 Implementation Details of Modules
+- 5.2 Testing
+  - 5.2.1 Unit Testing Cases
+  - 5.2.2 System Testing Cases
+- 5.3 Result Analysis
+
+#### Chapter 6: Conclusion and Future Recommendations
+- 6.1 Conclusion
+- 6.2 Future Recommendations
+
+## FORMATTING STANDARDS
+
+### Page Setup and Layout
+- **Paper Size:** A4 (210 × 297 mm)
+- **Margins:**
+  - Top: 1 inch (2.54 cm)
+  - Bottom: 1 inch (2.54 cm)
+  - Left: 1.25 inches (3.17 cm)
+  - Right: 1 inch (2.54 cm)
+
+### Page Numbering
+- **Preliminary Pages:** Roman numerals (i, ii, iii, ...) starting from Certificate page
+  - Position: Bottom center
+- **Main Content:** Arabic numerals (1, 2, 3, ...) starting from Chapter 1
+  - Position: Bottom center
+- **Cover Page:** No page number displayed
+
+### Typography and Fonts
+- **Base Font:** Times New Roman throughout document
+- **Body Text:** 12pt, justified alignment
+- **Line Spacing:** 1.5 throughout document
+- **Paragraph Indentation:** 0.5 inch first line indent
+
+### Heading Hierarchy
+- **Chapter Headings:** 16pt, bold, centered, Times New Roman
+- **Section Headings (1.1, 2.1, etc.):** 14pt, bold, left-aligned, Times New Roman
+- **Subsection Headings (1.1.1, 2.1.1, etc.):** 12pt, bold, left-aligned, Times New Roman
+- **Consistent Numbering:** Use hierarchical numbering system (1., 1.1, 1.1.1)
+- **Spacing:** Proper spacing before and after all headings
+
+### Tables and Figures
+- **Alignment:** Center-aligned on page
+- **Figure Captions:** 12pt, bold, centered below figure
+- **Table Captions:** 12pt, bold, centered above table
+- **Numbering:** Sequential numbering (Figure 1.1, Table 2.3, etc.)
+
+### Table of Contents Requirements
+- **Coverage:** Include all main sections and subsections with accurate page numbers
+- **Formatting:** Dot leaders between titles and page numbers
+- **Consistency:** Uniform formatting throughout
+- **Alignment:** Proper indentation for subsection hierarchy
+
+## CITATION AND REFERENCING
+
+### IEEE Citation Standard
+- **In-text Citations:** Numbered format [1], [2], [3], etc.
+- **Reference List:** Numbered IEEE format in References section
+- **Bibliography:** Separate section for consulted but uncited sources
+- **Completeness:** All sources must be properly cited with complete information
+- **Consistency:** Uniform citation style throughout document
+
+### Reference Section Requirements
+- Sequential numbering [1], [2], [3]...
+- Complete bibliographic information
+- Proper IEEE formatting for different source types
+- Alphabetical ordering not required (use citation order)
+
+## CONTENT QUALITY STANDARDS
+
+### Writing Style
+- **Academic Tone:** Professional, formal language throughout
+- **Clarity:** Clear, concise expression of ideas
+- **Coherence:** Logical flow between sections and chapters
+- **Contextualization:** Avoid basic definitions; relate concepts to project work
+- **Grammar:** Proper grammar, spelling, and punctuation
+
+### Content Requirements
+- **Depth:** Adequate detail and technical explanation
+- **Relevance:** Content directly related to project objectives
+- **Analysis:** Critical analysis rather than mere description
+- **Integration:** Seamless connection between chapters
+- **Originality:** Original work with proper attribution of sources
+
+## QUALITY ASSURANCE CHECKLIST
+
+### Document Structure Verification
+- [ ] All required sections present and in correct order
+- [ ] Proper page numbering system implemented
+- [ ] Table of contents matches document structure
+- [ ] All figures and tables properly captioned and numbered
+
+### Formatting Compliance
+- [ ] Consistent Times New Roman 12pt font
+- [ ] Correct margins and spacing throughout
+- [ ] Proper heading hierarchy and formatting
+- [ ] Justified text alignment with appropriate indentation
+
+### Citation and Reference Audit
+- [ ] All sources properly cited in IEEE format
+- [ ] Reference list complete and properly formatted
+- [ ] No missing or incomplete citations
+- [ ] Bibliography section included if applicable
+
+### Content Quality Review
+- [ ] Professional academic writing style maintained
+- [ ] Logical flow and organization of ideas
+- [ ] Adequate technical depth and analysis
+- [ ] Proper grammar, spelling, and punctuation
+- [ ] Contextualized content relevant to project
+
+## SUBMISSION REQUIREMENTS
+
+### Final Document Assembly
+1. **Digital Format:** PDF format for electronic submission
+2. **Print Format:** High-quality printing on A4 paper
+3. **Binding:** As per institutional requirements
+4. **Copies:** Required number of copies as specified
+
+### Pre-Submission Checklist
+- [ ] Complete formatting review using this guide
+- [ ] Proofreading for language and technical accuracy
+- [ ] Verification of all citations and references
+- [ ] Final document structure and content review
+- [ ] Supervisor approval and sign-off
+
+---
+
+**Note:** Students must contextualize all technical concepts and methodologies with their specific project work rather than providing generic definitions. This document serves as the authoritative guide for all TU academic document preparation.

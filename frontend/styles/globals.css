@@ -2,11 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
-
 @layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    min-width: 320px;
+  }
+  
+  /* Ensure form elements respect container widths */
+  input, select, textarea, button {
+    max-width: 100%;
   }
 }
 
