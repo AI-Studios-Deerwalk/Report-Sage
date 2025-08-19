@@ -5,21 +5,14 @@ Pydantic schemas for User model validation and serialization
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, validator
-from enum import Enum
-
-
-class UserRole(str, Enum):
-    """User role enumeration for API"""
-    STUDENT = "student"
-    TEACHER = "teacher"
 
 
 class UserBase(BaseModel):
     """Base user schema with common fields"""
     email: EmailStr = Field(..., description="User's email address")
-    name: str = Field(..., min_length=1, max_length=255, description="User's full name")
-    college_name: str = Field(..., min_length=1, max_length=255, description="Name of the college/institution")
-    role: UserRole = Field(..., description="User's role (student or teacher)")
+    fname: str = Field(..., min_length=1, max_length=128, description="User's first name")
+    lname: str = Field(..., min_length=1, max_length=128, description="User's last name")
+    phone_number: Optional[str] = Field(None, max_length=20, description="User's phone number")
 
 
 class UserCreate(UserBase):
@@ -42,9 +35,9 @@ class UserCreate(UserBase):
 
 class UserUpdate(BaseModel):
     """Schema for updating user information"""
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
-    college_name: Optional[str] = Field(None, min_length=1, max_length=255)
-    role: Optional[UserRole] = None
+    fname: Optional[str] = Field(None, min_length=1, max_length=128)
+    lname: Optional[str] = Field(None, min_length=1, max_length=128)
+    phone_number: Optional[str] = Field(None, max_length=20)
     is_active: Optional[bool] = None
 
 

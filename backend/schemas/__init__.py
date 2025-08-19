@@ -5,7 +5,6 @@ Request and response models for API endpoints
 
 # Import schemas here
 from .user import (
-    UserRole,
     UserBase,
     UserCreate,
     UserUpdate,
@@ -20,7 +19,6 @@ from .user import (
 )
 
 __all__ = [
-    "UserRole",
     "UserBase",
     "UserCreate",
     "UserUpdate",

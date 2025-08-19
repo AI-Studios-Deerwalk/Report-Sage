@@ -4,6 +4,6 @@ SQLAlchemy ORM models for database tables
 """
 
 # Import models here
-from .user import User, UserRole
+from .user import User
 
-__all__ = ["User", "UserRole"]
+__all__ = ["User"]

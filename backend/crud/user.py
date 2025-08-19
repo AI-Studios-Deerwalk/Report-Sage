@@ -3,7 +3,6 @@ User CRUD operations
 Database operations for User model
 """
 
-import uuid
 from datetime import datetime
 from typing import Optional, List
 from sqlalchemy import and_, or_
@@ -11,9 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-from ..models.user import User, UserRole
-from ..schemas.user import UserCreate, UserUpdate, UserPasswordChange
-from ..utils.password import hash_password, verify_password
+from models.user import User
+from schemas.user import UserCreate, UserUpdate, UserPasswordChange
+from utils.password import hash_password, verify_password
 # Using standard Python exceptions for simplicity
 
 
@@ -46,9 +45,9 @@ class UserCRUD:
         user = User(
             email=user_data.email,
             password=hashed_password,
-            name=user_data.name,
-            college_name=user_data.college_name,
-            role=UserRole(user_data.role.value),  # Convert from schema enum to model enum
+            fname=user_data.fname,
+            lname=user_data.lname,
+            phone_number=user_data.phone_number,
         )
         
         session.add(user)
@@ -57,13 +56,13 @@ class UserCRUD:
         
         return user
     
-    async def get_by_id(self, session: AsyncSession, user_id: uuid.UUID) -> Optional[User]:
+    async def get_by_id(self, session: AsyncSession, user_id: int) -> Optional[User]:
         """
         Get user by ID
         
         Args:
             session: Database session
-            user_id: User UUID
+            user_id: User ID
             
         Returns:
             User object or None if not found
@@ -112,7 +111,6 @@ class UserCRUD:
         session: AsyncSession, 
         skip: int = 0, 
         limit: int = 100,
-        role: Optional[UserRole] = None,
         is_active: Optional[bool] = None,
         search: Optional[str] = None
     ) -> List[User]:
@@ -123,9 +121,8 @@ class UserCRUD:
             session: Database session
             skip: Number of records to skip
             limit: Maximum number of records to return
-            role: Filter by user role
             is_active: Filter by active status
-            search: Search in name, email, or college_name
+            search: Search in name or email
             
         Returns:
             List of user objects
@@ -135,9 +132,6 @@ class UserCRUD:
         # Apply filters
         conditions = []
         
-        if role is not None:
-            conditions.append(User.role == role)
-        
         if is_active is not None:
             conditions.append(User.is_active == is_active)
         
@@ -145,9 +139,9 @@ class UserCRUD:
             search_term = f"%{search}%"
             conditions.append(
                 or_(
-                    User.name.ilike(search_term),
-                    User.email.ilike(search_term),
-                    User.college_name.ilike(search_term)
+                    User.fname.ilike(search_term),
+                    User.lname.ilike(search_term),
+                    User.email.ilike(search_term)
                 )
             )
         
@@ -166,7 +160,7 @@ class UserCRUD:
     async def update(
         self, 
         session: AsyncSession, 
-        user_id: uuid.UUID, 
+        user_id: int, 
         user_data: UserUpdate
     ) -> Optional[User]:
         """
@@ -174,7 +168,7 @@ class UserCRUD:
         
         Args:
             session: Database session
-            user_id: User UUID
+            user_id: User ID
             user_data: User update data
             
         Returns:
@@ -188,11 +182,7 @@ class UserCRUD:
         update_data = user_data.dict(exclude_unset=True)
         
         for field, value in update_data.items():
-            if field == "role" and value is not None:
-                # Convert schema enum to model enum
-                setattr(user, field, UserRole(value.value))
-            else:
-                setattr(user, field, value)
+            setattr(user, field, value)
         
         # Update timestamp
         user.updated_at = datetime.utcnow()
@@ -202,13 +192,13 @@ class UserCRUD:
         
         return user
     
-    async def delete(self, session: AsyncSession, user_id: uuid.UUID) -> bool:
+    async def delete(self, session: AsyncSession, user_id: int) -> bool:
         """
         Soft delete user (set is_active to False)
         
         Args:
             session: Database session
-            user_id: User UUID
+            user_id: User ID
             
         Returns:
             True if user was deleted, False if not found
@@ -223,13 +213,13 @@ class UserCRUD:
         await session.flush()
         return True
     
-    async def hard_delete(self, session: AsyncSession, user_id: uuid.UUID) -> bool:
+    async def hard_delete(self, session: AsyncSession, user_id: int) -> bool:
         """
         Hard delete user from database
         
         Args:
             session: Database session
-            user_id: User UUID
+            user_id: User ID
             
         Returns:
             True if user was deleted, False if not found
@@ -271,7 +261,7 @@ class UserCRUD:
     async def change_password(
         self, 
         session: AsyncSession, 
-        user_id: uuid.UUID, 
+        user_id: int, 
         password_data: UserPasswordChange
     ) -> bool:
         """
@@ -279,7 +269,7 @@ class UserCRUD:
         
         Args:
             session: Database session
-            user_id: User UUID
+            user_id: User ID
             password_data: Password change data
             
         Returns:
@@ -303,13 +293,13 @@ class UserCRUD:
         await session.flush()
         return True
     
-    async def verify_email(self, session: AsyncSession, user_id: uuid.UUID) -> bool:
+    async def verify_email(self, session: AsyncSession, user_id: int) -> bool:
         """
         Mark user email as verified
         
         Args:
             session: Database session
-            user_id: User UUID
+            user_id: User ID
             
         Returns:
             True if email was verified, False if user not found
@@ -354,7 +344,6 @@ class UserCRUD:
     async def count_users(
         self, 
         session: AsyncSession,
-        role: Optional[UserRole] = None,
         is_active: Optional[bool] = None
     ) -> int:
         """
@@ -362,7 +351,6 @@ class UserCRUD:
         
         Args:
             session: Database session
-            role: Filter by user role
             is_active: Filter by active status
             
         Returns:
@@ -374,9 +362,6 @@ class UserCRUD:
         
         conditions = []
         
-        if role is not None:
-            conditions.append(User.role == role)
-        
         if is_active is not None:
             conditions.append(User.is_active == is_active)
         
@@ -386,33 +371,7 @@ class UserCRUD:
         result = await session.execute(query)
         return result.scalar()
     
-    async def get_users_by_college(
-        self, 
-        session: AsyncSession, 
-        college_name: str,
-        skip: int = 0,
-        limit: int = 100
-    ) -> List[User]:
-        """
-        Get users by college name
-        
-        Args:
-            session: Database session
-            college_name: College name to filter by
-            skip: Number of records to skip
-            limit: Maximum number of records to return
-            
-        Returns:
-            List of user objects from the specified college
-        """
-        result = await session.execute(
-            select(User)
-            .where(User.college_name == college_name)
-            .offset(skip)
-            .limit(limit)
-            .order_by(User.created_at.desc())
-        )
-        return result.scalars().all()
+
 
 
 # Create global instance

@@ -10,14 +10,18 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database.connection import get_db_session
-from ..crud import user_crud
-from ..models.user import User, UserRole
+from database.connection import get_db_session
+from crud import user_crud
+from models.user import User
 
 # JWT Configuration
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-this-in-production")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "super-secret-jwt-key-for-development-change-in-production-minimum-32-chars")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # 24 hours for development
+
+# Validate JWT configuration
+if len(SECRET_KEY) < 32:
+    raise ValueError("JWT_SECRET_KEY must be at least 32 characters long for security")
 
 # Security scheme
 security = HTTPBearer()
@@ -72,21 +76,42 @@ async def get_current_user(
         # Decode JWT token
         payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
+        
         if user_id is None:
             raise credentials_exception
-    except JWTError:
+            
+        # Check token expiration
+        exp = payload.get("exp")
+        if exp is None:
+            raise credentials_exception
+            
+        # Convert user_id to integer if needed
+        try:
+            user_id_int = int(user_id)
+        except ValueError:
+            raise credentials_exception
+            
+    except JWTError as e:
+        print(f"JWT Error: {e}")  # For debugging
+        raise credentials_exception
+    except Exception as e:
+        print(f"Token validation error: {e}")  # For debugging
         raise credentials_exception
     
     # Get user from database
-    user = await user_crud.get_by_id(session, user_id)
-    if user is None:
+    try:
+        user = await user_crud.get_by_id(session, user_id_int)
+        if user is None:
+            raise credentials_exception
+    except Exception as e:
+        print(f"Database error: {e}")  # For debugging
         raise credentials_exception
     
     # Check if user is active
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Inactive user"
+            detail="User account is inactive"
         )
     
     return user
@@ -134,46 +159,7 @@ async def get_verified_user(current_user: User = Depends(get_current_active_user
     return current_user
 
 
-async def require_teacher(current_user: User = Depends(get_current_active_user)) -> User:
-    """
-    Require teacher role
-    
-    Args:
-        current_user: Current active user
-        
-    Returns:
-        Teacher user object
-        
-    Raises:
-        HTTPException: If user is not a teacher
-    """
-    if current_user.role != UserRole.TEACHER:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Teacher access required"
-        )
-    return current_user
-
-
-async def require_student(current_user: User = Depends(get_current_active_user)) -> User:
-    """
-    Require student role
-    
-    Args:
-        current_user: Current active user
-        
-    Returns:
-        Student user object
-        
-    Raises:
-        HTTPException: If user is not a student
-    """
-    if current_user.role != UserRole.STUDENT:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Student access required"
-        )
-    return current_user
+# Role-specific dependencies removed as part of migration
 
 
 def create_token_response(user: User) -> dict:
@@ -196,5 +182,13 @@ def create_token_response(user: User) -> dict:
         "access_token": access_token,
         "token_type": "bearer",
         "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # seconds
-        "user": user.to_public_dict()
+        "user": {
+            "uid": str(user.uid),
+            "email": user.email,
+            "fname": user.fname,
+            "lname": user.lname,
+            "is_email_verified": user.is_email_verified,
+            "is_active": user.is_active,
+            "created_at": user.created_at.isoformat()
+        }
     }

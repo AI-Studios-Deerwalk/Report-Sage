@@ -6,9 +6,9 @@ User authentication endpoints (login, register, password management)
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database.connection import get_db_session
-from ..crud import user_crud
-from ..schemas.user import (
+from database.connection import get_db_session
+from crud import user_crud
+from schemas.user import (
     UserCreate, 
     UserLogin, 
     UserPasswordChange,
@@ -21,7 +21,7 @@ from .dependencies import (
     create_token_response,
     get_current_user
 )
-from ..models.user import User
+from models.user import User
 
 router = APIRouter()
 
@@ -36,9 +36,9 @@ async def register_user(
     
     - **email**: Valid email address (must be unique)
     - **password**: Strong password (min 8 chars, uppercase, lowercase, digit)
-    - **name**: Full name
-    - **college_name**: Name of college/institution
-    - **role**: Either 'student' or 'teacher'
+    - **fname**: First name
+    - **lname**: Last name
+    - **phone_number**: Optional phone number
     """
     try:
         # Create user

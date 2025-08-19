@@ -144,6 +144,20 @@ class PromptManager:
                 keywords.extend([word for word in words if len(word) > 3 and word.isalpha()])
         return list(set(keywords))
     
+    def get_suggestion_keywords(self):
+        """Extract suggestion keywords dynamically from feedback_instructions.txt"""
+        if not self.feedback_instructions:
+            return []
+            
+        keywords = []
+        lines = self.feedback_instructions.split('\n')
+        for line in lines:
+            line = line.strip()
+            if '[SUGGESTION]' in line or 'enhancement ideas' in line.lower() or 'optional' in line.lower():
+                words = line.lower().replace('-', ' ').replace('(', ' ').replace(')', ' ').split()
+                keywords.extend([word for word in words if len(word) > 3 and word.isalpha()])
+        return list(set(keywords))
+    
     def get_no_violations_phrase(self):
         """Extract no violations phrase from feedback_instructions.txt"""
         if not self.feedback_instructions:

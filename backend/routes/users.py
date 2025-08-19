@@ -8,14 +8,13 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database.connection import get_db_session
-from ..crud import user_crud
-from ..schemas.user import UserResponse, UserUpdate, UserResponsePrivate
-from ..models.user import User, UserRole
+from database.connection import get_db_session
+from crud import user_crud
+from schemas.user import UserResponse, UserUpdate, UserResponsePrivate
+from models.user import User
 from .dependencies import (
     get_current_active_user,
-    get_verified_user,
-    require_teacher
+    get_verified_user
 )
 
 router = APIRouter()
@@ -64,10 +63,10 @@ async def update_user_profile(
 async def get_users(
     skip: int = Query(0, ge=0, description="Number of users to skip"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of users to return"),
-    role: Optional[UserRole] = Query(None, description="Filter by user role"),
+    # role parameter removed as part of migration
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
     search: Optional[str] = Query(None, description="Search in name, email, or college"),
-    current_user: User = Depends(require_teacher),
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -85,7 +84,6 @@ async def get_users(
         session,
         skip=skip,
         limit=limit,
-        role=role,
         is_active=is_active,
         search=search
     )
@@ -95,9 +93,9 @@ async def get_users(
 
 @router.get("/count", response_model=dict)
 async def get_user_count(
-    role: Optional[UserRole] = Query(None, description="Filter by user role"),
+    # role parameter removed as part of migration
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
-    current_user: User = Depends(require_teacher),
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -108,12 +106,11 @@ async def get_user_count(
     
     Requires teacher authentication
     """
-    count = await user_crud.count_users(session, role=role, is_active=is_active)
+    count = await user_crud.count_users(session, is_active=is_active)
     
     return {
         "total_users": count,
         "filters": {
-            "role": role.value if role else None,
             "is_active": is_active
         }
     }
@@ -124,7 +121,7 @@ async def get_users_by_college(
     college_name: str,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    current_user: User = Depends(require_teacher),
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -149,7 +146,7 @@ async def get_users_by_college(
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user_by_id(
     user_id: uuid.UUID,
-    current_user: User = Depends(require_teacher),
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -174,7 +171,7 @@ async def get_user_by_id(
 async def update_user_by_id(
     user_id: uuid.UUID,
     user_update: UserUpdate,
-    current_user: User = Depends(require_teacher),
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -199,7 +196,7 @@ async def update_user_by_id(
 @router.delete("/{user_id}", response_model=dict)
 async def deactivate_user(
     user_id: uuid.UUID,
-    current_user: User = Depends(require_teacher),
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -224,7 +221,7 @@ async def deactivate_user(
 @router.delete("/{user_id}/permanent", response_model=dict)
 async def delete_user_permanently(
     user_id: uuid.UUID,
-    current_user: User = Depends(require_teacher),
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -249,7 +246,7 @@ async def delete_user_permanently(
 @router.post("/{user_id}/verify-email", response_model=dict)
 async def verify_user_email(
     user_id: uuid.UUID,
-    current_user: User = Depends(require_teacher),
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -276,7 +273,7 @@ async def get_my_students(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     search: Optional[str] = Query(None, description="Search students"),
-    current_user: User = Depends(require_teacher),
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -288,28 +285,24 @@ async def get_my_students(
     
     Requires teacher authentication
     """
-    # Get students from the same college as the teacher
+    # Get all active users (role filtering removed as part of migration)
     students = await user_crud.get_all(
         session,
         skip=skip,
         limit=limit,
-        role=UserRole.STUDENT,
         is_active=True,
         search=search
     )
     
-    # Filter by college (could also be done in the query)
-    college_students = [
-        student for student in students 
-        if student.college_name == current_user.college_name
-    ]
+    # College filtering removed as part of migration
+    college_students = students
     
     return college_students
 
 
 @router.get("/stats/dashboard", response_model=dict)
 async def get_dashboard_stats(
-    current_user: User = Depends(require_teacher),
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -321,28 +314,11 @@ async def get_dashboard_stats(
     # Get counts
     total_users = await user_crud.count_users(session)
     active_users = await user_crud.count_users(session, is_active=True)
-    students = await user_crud.count_users(session, role=UserRole.STUDENT)
-    teachers = await user_crud.count_users(session, role=UserRole.TEACHER)
     
-    # Get college-specific stats
-    college_users = await user_crud.get_users_by_college(
-        session, 
-        current_user.college_name, 
-        limit=1000
-    )
-    college_students = len([u for u in college_users if u.role == UserRole.STUDENT])
-    college_teachers = len([u for u in college_users if u.role == UserRole.TEACHER])
+    # College-specific stats removed as part of migration
     
     return {
         "total_users": total_users,
         "active_users": active_users,
-        "inactive_users": total_users - active_users,
-        "students": students,
-        "teachers": teachers,
-        "college_stats": {
-            "college_name": current_user.college_name,
-            "total_users": len(college_users),
-            "students": college_students,
-            "teachers": college_teachers
-        }
+        "inactive_users": total_users - active_users
     }

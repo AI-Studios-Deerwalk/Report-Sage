@@ -3,19 +3,10 @@ User model for the Report Rage application
 """
 
 from datetime import datetime
-from sqlalchemy import Column, String, Boolean, DateTime, Enum
+from sqlalchemy import Column, String, Boolean, DateTime, Integer
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
-import enum
 
 Base = declarative_base()
-
-
-class UserRole(enum.Enum):
-    """User role enumeration"""
-    STUDENT = "student"
-    TEACHER = "teacher"
 
 
 class User(Base):
@@ -25,20 +16,20 @@ class User(Base):
     
     # Primary key
     uid = Column(
-        UUID(as_uuid=True), 
+        Integer, 
         primary_key=True, 
-        default=uuid.uuid4,
+        autoincrement=True,
         index=True
     )
     
     # Basic info
     email = Column(String(255), unique=True, nullable=False, index=True)
     password = Column(String(255), nullable=False)  # Will store hashed password
-    name = Column(String(255), nullable=False)
+    fname = Column(String(128), nullable=False)  # First name
+    lname = Column(String(128), nullable=False)  # Last name
+    phone_number = Column(String(20), nullable=True)  # Phone number
     
-    # Academic info
-    college_name = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole), nullable=False)
+    # Academic info removed
     
     # Verification
     is_email_verified = Column(Boolean, default=False, nullable=False)
@@ -51,16 +42,16 @@ class User(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     
     def __repr__(self):
-        return f"<User(uid={self.uid}, email='{self.email}', name='{self.name}', role='{self.role.value}')>"
+        return f"<User(uid={self.uid}, email='{self.email}', name='{self.fname} {self.lname}')>"
     
     def to_dict(self):
         """Convert user object to dictionary for JSON serialization"""
         return {
-            "uid": str(self.uid),
+            "uid": self.uid,
             "email": self.email,
-            "name": self.name,
-            "college_name": self.college_name,
-            "role": self.role.value,
+            "fname": self.fname,
+            "lname": self.lname,
+            "phone_number": self.phone_number,
             "is_email_verified": self.is_email_verified,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
@@ -70,10 +61,10 @@ class User(Base):
     def to_public_dict(self):
         """Convert user object to dictionary without sensitive information"""
         return {
-            "uid": str(self.uid),
-            "name": self.name,
-            "college_name": self.college_name,
-            "role": self.role.value,
+            "uid": self.uid,
+            "fname": self.fname,
+            "lname": self.lname,
+            "phone_number": self.phone_number,
             "is_email_verified": self.is_email_verified,
             "created_at": self.created_at.isoformat()
         }

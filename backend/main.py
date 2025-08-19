@@ -48,7 +48,7 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
-# Include API routes
+# Include API routes (includes auth and user routes)
 app.include_router(api_router)
 
 # Dynamic executor - creates workers based on document size
@@ -94,7 +94,17 @@ class ErrorCategorizer:
 
 @app.get("/")
 async def root():
-    return {"message": "TU Report Analyzer Backend is running"}
+    return {
+        "message": "Report Rage API - TU Report Analyzer with Authentication",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "api_endpoints": {
+            "authentication": "/api/v1/auth",
+            "users": "/api/v1/users", 
+            "analysis": "/analyze",
+            "batch_analysis": "/analyze-batch"
+        }
+    }
 
 @app.get("/health")
 async def health_check():
@@ -255,7 +265,8 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
         # Parse the batch response with categorization
         categorized_results = {
             "errors": [],
-            "warnings": []
+            "warnings": [],
+            "suggestions": []
         }
         
         page_results = []
@@ -436,7 +447,13 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
                             categorized_violation["text"] = violation.strip()
                         categorized_violation["type"] = "warning"
                         categorized_results["warnings"].append(categorized_violation)
-
+                    elif "[SUGGESTION]" in violation or "suggestion" in violation_lower or "consider" in violation_lower or "recommend" in violation_lower:
+                        if "[SUGGESTION]" in violation:
+                            categorized_violation["text"] = violation.replace("[SUGGESTION]", "").strip()
+                        else:
+                            categorized_violation["text"] = violation.strip()
+                        categorized_violation["type"] = "suggestion"
+                        categorized_results["suggestions"].append(categorized_violation)
                     else:
                         # Default to error if no category specified but it's clearly a violation
                         if prompt_manager.get_no_violations_phrase().lower() not in violation_lower:
@@ -446,7 +463,8 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
         # Count total issues
         total_errors = len(categorized_results["errors"])
         total_warnings = len(categorized_results["warnings"])
-        total_issues = total_errors + total_warnings
+        total_suggestions = len(categorized_results["suggestions"])
+        total_issues = total_errors + total_warnings + total_suggestions
         
         # Create overall summary
         if total_issues > 0:
@@ -454,9 +472,9 @@ async def analyze_pdf_batch(file: UploadFile = File(...)):
 
 📊 SUMMARY:
 • Pages Analyzed: {len(page_results)}
-• Errors: {total_errors} | Warnings: {total_warnings}
+• Errors: {total_errors} | Warnings: {total_warnings} | Suggestions: {total_suggestions}
 
-Focus on fixing ERRORS first, then address WARNINGS."""
+Focus on fixing ERRORS first, then WARNINGS, then consider SUGGESTIONS."""
         else:
             overall_summary = f"""TU FORMAT ANALYSIS COMPLETE
 
