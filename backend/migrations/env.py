@@ -13,6 +13,7 @@ backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
 # Import your models and database config
+from models import User, UserOTP
 from models.user import Base
 from database.config import db_config
 

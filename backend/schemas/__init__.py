@@ -17,6 +17,16 @@ from .user import (
     PasswordResetRequest,
     PasswordResetConfirm,
 )
+from .user_otp import (
+    UserOTPBase,
+    UserOTPCreate,
+    UserOTPUpdate,
+    UserOTPResponse,
+    UserOTPVerify,
+    UserOTPRequest,
+    UserOTPResend,
+    UserOTPStatus,
+)
 
 __all__ = [
     "UserBase",
@@ -30,4 +40,12 @@ __all__ = [
     "EmailVerificationConfirm",
     "PasswordResetRequest",
     "PasswordResetConfirm",
+    "UserOTPBase",
+    "UserOTPCreate",
+    "UserOTPUpdate",
+    "UserOTPResponse",
+    "UserOTPVerify",
+    "UserOTPRequest",
+    "UserOTPResend",
+    "UserOTPStatus",
 ]

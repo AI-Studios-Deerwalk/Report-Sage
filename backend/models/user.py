@@ -5,6 +5,7 @@ User model for the Report Rage application
 from datetime import datetime
 from sqlalchemy import Column, String, Boolean, DateTime, Integer
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
@@ -40,6 +41,9 @@ class User(Base):
     
     # Status
     is_active = Column(Boolean, default=True, nullable=False)
+    
+    # Relationships
+    otps = relationship("UserOTP", back_populates="user")
     
     def __repr__(self):
         return f"<User(uid={self.uid}, email='{self.email}', name='{self.fname} {self.lname}')>"
