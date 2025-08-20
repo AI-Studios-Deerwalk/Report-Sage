@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.connection import get_db_session
-from crud import user_crud
+from crud import user_crud, user_otp_crud
 from schemas.user import (
     UserCreate, 
     UserLogin, 
@@ -22,6 +22,7 @@ from .dependencies import (
     get_current_user
 )
 from models.user import User
+from utils.email_service import email_service
 
 router = APIRouter()
 
@@ -32,7 +33,7 @@ async def register_user(
     session: AsyncSession = Depends(get_db_session)
 ):
     """
-    Register a new user
+    Register a new user and send email verification OTP
     
     - **email**: Valid email address (must be unique)
     - **password**: Strong password (min 8 chars, uppercase, lowercase, digit)
@@ -44,18 +45,46 @@ async def register_user(
         # Create user
         user = await user_crud.create(session, user_data)
         
+        # Create OTP for email verification
+        otp = await user_otp_crud.create_otp(
+            session,
+            user_id=user.uid,
+            expires_in_minutes=10,
+            otp_length=6
+        )
+        
+        # Send OTP email
+        email_sent = await email_service.send_otp_email(
+            recipient_email=user.email,
+            recipient_name=f"{user.fname} {user.lname}",
+            otp_code=otp.otp_code
+        )
+        
+        await session.commit()
+        
         # Create token response
         token_response = create_token_response(user)
         
         return {
             **token_response,
-            "message": "User registered successfully. Please verify your email."
+            "message": "User registered successfully. Please check your email for verification code.",
+            "otp_sent": email_sent,
+            "user_id": user.uid,
+            "email_sent_to": user.email,
+            "otp_expires_in": 600  # 10 minutes in seconds
         }
         
     except ValueError as e:
+        await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
+        )
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to register user"
         )
 
 
