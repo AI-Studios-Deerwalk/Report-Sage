@@ -14,10 +14,10 @@ import os
 # Add the parent directory to the Python path (adjust depth if needed)
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from backend.database.connection import db_manager
-from backend.models.admin import Admin
-from backend.schemas.admin import AdminCreate
-from backend.utils.password import hash_password
+from database.connection import db_manager
+from models.admin import Admin
+from schemas.admin import AdminCreate
+from utils.password import hash_password
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +29,9 @@ class AdminSeeder:
         # Replace with your real 4 admins (emails/passwords)
         self.admins: List[AdminCreate] = [
             AdminCreate(email="swornima.shrestha04@gmail.com", password="Swornima123"),
-            # AdminCreate(email="admin2@example.com", password="AdminPass123"),
-            # AdminCreate(email="admin3@example.com", password="AdminPass123"),
-            # AdminCreate(email="admin4@example.com", password="AdminPass123"),
+            AdminCreate(email="ason.gautam12@gmail.com", password="#asonG12"),
+            AdminCreate(email="bidushi.thapa05@gmail.com", password="#deerwalkD12"),
+            AdminCreate(email="admin@admin.com", password="aprojectisnevertrulycomplete"),
         ]
 
     async def seed_admins(self, session: AsyncSession) -> List[int]:

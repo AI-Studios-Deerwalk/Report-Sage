@@ -13,9 +13,9 @@ import os
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from backend.database.connection import db_manager
-from backend.crud.user import user_crud
-from backend.schemas.user import UserCreate
+from database.connection import db_manager
+from crud.user import user_crud
+from schemas.user import UserCreate
 
 
 logger = logging.getLogger(__name__)
