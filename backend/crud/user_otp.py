@@ -36,7 +36,8 @@ class UserOTPCRUD:
         self, 
         session: AsyncSession, 
         user_id: int, 
-        expires_in_minutes: int = 10,
+        for_purpose: str = "verification",
+        expires_in_minutes: int = 2,
         otp_length: int = 6
     ) -> UserOTP:
         """
@@ -45,6 +46,7 @@ class UserOTPCRUD:
         Args:
             session: Database session
             user_id: User ID
+            for_purpose: Purpose of the OTP (verification or forgot_password)
             expires_in_minutes: Minutes until OTP expires (default: 10)
             otp_length: Length of OTP code (default: 6)
             
@@ -73,6 +75,7 @@ class UserOTPCRUD:
             user_id=user_id,
             otp_code=otp_code,
             expires_at=expires_at,
+            for_purpose=for_purpose,
             is_used=False,
             attempts=0
         )
@@ -102,7 +105,8 @@ class UserOTPCRUD:
     async def get_valid_otp_by_user(
         self, 
         session: AsyncSession, 
-        user_id: int
+        user_id: int,
+        for_purpose: Optional[str] = None
     ) -> Optional[UserOTP]:
         """
         Get the most recent valid OTP for a user
@@ -110,27 +114,32 @@ class UserOTPCRUD:
         Args:
             session: Database session
             user_id: User ID
+            for_purpose: Optional purpose filter
             
         Returns:
             Valid OTP object or None if not found
         """
-        result = await session.execute(
-            select(UserOTP)
-            .where(
-                and_(
-                    UserOTP.user_id == user_id,
-                    UserOTP.is_used == False,
-                    UserOTP.expires_at > datetime.utcnow()
-                )
+        query = select(UserOTP).where(
+            and_(
+                UserOTP.user_id == user_id,
+                UserOTP.is_used == False,
+                UserOTP.expires_at > datetime.utcnow()
             )
-            .order_by(UserOTP.created_at.desc())
         )
+        
+        if for_purpose:
+            query = query.where(UserOTP.for_purpose == for_purpose)
+        
+        query = query.order_by(UserOTP.created_at.desc())
+        
+        result = await session.execute(query)
         return result.scalar_one_or_none()
     
     async def get_all_otps_by_user(
         self, 
         session: AsyncSession, 
         user_id: int,
+        for_purpose: Optional[str] = None,
         skip: int = 0,
         limit: int = 50
     ) -> List[UserOTP]:
@@ -140,26 +149,29 @@ class UserOTPCRUD:
         Args:
             session: Database session
             user_id: User ID
+            for_purpose: Optional purpose filter
             skip: Number of records to skip
             limit: Maximum number of records to return
             
         Returns:
             List of OTP objects
         """
-        result = await session.execute(
-            select(UserOTP)
-            .where(UserOTP.user_id == user_id)
-            .order_by(UserOTP.created_at.desc())
-            .offset(skip)
-            .limit(limit)
-        )
+        query = select(UserOTP).where(UserOTP.user_id == user_id)
+        
+        if for_purpose:
+            query = query.where(UserOTP.for_purpose == for_purpose)
+        
+        query = query.order_by(UserOTP.created_at.desc()).offset(skip).limit(limit)
+        
+        result = await session.execute(query)
         return result.scalars().all()
     
     async def verify_otp(
         self, 
         session: AsyncSession, 
         user_id: int, 
-        otp_code: str
+        otp_code: str,
+        for_purpose: Optional[str] = None
     ) -> tuple[bool, Optional[UserOTP]]:
         """
         Verify an OTP code for a user
@@ -168,12 +180,13 @@ class UserOTPCRUD:
             session: Database session
             user_id: User ID
             otp_code: OTP code to verify
+            for_purpose: Optional purpose filter
             
         Returns:
             Tuple of (is_valid, otp_object)
         """
         # Get the most recent valid OTP for the user
-        otp = await self.get_valid_otp_by_user(session, user_id)
+        otp = await self.get_valid_otp_by_user(session, user_id, for_purpose)
         
         if not otp:
             return False, None
@@ -195,7 +208,8 @@ class UserOTPCRUD:
     async def invalidate_user_otps(
         self, 
         session: AsyncSession, 
-        user_id: int
+        user_id: int,
+        for_purpose: Optional[str] = None
     ) -> int:
         """
         Invalidate all unused OTPs for a user
@@ -203,18 +217,22 @@ class UserOTPCRUD:
         Args:
             session: Database session
             user_id: User ID
+            for_purpose: Optional purpose filter
             
         Returns:
             Number of OTPs invalidated
         """
-        result = await session.execute(
-            select(UserOTP).where(
-                and_(
-                    UserOTP.user_id == user_id,
-                    UserOTP.is_used == False
-                )
+        query = select(UserOTP).where(
+            and_(
+                UserOTP.user_id == user_id,
+                UserOTP.is_used == False
             )
         )
+        
+        if for_purpose:
+            query = query.where(UserOTP.for_purpose == for_purpose)
+        
+        result = await session.execute(query)
         otps = result.scalars().all()
         
         for otp in otps:
@@ -252,7 +270,8 @@ class UserOTPCRUD:
     async def get_otp_status(
         self, 
         session: AsyncSession, 
-        user_id: int
+        user_id: int,
+        for_purpose: Optional[str] = None
     ) -> dict:
         """
         Get OTP status for a user
@@ -260,16 +279,18 @@ class UserOTPCRUD:
         Args:
             session: Database session
             user_id: User ID
+            for_purpose: Optional purpose filter
             
         Returns:
             Dictionary with OTP status information
         """
         # Get valid OTP
-        valid_otp = await self.get_valid_otp_by_user(session, user_id)
+        valid_otp = await self.get_valid_otp_by_user(session, user_id, for_purpose)
         
         if not valid_otp:
             return {
                 "has_valid_otp": False,
+                "for_purpose": for_purpose,
                 "expires_in": None,
                 "attempts_remaining": None
             }
@@ -284,6 +305,7 @@ class UserOTPCRUD:
         
         return {
             "has_valid_otp": True,
+            "for_purpose": valid_otp.for_purpose,
             "expires_in": expires_in_seconds,
             "attempts_remaining": attempts_remaining
         }
@@ -292,7 +314,8 @@ class UserOTPCRUD:
         self, 
         session: AsyncSession, 
         user_id: int,
-        expires_in_minutes: int = 10
+        for_purpose: str = "verification",
+        expires_in_minutes: int = 2
     ) -> Optional[UserOTP]:
         """
         Resend OTP for a user (invalidate old ones and create new)
@@ -300,19 +323,21 @@ class UserOTPCRUD:
         Args:
             session: Database session
             user_id: User ID
+            for_purpose: Purpose of the OTP
             expires_in_minutes: Minutes until new OTP expires
             
         Returns:
             New OTP object or None if user not found
         """
         try:
-            # Invalidate existing OTPs
-            await self.invalidate_user_otps(session, user_id)
+            # Invalidate existing OTPs for this purpose
+            await self.invalidate_user_otps(session, user_id, for_purpose)
             
             # Create new OTP
             new_otp = await self.create_otp(
                 session, 
                 user_id, 
+                for_purpose,
                 expires_in_minutes
             )
             
@@ -375,6 +400,7 @@ class UserOTPCRUD:
         self, 
         session: AsyncSession, 
         user_id: int,
+        for_purpose: Optional[str] = None,
         is_used: Optional[bool] = None
     ) -> int:
         """
@@ -383,6 +409,7 @@ class UserOTPCRUD:
         Args:
             session: Database session
             user_id: User ID
+            for_purpose: Optional purpose filter
             is_used: Filter by used status
             
         Returns:
@@ -391,6 +418,9 @@ class UserOTPCRUD:
         from sqlalchemy import func
         
         query = select(func.count(UserOTP.id)).where(UserOTP.user_id == user_id)
+        
+        if for_purpose:
+            query = query.where(UserOTP.for_purpose == for_purpose)
         
         if is_used is not None:
             query = query.where(UserOTP.is_used == is_used)

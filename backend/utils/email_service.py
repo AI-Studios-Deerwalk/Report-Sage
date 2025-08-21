@@ -10,6 +10,8 @@ from typing import Optional
 import os
 from dotenv import load_dotenv
 import logging
+import secrets
+import string
 
 load_dotenv()
 
@@ -26,10 +28,14 @@ class EmailService:
         self.smtp_username = os.getenv("SMTP_USERNAME")
         self.smtp_password = os.getenv("SMTP_PASSWORD")
         self.from_email = os.getenv("FROM_EMAIL", self.smtp_username)
-        self.from_name = os.getenv("FROM_NAME", "Report Rage")
+        self.from_name = os.getenv("FROM_NAME", "DWIT Academia")
         
         if not self.smtp_username or not self.smtp_password:
             logger.warning("SMTP credentials not configured. Email sending will be disabled.")
+    
+    def generate_otp(self, length: int = 6) -> str:
+        """Generate a random OTP code"""
+        return ''.join(secrets.choice(string.digits) for _ in range(length))
     
     def _create_smtp_connection(self) -> Optional[smtplib.SMTP]:
         """
@@ -66,7 +72,7 @@ class EmailService:
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Email Verification - Report Rage</title>
+            <title>Email Verification - DWIT Academia</title>
             <style>
                 body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
                 .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
@@ -81,12 +87,12 @@ class EmailService:
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>Report Rage</h1>
+                    <h1>DWIT Academia</h1>
                     <p>Email Verification</p>
                 </div>
                 <div class="content">
                     <h2>Hello {recipient_name}!</h2>
-                    <p>Thank you for signing up with Report Rage. To complete your registration, please verify your email address using the OTP code below:</p>
+                    <p>Thank you for signing up with DWIT Academia. To complete your registration, please verify your email address using the OTP code below:</p>
                     
                     <div class="otp-box">
                         <p>Your verification code is:</p>
@@ -95,16 +101,16 @@ class EmailService:
                     </div>
                     
                     <div class="warning">
-                        <strong>Security Note:</strong> Never share this code with anyone. Report Rage will never ask for this code via phone or email.
+                        <strong>Security Note:</strong> Never share this code with anyone. DWIT Academia will never ask for this code via phone or email.
                     </div>
                     
                     <p>If you didn't request this verification, please ignore this email or contact our support team.</p>
                     
-                    <p>Best regards,<br>The Report Rage Team</p>
+                    <p>Best regards,<br>The DWIT Academia Team</p>
                 </div>
                 <div class="footer">
                     <p>This is an automated message. Please do not reply to this email.</p>
-                    <p>&copy; 2024 Report Rage. All rights reserved.</p>
+                    <p>&copy; 2024 DWIT Academia. All rights reserved.</p>
                 </div>
             </div>
         </body>
@@ -113,38 +119,33 @@ class EmailService:
         
         # Text version
         text_content = f"""
-        Report Rage - Email Verification
+        DWIT Academia - Email Verification
         
         Hello {recipient_name}!
         
-        Thank you for signing up with Report Rage. To complete your registration, please verify your email address using the OTP code below:
+        Thank you for signing up with DWIT Academia. To complete your registration, please verify your email address using the OTP code below:
         
         Your verification code is: {otp_code}
         
         This code will expire in 10 minutes.
         
-        Security Note: Never share this code with anyone. Report Rage will never ask for this code via phone or email.
+        Security Note: Never share this code with anyone. DWIT Academia will never ask for this code via phone or email.
         
         If you didn't request this verification, please ignore this email or contact our support team.
         
         Best regards,
-        The Report Rage Team
+        The DWIT Academia Team
         
         ---
         This is an automated message. Please do not reply to this email.
-        © 2024 Report Rage. All rights reserved.
+        © 2024 DWIT Academia. All rights reserved.
         """
         
         return html_content, text_content
     
-    async def send_otp_email(
-        self, 
-        recipient_email: str, 
-        recipient_name: str, 
-        otp_code: str
-    ) -> bool:
+    def send_otp_email(self, recipient_email: str, recipient_name: str, otp_code: str) -> bool:
         """
-        Send OTP verification email
+        Send OTP verification email (synchronous version for backward compatibility)
         
         Args:
             recipient_email: Email address to send to
@@ -155,13 +156,13 @@ class EmailService:
             True if email sent successfully, False otherwise
         """
         if not self.smtp_username or not self.smtp_password:
-            logger.warning(f"SMTP not configured. Would send OTP {otp_code} to {recipient_email}")
+            logger.warning(f"SMTP not configured. OTP for {recipient_email}: {otp_code}")
             return False
         
         try:
             # Create message
             message = MIMEMultipart("alternative")
-            message["Subject"] = f"Your Report Rage Verification Code: {otp_code}"
+            message["Subject"] = f"Your DWIT Academia Verification Code: {otp_code}"
             message["From"] = f"{self.from_name} <{self.from_email}>"
             message["To"] = recipient_email
             
@@ -192,6 +193,25 @@ class EmailService:
             logger.error(f"Failed to send OTP email to {recipient_email}: {e}")
             return False
     
+    async def send_otp_email_async(
+        self, 
+        recipient_email: str, 
+        recipient_name: str, 
+        otp_code: str
+    ) -> bool:
+        """
+        Send OTP verification email (async version)
+        
+        Args:
+            recipient_email: Email address to send to
+            recipient_name: Name of the recipient
+            otp_code: OTP code to send
+            
+        Returns:
+            True if email sent successfully, False otherwise
+        """
+        return self.send_otp_email(recipient_email, recipient_name, otp_code)
+    
     async def send_welcome_email(
         self, 
         recipient_email: str, 
@@ -214,7 +234,7 @@ class EmailService:
         try:
             # Create message
             message = MIMEMultipart("alternative")
-            message["Subject"] = "Welcome to Report Rage!"
+            message["Subject"] = "Welcome to DWIT Academia!"
             message["From"] = f"{self.from_name} <{self.from_email}>"
             message["To"] = recipient_email
             
@@ -224,7 +244,7 @@ class EmailService:
             <html>
             <head>
                 <meta charset="utf-8">
-                <title>Welcome to Report Rage</title>
+                <title>Welcome to DWIT Academia</title>
                 <style>
                     body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
                     .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
@@ -235,14 +255,14 @@ class EmailService:
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>Welcome to Report Rage!</h1>
+                        <h1>Welcome to DWIT Academia!</h1>
                     </div>
                     <div class="content">
                         <h2>Hello {recipient_name}!</h2>
-                        <p>Welcome to Report Rage! Your email has been successfully verified and your account is now active.</p>
+                        <p>Welcome to DWIT Academia! Your email has been successfully verified and your account is now active.</p>
                         <p>You can now start using our platform to analyze and improve your reports.</p>
                         <p>If you have any questions, feel free to contact our support team.</p>
-                        <p>Best regards,<br>The Report Rage Team</p>
+                        <p>Best regards,<br>The DWIT Academia Team</p>
                     </div>
                 </div>
             </body>
@@ -250,18 +270,18 @@ class EmailService:
             """
             
             text_content = f"""
-            Welcome to Report Rage!
+            Welcome to DWIT Academia!
             
             Hello {recipient_name}!
             
-            Welcome to Report Rage! Your email has been successfully verified and your account is now active.
+            Welcome to DWIT Academia! Your email has been successfully verified and your account is now active.
             
             You can now start using our platform to analyze and improve your reports.
             
             If you have any questions, feel free to contact our support team.
             
             Best regards,
-            The Report Rage Team
+            The DWIT Academia Team
             """
             
             # Create MIME parts

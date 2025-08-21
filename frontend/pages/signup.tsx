@@ -39,7 +39,7 @@ export default function Signup() {
       }
       
       // Call the register function from AuthContext
-      await register({
+      const registrationResult = await register({
         email: formData.studentEmail,
         password: formData.password,
         fname: formData.firstName,
@@ -50,12 +50,28 @@ export default function Signup() {
       // Show success message
       toast({
         title: "Account created successfully",
-        description: "Please log in with your new account",
+        description: registrationResult.email_sent 
+          ? "Please check your email for verification code" 
+          : "Verification code generated. Check console if email not configured.",
         variant: "success",
       });
       
-      // Redirect to login page
-      router.push("/login");
+      // Store verification data in localStorage as backup
+      localStorage.setItem('pendingVerificationUserId', registrationResult.user_id.toString())
+      localStorage.setItem('pendingVerificationEmail', formData.studentEmail)
+      
+      // Clear any existing countdown and start fresh
+      localStorage.removeItem('otpCountdown')
+      localStorage.removeItem('otpStartTime')
+      
+      // Redirect to OTP verification page with user info
+      router.push({
+        pathname: "/verify-otp",
+        query: {
+          userId: registrationResult.user_id,
+          email: formData.studentEmail
+        }
+      });
     } catch (err: any) {
       console.error("Signup error:", err);
       setError(err.message || "Failed to create account. Please try again.");
@@ -67,8 +83,8 @@ export default function Signup() {
   return (
     <>
       <Head>
-        <title>Sign Up - Report Rage</title>
-        <meta name="description" content="Create your Report Rage account to get started" />
+        <title>Sign Up - DWIT Academia</title>
+        <meta name="description" content="Create your DWIT Academia account to get started" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

@@ -96,7 +96,7 @@ class ErrorCategorizer:
 @app.get("/")
 async def root():
     return {
-        "message": "Report Rage API - TU Report Analyzer with Authentication",
+        "message": "DWIT Academia API - TU Report Analyzer with Authentication",
         "version": "1.0.0",
         "docs": "/docs",
         "api_endpoints": {
