@@ -4,11 +4,11 @@ User OTP model for the Report Rage application
 
 from datetime import datetime
 from sqlalchemy import Column, String, Boolean, DateTime, Integer, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+
 from sqlalchemy.orm import relationship
 
-Base = declarative_base()
 
+from models.base import Base
 
 class UserOTP(Base):
     """User OTP model for one-time password verification"""
