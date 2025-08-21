@@ -100,3 +100,4 @@ temp/
 
 # Sentry Config File
 .sentryclirc
+.next/
