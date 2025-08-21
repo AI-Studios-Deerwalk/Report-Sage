@@ -28,6 +28,10 @@ from .user_otp import (
     UserOTPStatus,
 )
 
+# For admin schemas
+from .admin import *
+
+
 __all__ = [
     "UserBase",
     "UserCreate",

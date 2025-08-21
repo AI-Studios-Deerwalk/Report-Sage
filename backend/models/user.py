@@ -4,10 +4,10 @@ User model for the DWIT Academia application
 
 from datetime import datetime
 from sqlalchemy import Column, String, Boolean, DateTime, Integer
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
-Base = declarative_base()
+from models.base import Base
+
 
 
 class User(Base):

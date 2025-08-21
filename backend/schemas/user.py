@@ -43,7 +43,7 @@ class UserUpdate(BaseModel):
 
 class UserResponse(UserBase):
     """Schema for user response (public information)"""
-    uid: str = Field(..., description="User's unique identifier")
+    uid: int = Field(..., description="User's unique identifier")
     is_email_verified: bool = Field(..., description="Whether email is verified")
     created_at: datetime = Field(..., description="When the user was created")
     is_active: bool = Field(..., description="Whether the user account is active")

@@ -14,6 +14,7 @@ class OTPPurpose(enum.Enum):
     VERIFICATION = "verification"
     FORGOT_PASSWORD = "forgot_password"
 
+from models.base import Base
 
 class UserOTP(Base):
     """User OTP model for one-time password verification"""
