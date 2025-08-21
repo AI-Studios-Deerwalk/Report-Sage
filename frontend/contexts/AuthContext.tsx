@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authAPI } from '@/lib/api';
+import { authAPI, OTPPurpose } from '@/lib/api';
 import { tokenStorage, type TokenData } from '@/lib/jwt';
 
 // Types
@@ -13,6 +13,15 @@ interface User {
   is_email_verified: boolean;
   is_active: boolean;
   created_at: string;
+}
+
+interface RegistrationResult {
+  user_id: number;
+  email_sent: boolean;
+  otp_expires_in: number;
+  access_token: string;
+  token_type: string;
+  user: User;
 }
 
 interface AuthContextType {
@@ -27,7 +36,9 @@ interface AuthContextType {
     fname: string;
     lname: string;
     phone_number?: string;
-  }) => Promise<void>;
+  }) => Promise<RegistrationResult>;
+  verifyOTP: (userId: number, otpCode: string, forPurpose?: OTPPurpose) => Promise<void>;
+  resendOTP: (userId: number, forPurpose?: OTPPurpose) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -87,18 +98,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               // If token is truly invalid, the API interceptor will handle logout
             }
           }
-        } else {
-          // No valid token found, clear any stale data
-          tokenStorage.clearToken();
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
-        // Only clear tokens if there's a critical error, not just API failures
-        if (!tokenStorage.getToken()) {
-          tokenStorage.clearToken();
-          setToken(null);
-          setUser(null);
-        }
+        console.error('Auth initialization error:', error);
       } finally {
         setIsLoading(false);
       }
@@ -110,15 +112,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     try {
       const response = await authAPI.login({ email, password });
-      const tokenData: TokenData = response.data;
+      const { access_token, token_type, user: userData } = response.data;
 
-      // Store auth data using JWT utilities
-      tokenStorage.setToken(tokenData);
+      // Store token and user data
+      tokenStorage.setToken({
+        access_token,
+        token_type,
+        expires_in: 86400, // 24 hours
+        user: userData
+      });
+
+      setToken(access_token);
+      setUser(userData);
       
-      setToken(tokenData.access_token);
-      setUser(tokenData.user);
-      
-      console.log('✅ Login successful for user:', tokenData.user.email);
+      console.log('✅ Login successful for user:', email);
     } catch (error: any) {
       console.error('Login error:', error);
       const errorMessage = error.response?.data?.detail || 'Login failed. Please check your credentials.';
@@ -135,19 +142,61 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }) => {
     try {
       const response = await authAPI.register(userData);
-      const tokenData: TokenData = response.data;
+      const registrationData = response.data;
 
-      // Store auth data using JWT utilities
-      tokenStorage.setToken(tokenData);
+      // Store token and user data (user can now access protected routes)
+      tokenStorage.setToken({
+        access_token: registrationData.access_token,
+        token_type: registrationData.token_type,
+        expires_in: 86400, // 24 hours
+        user: registrationData.user
+      });
+
+      setToken(registrationData.access_token);
+      setUser(registrationData.user);
+
+      // Don't automatically log in - user needs to verify OTP first
+      console.log('✅ Registration successful for user:', userData.email);
+      console.log('📧 OTP sent:', registrationData.email_sent);
       
-      setToken(tokenData.access_token);
-      setUser(tokenData.user);
-      
-      console.log('✅ Registration successful for user:', tokenData.user.email);
+      return {
+        user_id: registrationData.user_id,
+        email_sent: registrationData.email_sent,
+        otp_expires_in: registrationData.otp_expires_in,
+        access_token: registrationData.access_token,
+        token_type: registrationData.token_type,
+        user: registrationData.user
+      };
     } catch (error: any) {
       console.error('Registration error:', error);
       const errorMessage = error.response?.data?.detail || 'Registration failed. Please try again.';
       throw new Error(errorMessage);
+    }
+  };
+
+  const verifyOTP = async (userId: number, otpCode: string, forPurpose: OTPPurpose = OTPPurpose.VERIFICATION) => {
+    try {
+      const response = await authAPI.verifyOtp(userId, otpCode, forPurpose);
+      console.log('✅ OTP verified successfully');
+      
+      // After OTP verification, refresh user data
+      await refreshUser();
+      
+      return response.data;
+    } catch (error: any) {
+      console.error('OTP verification error:', error);
+      throw new Error(error.response?.data?.detail || error.message || 'OTP verification failed');
+    }
+  };
+
+  const resendOTP = async (userId: number, forPurpose: OTPPurpose = OTPPurpose.VERIFICATION) => {
+    try {
+      const response = await authAPI.resendOtp(userId, forPurpose);
+      console.log('✅ OTP resent successfully');
+      return response.data;
+    } catch (error: any) {
+      console.error('Resend OTP error:', error);
+      throw new Error(error.response?.data?.detail || error.message || 'Failed to resend OTP');
     }
   };
 
@@ -185,12 +234,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
         
         setUser(userData);
-        console.log('🔄 User data refreshed successfully');
+        console.log('✅ User data refreshed');
       }
     } catch (error) {
-      console.error('Error refreshing user:', error);
-      // If refresh fails, logout user
-      logout();
+      console.error('Failed to refresh user data:', error);
+      // Don't throw error - this is a background refresh
     }
   };
 
@@ -201,6 +249,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     login,
     register,
+    verifyOTP,
+    resendOTP,
     logout,
     refreshUser,
   };

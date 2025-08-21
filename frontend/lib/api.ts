@@ -76,6 +76,12 @@ apiClient.interceptors.response.use(
   }
 );
 
+// OTP Purpose enum
+export enum OTPPurpose {
+  VERIFICATION = 'verification',
+  FORGOT_PASSWORD = 'forgot_password'
+}
+
 // Auth API endpoints
 export const authAPI = {
   register: (userData: {
@@ -102,6 +108,30 @@ export const authAPI = {
 
   checkEmailAvailability: (email: string) => 
     apiClient.get(`/api/v1/auth/check-email/${encodeURIComponent(email)}`),
+
+  requestPasswordReset: (email: string) => 
+    apiClient.post('/api/v1/auth/request-password-reset', { email }),
+
+  resetPassword: (email: string, newPassword: string, otpCode: string) => {
+    return apiClient.post('/api/v1/auth/reset-password', {
+      email,
+      new_password: newPassword,
+      otp_code: otpCode
+    });
+  },
+
+  verifyOtp: (userId: number, otpCode: string, forPurpose?: OTPPurpose) => 
+    apiClient.post('/api/v1/auth/verify-otp', { 
+      user_id: userId, 
+      otp_code: otpCode,
+      for_purpose: forPurpose
+    }),
+
+  resendOtp: (userId: number, forPurpose?: OTPPurpose) => 
+    apiClient.post('/api/v1/auth/resend-otp', { 
+      user_id: userId,
+      for_purpose: forPurpose
+    }),
 };
 
 // User API endpoints

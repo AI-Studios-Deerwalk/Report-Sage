@@ -1,5 +1,5 @@
 """
-Utils package for TU Report Rage backend
+Utils package for TU DWIT Academia backend
 """
 
 from .password import hash_password, verify_password

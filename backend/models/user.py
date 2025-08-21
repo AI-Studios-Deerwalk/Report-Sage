@@ -1,5 +1,5 @@
 """
-User model for the Report Rage application
+User model for the DWIT Academia application
 """
 
 from datetime import datetime

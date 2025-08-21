@@ -1,5 +1,5 @@
 """
-Database module for Report Rage backend
+Database module for DWIT Academia backend
 Provides PostgreSQL connection and database utilities
 """
 
