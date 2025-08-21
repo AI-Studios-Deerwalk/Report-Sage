@@ -1,12 +1,18 @@
 """
-User OTP model for the Report Rage application
+User OTP model for the DWIT Academia application
 """
 
 from datetime import datetime
-from sqlalchemy import Column, String, Boolean, DateTime, Integer, ForeignKey
-
+from sqlalchemy import Column, String, Boolean, DateTime, Integer, ForeignKey, Enum
 from sqlalchemy.orm import relationship
+from .user import Base
+import enum
 
+
+class OTPPurpose(enum.Enum):
+    """Enum for OTP purposes"""
+    VERIFICATION = "verification"
+    FORGOT_PASSWORD = "forgot_password"
 
 from models.base import Base
 
@@ -36,6 +42,14 @@ class UserOTP(Base):
     expires_at = Column(DateTime, nullable=False)  # Expiration timestamp
     is_used = Column(Boolean, default=False, nullable=False)  # Whether OTP has been used
     
+    # OTP purpose - use string enum with explicit values
+    for_purpose = Column(
+        Enum("verification", "forgot_password", name="otppurpose"), 
+        nullable=False, 
+        default="verification",
+        index=True
+    )
+    
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     
@@ -46,7 +60,7 @@ class UserOTP(Base):
     user = relationship("User", back_populates="otps")
     
     def __repr__(self):
-        return f"<UserOTP(id={self.id}, user_id={self.user_id}, otp_code='{self.otp_code}', is_used={self.is_used})>"
+        return f"<UserOTP(id={self.id}, user_id={self.user_id}, otp_code='{self.otp_code}', for_purpose='{self.for_purpose}', is_used={self.is_used})>"
     
     def to_dict(self):
         """Convert OTP object to dictionary for JSON serialization"""
@@ -56,6 +70,7 @@ class UserOTP(Base):
             "otp_code": self.otp_code,
             "expires_at": self.expires_at.isoformat(),
             "is_used": self.is_used,
+            "for_purpose": self.for_purpose,
             "created_at": self.created_at.isoformat(),
             "attempts": self.attempts
         }

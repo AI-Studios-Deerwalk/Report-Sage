@@ -100,10 +100,11 @@ class PasswordResetRequest(BaseModel):
     email: EmailStr = Field(..., description="Email address for password reset")
 
 
-class PasswordResetConfirm(BaseModel):
-    """Schema for confirming password reset"""
-    token: str = Field(..., description="Password reset token")
+class PasswordReset(BaseModel):
+    """Schema for resetting password with OTP"""
+    email: EmailStr = Field(..., description="Email address for password reset")
     new_password: str = Field(..., min_length=8, max_length=128, description="New password")
+    otp_code: str = Field(..., description="OTP code for verification")
     
     @validator('new_password')
     def validate_new_password(cls, v):

@@ -1,71 +1,84 @@
 "use client"
 
 import * as React from "react"
-import { OTPInput, OTPInputContext } from "input-otp"
-import { Dot } from "lucide-react"
-
 import { cn } from "@/lib/utils"
 
-const InputOTP = React.forwardRef<
-  React.ElementRef<typeof OTPInput>,
-  React.ComponentPropsWithoutRef<typeof OTPInput>
->(({ className, containerClassName, ...props }, ref) => (
-  <OTPInput
-    ref={ref}
-    containerClassName={cn(
-      "flex items-center gap-2 has-[:disabled]:opacity-50",
-      containerClassName
-    )}
-    className={cn("disabled:cursor-not-allowed", className)}
-    {...props}
-  />
-))
+interface InputOTPProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  length?: number
+  onComplete?: (value: string) => void
+}
+
+const InputOTP = React.forwardRef<HTMLInputElement, InputOTPProps>(
+  ({ className, length = 6, onComplete, ...props }, ref) => {
+    const [values, setValues] = React.useState<string[]>(Array(length).fill(""))
+    const [focusedIndex, setFocusedIndex] = React.useState<number | null>(null)
+    const inputRefs = React.useRef<(HTMLInputElement | null)[]>([])
+
+    const handleInputChange = (index: number, value: string) => {
+      if (value.length > 1) return
+
+      const newValues = [...values]
+      newValues[index] = value
+      setValues(newValues)
+
+      // Auto-focus next input
+      if (value && index < length - 1) {
+        inputRefs.current[index + 1]?.focus()
+      }
+
+      // Call onComplete when all fields are filled
+      if (newValues.every((v) => v !== "") && onComplete) {
+        onComplete(newValues.join(""))
+      }
+    }
+
+    const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+      if (e.key === "Backspace" && !values[index] && index > 0) {
+        inputRefs.current[index - 1]?.focus()
+      }
+    }
+
+    return (
+      <div className="flex justify-center gap-3">
+        {values.map((value, index) => (
+          <div key={index} className="relative">
+            <input
+              ref={(el) => {
+                inputRefs.current[index] = el
+                if (index === 0 && ref) {
+                  if (typeof ref === "function") {
+                    ref(el)
+                  } else {
+                    ref.current = el
+                  }
+                }
+              }}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={value}
+              onChange={(e) => handleInputChange(index, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(index, e)}
+              onFocus={() => setFocusedIndex(index)}
+              onBlur={() => setFocusedIndex(null)}
+              className={cn(
+                "w-12 h-12 text-center text-lg font-semibold border-2 transition-all duration-200 rounded-xl",
+                focusedIndex === index
+                  ? "border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  : "border-gray-200 hover:border-gray-300",
+                className,
+              )}
+              {...props}
+            />
+            {focusedIndex === index && (
+              <div className="absolute inset-0 border-2 border-blue-500 rounded-xl pointer-events-none animate-pulse"></div>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+  },
+)
+
 InputOTP.displayName = "InputOTP"
-
-const InputOTPGroup = React.forwardRef<
-  React.ElementRef<"div">,
-  React.ComponentPropsWithoutRef<"div">
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("flex items-center", className)} {...props} />
-))
-InputOTPGroup.displayName = "InputOTPGroup"
-
-const InputOTPSlot = React.forwardRef<
-  React.ElementRef<"div">,
-  React.ComponentPropsWithoutRef<"div"> & { index: number }
->(({ index, className, ...props }, ref) => {
-  const inputOTPContext = React.useContext(OTPInputContext)
-  const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index]
-
-  return (
-    <div
-      ref={ref}
-      className={cn(
-        "relative flex h-10 w-10 items-center justify-center border-y border-r border-input text-sm transition-all first:rounded-l-md first:border-l last:rounded-r-md",
-        isActive && "z-10 ring-2 ring-ring ring-offset-background",
-        className
-      )}
-      {...props}
-    >
-      {char}
-      {hasFakeCaret && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-4 w-px animate-caret-blink bg-foreground duration-1000" />
-        </div>
-      )}
-    </div>
-  )
-})
-InputOTPSlot.displayName = "InputOTPSlot"
-
-const InputOTPSeparator = React.forwardRef<
-  React.ElementRef<"div">,
-  React.ComponentPropsWithoutRef<"div">
->(({ ...props }, ref) => (
-  <div ref={ref} role="separator" {...props}>
-    <Dot />
-  </div>
-))
-InputOTPSeparator.displayName = "InputOTPSeparator"
-
-export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator }
+export { InputOTP }

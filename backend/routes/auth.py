@@ -3,18 +3,19 @@ Authentication routes
 User authentication endpoints (login, register, password management)
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.connection import get_db_session
-from crud import user_crud
+from crud import user_crud, user_otp_crud
 from schemas.user import (
     UserCreate, 
     UserLogin, 
     UserPasswordChange,
     UserResponse,
     EmailVerificationRequest,
-    PasswordResetRequest
+    PasswordResetRequest,
+    PasswordReset
 )
 from .dependencies import (
     get_current_active_user, 
@@ -22,6 +23,7 @@ from .dependencies import (
     get_current_user
 )
 from models.user import User
+from utils.email_service import email_service
 
 router = APIRouter()
 
@@ -43,19 +45,64 @@ async def register_user(
     try:
         # Create user
         user = await user_crud.create(session, user_data)
+        print(f"✅ User created with ID: {user.uid}")
+        
+        # Create OTP and send email
+        try:
+            otp = await user_otp_crud.create_otp(
+                session,
+                user_id=user.uid,
+                for_purpose="verification",
+                expires_in_minutes=2,
+                otp_length=6
+            )
+            print(f"✅ OTP created: {otp.otp_code}")
+        except Exception as otp_error:
+            print(f"❌ OTP creation failed: {otp_error}")
+            raise
+        
+        # Send OTP email
+        try:
+            email_sent = email_service.send_otp_email(
+                recipient_email=user.email,
+                recipient_name=f"{user.fname} {user.lname}",
+                otp_code=otp.otp_code
+            )
+            print(f"✅ Email sent: {email_sent}")
+        except Exception as email_error:
+            print(f"❌ Email sending failed: {email_error}")
+            # Don't fail registration if email fails
+            email_sent = False
+        
+        await session.commit()
+        print(f"✅ Transaction committed")
         
         # Create token response
         token_response = create_token_response(user)
         
         return {
             **token_response,
-            "message": "User registered successfully. Please verify your email."
+            "message": "User registered successfully. Please check your email for verification code.",
+            "user_id": user.uid,
+            "email_sent": email_sent,
+            "otp_expires_in": 120
         }
         
     except ValueError as e:
+        await session.rollback()
+        print(f"❌ ValueError: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
+        )
+    except Exception as e:
+        await session.rollback()
+        print(f"❌ Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: {str(e)}"
         )
 
 
@@ -183,38 +230,104 @@ async def request_password_reset(
     
     - **email**: Email address for password reset
     
-    In production, this would send a password reset email
-    For now, it just confirms the email exists
+    Sends OTP to registered email for password reset verification
     """
     user = await user_crud.get_by_email(session, request_data.email)
     
-    # Don't reveal if email exists or not for security
-    return {"message": "If the email exists, a password reset link has been sent"}
+    if not user:
+        # Don't reveal if email exists or not for security
+        return {
+            "message": "If the email exists, an OTP has been sent to the registered email",
+            "user_id": None,
+            "email_sent": False
+        }
+    
+    try:
+        # Create OTP for password reset
+        otp = await user_otp_crud.create_otp(
+            session,
+            user_id=user.uid,
+            for_purpose="forgot_password",
+            expires_in_minutes=2,
+            otp_length=6
+        )
+        
+        # Send OTP email
+        email_sent = email_service.send_otp_email(
+            recipient_email=user.email,
+            recipient_name=f"{user.fname} {user.lname}",
+            otp_code=otp.otp_code
+        )
+        
+        await session.commit()
+        
+        return {
+            "message": "OTP sent to registered email",
+            "user_id": user.uid,
+            "email_sent": email_sent,
+            "otp_expires_in": 120
+        }
+        
+    except Exception as e:
+        await session.rollback()
+        return {
+            "message": "If the email exists, an OTP has been sent to the registered email",
+            "user_id": None,
+            "email_sent": False
+        }
 
 
 @router.post("/reset-password", response_model=dict)
 async def reset_password(
-    email: str,
-    new_password: str,
+    password_data: PasswordReset,
     session: AsyncSession = Depends(get_db_session)
 ):
     """
-    Reset password (simplified version)
+    Reset password with OTP verification
     
     - **email**: User's email
     - **new_password**: New password
+    - **otp_code**: OTP code from email
     
-    In production, this would require a valid reset token
-    This is a simplified version for development
+    Requires valid OTP to reset password
     """
-    success = await user_crud.reset_password(session, email, new_password)
-    
-    if not success:
+    # Get user by email
+    user = await user_crud.get_by_email(session, password_data.email)
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
     
+    # Verify OTP for password reset
+    is_valid, otp_obj = await user_otp_crud.verify_otp(
+        session, 
+        user.uid, 
+        password_data.otp_code, 
+        "forgot_password"
+    )
+    if not is_valid:
+        if otp_obj is None:
+            detail = "No valid OTP found"
+        else:
+            attempts_left = max(0, 5 - otp_obj.attempts)
+            detail = f"Invalid OTP. {attempts_left} attempts remaining."
+        
+        await session.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=detail
+        )
+    
+    # Reset password
+    success = await user_crud.reset_password(session, password_data.email, password_data.new_password)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset password"
+        )
+    
+    await session.commit()
     return {"message": "Password reset successfully"}
 
 
@@ -229,6 +342,114 @@ async def get_current_user_info(
     Requires authentication
     """
     return current_user
+
+
+@router.post("/verify-otp", response_model=dict)
+async def verify_otp(
+    user_id: int = Body(...),
+    otp_code: str = Body(...),
+    for_purpose: str = Body("verification"),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Verify OTP code for email verification
+    
+    - **user_id**: User ID (returned from registration)
+    - **otp_code**: 6-digit OTP code from email
+    """
+    try:
+        # Verify OTP for email verification
+        is_valid, otp_obj = await user_otp_crud.verify_otp(
+            session, 
+            user_id, 
+            otp_code, 
+            for_purpose
+        )
+        
+        if not is_valid:
+            if otp_obj is None:
+                detail = "No valid OTP found"
+            else:
+                attempts_left = max(0, 5 - otp_obj.attempts)
+                detail = f"Invalid OTP. {attempts_left} attempts remaining."
+            
+            await session.commit()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=detail
+            )
+        
+        # Mark email as verified
+        await user_crud.verify_email(session, user_id)
+        await session.commit()
+        
+        return {
+            "message": "Email verified successfully",
+            "verified": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Verification failed"
+        )
+
+
+@router.post("/resend-otp", response_model=dict)
+async def resend_otp(
+    user_id: int = Body(...),
+    for_purpose: str = Body("verification"),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Resend OTP code to user's email
+    
+    - **user_id**: User ID to resend OTP to
+    - **for_purpose**: Purpose of the OTP (verification or forgot_password)
+    """
+    try:
+        # Get user
+        user = await user_crud.get_by_id(session, user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Create new OTP
+        otp = await user_otp_crud.resend_otp(session, user_id, for_purpose)
+        if not otp:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to generate OTP"
+            )
+        
+        # Send email
+        email_sent = email_service.send_otp_email(
+            recipient_email=user.email,
+            recipient_name=f"{user.fname} {user.lname}",
+            otp_code=otp.otp_code
+        )
+        
+        await session.commit()
+        
+        return {
+            "message": "OTP resent successfully",
+            "email_sent": email_sent,
+            "otp_expires_in": 120
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to resend OTP"
+        )
 
 
 @router.post("/logout", response_model=dict)
