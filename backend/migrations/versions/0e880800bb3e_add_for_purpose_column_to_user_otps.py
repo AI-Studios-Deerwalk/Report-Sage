@@ -19,12 +19,20 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create enum type for OTP purposes
-    otp_purpose_enum = sa.Enum('verification', 'forgot_password', name='otppurpose')
-    otp_purpose_enum.create(op.get_bind())
+    # Create enum type for OTP purposes (only if it doesn't exist)
+    connection = op.get_bind()
+    inspector = sa.inspect(connection)
+    
+    # Check if enum type already exists
+    existing_enums = inspector.get_enums()
+    enum_exists = any(enum['name'] == 'otppurpose' for enum in existing_enums)
+    
+    if not enum_exists:
+        otp_purpose_enum = sa.Enum('verification', 'forgot_password', name='otppurpose')
+        otp_purpose_enum.create(connection)
     
     # Add for_purpose column to user_otps table
-    op.add_column('user_otps', sa.Column('for_purpose', otp_purpose_enum, nullable=True))
+    op.add_column('user_otps', sa.Column('for_purpose', sa.Enum('verification', 'forgot_password', name='otppurpose'), nullable=True))
     
     # Set default value for existing records
     op.execute("UPDATE user_otps SET for_purpose = 'verification' WHERE for_purpose IS NULL")
@@ -43,6 +51,14 @@ def downgrade() -> None:
     # Drop column
     op.drop_column('user_otps', 'for_purpose')
     
-    # Drop enum type
-    otp_purpose_enum = sa.Enum(name='otppurpose')
-    otp_purpose_enum.drop(op.get_bind())
+    # Drop enum type (only if it exists)
+    connection = op.get_bind()
+    inspector = sa.inspect(connection)
+    
+    # Check if enum type exists
+    existing_enums = inspector.get_enums()
+    enum_exists = any(enum['name'] == 'otppurpose' for enum in existing_enums)
+    
+    if enum_exists:
+        otp_purpose_enum = sa.Enum(name='otppurpose')
+        otp_purpose_enum.drop(connection)
