@@ -151,4 +151,32 @@ export const userAPI = {
   }) => apiClient.get('/api/v1/users/', { params }),
 };
 
+// Archive API endpoints
+export const archiveAPI = {
+  getArchives: (params?: {
+    skip?: number;
+    limit?: number;
+  }) => apiClient.get('/api/v1/archive/archives/', { params }),
+
+  getArchive: (archiveId: number) => 
+    apiClient.get(`/api/v1/archive/archives/${archiveId}`),
+
+  uploadDocument: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.post('/api/v1/archive/archives/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 30000, // 30 second timeout for file uploads
+    });
+  },
+
+  deleteArchive: (archiveId: number) => 
+    apiClient.delete(`/api/v1/archive/archives/${archiveId}`),
+
+  reanalyzeArchive: (archiveId: number) => 
+    apiClient.post(`/api/v1/archive/archives/${archiveId}/reanalyze`),
+};
+
 export default apiClient;
