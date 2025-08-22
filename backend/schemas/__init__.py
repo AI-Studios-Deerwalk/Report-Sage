@@ -34,6 +34,9 @@ from .admin import *
 # For FAQ schemas
 from .faq import *
 
+# For issue schemas
+from .issue import *
+
 __all__ = [
     "UserBase",
     "UserCreate",

@@ -13,6 +13,9 @@ from .admin import router as admin_router
 #For FAQs routes
 from .faq import router as faq_router
 
+#For Issues routes
+from .issue import router as issue_router
+
 # Create main API router
 api_router = APIRouter(prefix="/api/v1")
 
@@ -21,5 +24,6 @@ api_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(users_router, prefix="/users", tags=["Users"])
 api_router.include_router(admin_router, prefix="/admin", tags=["Admin"])
 api_router.include_router(faq_router, prefix="/faqs", tags=["FAQs"])
+api_router.include_router(issue_router, prefix="/issues", tags=["Issues"])
 
 __all__ = ["api_router"]
