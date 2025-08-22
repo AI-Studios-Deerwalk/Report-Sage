@@ -28,16 +28,6 @@ from .user_otp import (
     UserOTPStatus,
 )
 
-from .archive import (
-    AnalysisItem, 
-    ArchiveCreate, 
-    ArchiveUpdate, 
-    ArchiveResponse, 
-    ArchiveListResponse,
-    ArchiveAnalysisRequest,
-    ArchiveAnalysisResponse
-)
-
 __all__ = [
     "UserBase",
     "UserCreate",

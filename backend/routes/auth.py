@@ -34,7 +34,7 @@ async def register_user(
     session: AsyncSession = Depends(get_db_session)
 ):
     """
-    Register a new user
+    Register a new user and send email verification OTP
     
     - **email**: Valid email address (must be unique)
     - **password**: Strong password (min 8 chars, uppercase, lowercase, digit)
@@ -45,64 +45,44 @@ async def register_user(
     try:
         # Create user
         user = await user_crud.create(session, user_data)
-        print(f"✅ User created with ID: {user.uid}")
         
-        # Create OTP and send email
-        try:
-            otp = await user_otp_crud.create_otp(
-                session,
-                user_id=user.uid,
-                for_purpose="verification",
-                expires_in_minutes=2,
-                otp_length=6
-            )
-            print(f"✅ OTP created: {otp.otp_code}")
-        except Exception as otp_error:
-            print(f"❌ OTP creation failed: {otp_error}")
-            raise
+        # Create email verification OTP
+        otp = await user_otp_crud.create_otp(
+            session=session,
+            user_id=user.uid,
+            for_purpose="verification",
+            expires_in_minutes=10,
+            otp_length=6
+        )
         
         # Send OTP email
         try:
             email_sent = email_service.send_otp_email(
                 recipient_email=user.email,
-                recipient_name=f"{user.fname} {user.lname}",
+                recipient_name=user.fname,
                 otp_code=otp.otp_code
             )
-            print(f"✅ Email sent: {email_sent}")
         except Exception as email_error:
-            print(f"❌ Email sending failed: {email_error}")
-            # Don't fail registration if email fails
+            # Log the error but don't fail registration
+            print(f"⚠️ Email sending failed: {email_error}")
+            print(f"📧 OTP Code for {user.email}: {otp.otp_code}")
             email_sent = False
-        
-        await session.commit()
-        print(f"✅ Transaction committed")
         
         # Create token response
         token_response = create_token_response(user)
         
         return {
             **token_response,
-            "message": "User registered successfully. Please check your email for verification code.",
             "user_id": user.uid,
             "email_sent": email_sent,
-            "otp_expires_in": 120
+            "otp_expires_in": 600,  # 10 minutes in seconds
+            "message": "User registered successfully. Please verify your email."
         }
         
     except ValueError as e:
-        await session.rollback()
-        print(f"❌ ValueError: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
-        )
-    except Exception as e:
-        await session.rollback()
-        print(f"❌ Unexpected error: {e}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Registration failed: {str(e)}"
         )
 
 

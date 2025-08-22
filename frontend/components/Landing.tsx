@@ -34,12 +34,14 @@ export default function AcademiaLanding() {
                 Sign up
               </Button>
 
-              <p className="text-center text-gray-600">
-                Already have an account?{" "}
-                <Link href="/login" className="text-black hover:underline font-medium">
-                  Login
-                </Link>
-              </p>
+              <div className="flex flex-col space-y-2">
+                <p className="text-center text-gray-600">
+                  Already have an account?{" "}
+                  <Link href="/login" className="text-black hover:underline font-medium">
+                    Login
+                  </Link>
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface SignupFormProps {
   onSubmit?: (formData: FormData) => void
@@ -42,9 +43,18 @@ export function SignupForm({ onSubmit, onBackClick, onLoginClick, error, isSubmi
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
+    
+    // Ensure value is a string and handle phone number specially
+    let processedValue = value || ""
+    
+    if (name === "phoneNumber") {
+      // Only allow digits for phone number
+      processedValue = processedValue.replace(/\D/g, '')
+    }
+    
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: processedValue,
     }))
   }
 
@@ -80,6 +90,12 @@ export function SignupForm({ onSubmit, onBackClick, onLoginClick, error, isSubmi
       return
     }
 
+    // Validate phone number format
+    if (formData.phoneNumber && !/^\d{10}$/.test(formData.phoneNumber.replace(/\D/g, ''))) {
+      onSubmit?.({ ...formData, validationError: "Please enter a valid 10-digit phone number" })
+      return
+    }
+
     onSubmit?.(formData)
   }
 
@@ -92,12 +108,12 @@ export function SignupForm({ onSubmit, onBackClick, onLoginClick, error, isSubmi
   }
 
   const isFormValid =
-    formData.firstName.trim() &&
-    formData.lastName.trim() &&
-    formData.studentEmail.trim() &&
-    formData.password.trim() &&
-    formData.confirmPassword.trim() &&
-    formData.phoneNumber.trim()
+    (formData.firstName?.trim() || "") &&
+    (formData.lastName?.trim() || "") &&
+    (formData.studentEmail?.trim() || "") &&
+    (formData.password?.trim() || "") &&
+    (formData.confirmPassword?.trim() || "") &&
+    (formData.phoneNumber?.trim() || "")
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 flex items-center justify-center p-4">
@@ -473,6 +489,10 @@ export function SignupForm({ onSubmit, onBackClick, onLoginClick, error, isSubmi
                       src="/nepalflag.png"
                       alt="Nepal Flag"
                       className="w-5 h-4 object-contain border border-gray-300 rounded-sm"
+                      onError={(e) => {
+                        // Fallback if image fails to load
+                        e.currentTarget.style.display = 'none'
+                      }}
                     />
                     <span className="text-sm text-gray-600">+977</span>
                   </div>
@@ -550,6 +570,7 @@ export function SignupForm({ onSubmit, onBackClick, onLoginClick, error, isSubmi
 export default function SignupPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const { register } = useAuth()
 
   const router = useRouter()
 
@@ -558,11 +579,30 @@ export default function SignupPage() {
     setError("")
 
     try {
-      // Handle signup logic here
-      console.log("Signup data:", formData)
-      // Redirect to login after successful signup
-      router.push("/login")
+      // Validate form data before sending
+      if (!formData.firstName?.trim() || !formData.lastName?.trim() || !formData.studentEmail?.trim() || !formData.password?.trim() || !formData.phoneNumber?.trim()) {
+        throw new Error("All fields are required")
+      }
+
+      // Call the actual registration function from AuthContext
+      const registrationResult = await register({
+        email: formData.studentEmail.trim(),
+        password: formData.password,
+        fname: formData.firstName.trim(),
+        lname: formData.lastName.trim(),
+        phone_number: formData.phoneNumber.trim()
+      })
+      
+      // If registration is successful, redirect to OTP verification
+      const userId = registrationResult.user_id
+      if (!userId) {
+        throw new Error("Registration successful but user ID not received")
+      }
+      
+      console.log('✅ Registration successful, redirecting to OTP verification')
+      router.push(`/verify-otp?user_id=${userId}&email=${encodeURIComponent(formData.studentEmail.trim())}`)
     } catch (err: any) {
+      console.error('Signup error:', err)
       setError(err.message || "Signup failed. Please try again.")
     } finally {
       setIsLoading(false)

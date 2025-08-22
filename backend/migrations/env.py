@@ -14,7 +14,12 @@ sys.path.insert(0, str(backend_dir))
 
 # Import your models and database config
 from models import User, UserOTP
-from models.user import Base
+from models.base import Base
+from models.user import User
+from models.admin import Admin
+from models.faq import FAQ
+from models.issue import Issue
+from models.user_otp import UserOTP
 from database.config import db_config
 
 # this is the Alembic Config object, which provides
@@ -28,7 +33,7 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-target_metadata = Base.metadata
+target_metadata =Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
