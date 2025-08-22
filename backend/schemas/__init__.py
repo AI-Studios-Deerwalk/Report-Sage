@@ -28,6 +28,16 @@ from .user_otp import (
     UserOTPStatus,
 )
 
+from .archive import (
+    AnalysisItem, 
+    ArchiveCreate, 
+    ArchiveUpdate, 
+    ArchiveResponse, 
+    ArchiveListResponse,
+    ArchiveAnalysisRequest,
+    ArchiveAnalysisResponse
+)
+
 __all__ = [
     "UserBase",
     "UserCreate",
@@ -48,4 +58,11 @@ __all__ = [
     "UserOTPRequest",
     "UserOTPResend",
     "UserOTPStatus",
+     "AnalysisItem",
+    "ArchiveCreate",
+    "ArchiveUpdate",
+    "ArchiveResponse",
+    "ArchiveListResponse",
+    "ArchiveAnalysisRequest",
+    "ArchiveAnalysisResponse"
 ]
