@@ -11,8 +11,8 @@ from sqlalchemy.future import select
 import sys
 import os
 
-# Add the parent directory to the Python path (adjust depth if needed)
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# Add the current directory to the Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from database.connection import db_manager
 from models.admin import Admin

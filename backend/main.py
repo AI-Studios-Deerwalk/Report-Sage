@@ -38,9 +38,27 @@ async def startup_event():
         logging.info("Note: Use 'alembic upgrade head' to apply database migrations")
     except Exception as e:
         logging.error(f"Failed to initialize database: {e}")
+        logging.warning("Server will continue without database connection - some features may not work")
         # Continue without database for now
+        # Don't let database errors crash the server
 
-# Add CORS middleware
+# Comment out database initialization temporarily to test server startup
+# @app.on_event("startup")
+# async def startup_event():
+#     """Initialize database on startup"""
+#     try:
+#         # Just initialize the database manager, tables should be created via migrations
+#         from database.connection import db_manager
+#         db_manager.initialize()
+#         logging.info("Database connection initialized successfully")
+#         logging.info("Note: Use 'alembic upgrade head' to apply database migrations")
+#     except Exception as e:
+#         logging.error(f"Failed to initialize database: {e}")
+#         logging.warning("Server will continue without database connection - some features may not work")
+#         # Continue without database for now
+#         # Don't let database errors crash the server
+
+# Add CORS middleware BEFORE including routes
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,  # Allow frontend origins from env

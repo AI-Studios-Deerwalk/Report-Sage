@@ -41,6 +41,7 @@ class User(Base):
     
     # Status
     is_active = Column(Boolean, default=True, nullable=False)
+    is_blocked = Column(Boolean, default=False, nullable=False)  # New column for admin blocking
     
     # Relationships
     otps = relationship("UserOTP", back_populates="user")
@@ -59,7 +60,8 @@ class User(Base):
             "is_email_verified": self.is_email_verified,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
-            "is_active": self.is_active
+            "is_active": self.is_active,
+            "is_blocked": self.is_blocked
         }
     
     def to_public_dict(self):
