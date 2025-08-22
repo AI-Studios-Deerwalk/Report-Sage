@@ -74,3 +74,6 @@ class User(Base):
             "is_email_verified": self.is_email_verified,
             "created_at": self.created_at.isoformat()
         }
+    
+    archives = relationship("Archive", back_populates="user", cascade="all, delete-orphan")
+    

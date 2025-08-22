@@ -139,6 +139,20 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
+# Alias for backward compatibility 
+def get_db():
+    """Dependency for FastAPI to get database session (sync version)"""
+    session = db_manager.get_sync_session()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
 # Convenience functions
 async def init_database():
     """Initialize database and create tables"""

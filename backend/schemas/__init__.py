@@ -28,12 +28,6 @@ from .user_otp import (
     UserOTPStatus,
 )
 
-# For admin schemas
-from .admin import *
-
-# For FAQ schemas
-from .faq import *
-
 __all__ = [
     "UserBase",
     "UserCreate",
@@ -54,4 +48,11 @@ __all__ = [
     "UserOTPRequest",
     "UserOTPResend",
     "UserOTPStatus",
+     "AnalysisItem",
+    "ArchiveCreate",
+    "ArchiveUpdate",
+    "ArchiveResponse",
+    "ArchiveListResponse",
+    "ArchiveAnalysisRequest",
+    "ArchiveAnalysisResponse"
 ]

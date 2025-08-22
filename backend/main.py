@@ -5,6 +5,7 @@ import logging
 import asyncio
 import re
 import time
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from utils.pdf_reader import extract_text_with_pages
@@ -31,10 +32,14 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %
 async def startup_event():
     """Initialize database on startup"""
     try:
-        # Just initialize the database manager, tables should be created via migrations
+        # Initialize the database manager and ensure connection
         from database.connection import db_manager
         db_manager.initialize()
-        logging.info("Database connection initialized successfully")
+        
+        # Test the database connection
+        await db_manager.check_connection()
+        
+        logging.info("Database connection initialized and tested successfully")
         logging.info("Note: Use 'alembic upgrade head' to apply database migrations")
     except Exception as e:
         logging.error(f"Failed to initialize database: {e}")
@@ -120,6 +125,7 @@ async def root():
         "api_endpoints": {
             "authentication": "/api/v1/auth",
             "users": "/api/v1/users", 
+            "archive": "/api/v1/archive",
             "analysis": "/analyze",
             "batch_analysis": "/analyze-batch"
         }
@@ -127,19 +133,28 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    # Check database health
-    db_healthy = await check_database_health()
-    
-    return {
-        "status": "healthy" if db_healthy else "unhealthy",
-        "database": "connected" if db_healthy else "disconnected",
-        "config": {
-            "timeout_seconds": ANALYSIS_TIMEOUT_SECONDS,
-            "temperature": TEMPERATURE,
-            "model": os.getenv("OLLAMA_MODEL", "llama3.2:3b"),
-            "max_workers": "unlimited (dynamic)"
+    """Health check endpoint to verify server and database status"""
+    try:
+        from database.connection import db_manager
+        
+        # Check if database is initialized and responsive
+        if not db_manager._initialized:
+            return {"status": "initializing", "database": "not ready"}
+        
+        # Test database connection
+        db_healthy = await db_manager.check_connection()
+        
+        return {
+            "status": "healthy" if db_healthy else "degraded",
+            "database": "connected" if db_healthy else "disconnected",
+            "timestamp": datetime.now().isoformat()
         }
-    }
+    except Exception as e:
+        return {
+            "status": "unhealthy", 
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 def analyze_single_page(page_data):
     """Analyze a single page - optimized for parallel processing"""

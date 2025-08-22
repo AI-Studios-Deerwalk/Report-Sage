@@ -4,11 +4,113 @@ Handles formatting of TU format analysis results and summaries
 """
 
 import logging
+import re
 from . import prompt_manager
 
 
 class ResultFormatter:
     """Formats analysis results into user-friendly summaries"""
+    
+    @staticmethod
+    def parse_analysis_result(analysis_text: str) -> dict:
+        """
+        Parse Ollama analysis result into structured data
+        
+        Args:
+            analysis_text: Raw text output from Ollama
+            
+        Returns:
+            Dict containing structured suggestions, warnings, and errors
+        """
+        try:
+            result = {"suggestions": [], "warnings": [], "errors": []}
+
+            if not analysis_text or not analysis_text.strip():
+                return result
+
+            # Normalize newlines and split
+            lines = [ln.strip() for ln in analysis_text.splitlines()]
+
+            # Patterns
+            header_re = re.compile(r"^(SUGGESTIONS?|WARNINGS?|ERRORS?)\s*:?$", re.IGNORECASE)
+            bullet_re = re.compile(r"^(-|\*|•|\d+[.)])\s+(.*)$")
+            inline_tag_re = re.compile(r"^\[(ERROR|WARNING|SUGGESTION)\]\s*[:\-]?\s*(.*)$", re.IGNORECASE)
+            severity_re = re.compile(r"(?:\(|\[)(low|medium|high)(?:\)|\])", re.IGNORECASE)
+
+            current_section = None
+
+            def push(target: str, text: str):
+                if not text:
+                    return
+                # Try to extract severity tokens like (high) or [medium]
+                severity = None
+                sev_match = severity_re.search(text)
+                if sev_match:
+                    severity = sev_match.group(1).lower()
+                    # remove the matched token from message
+                    text_local = severity_re.sub("", text).strip(" -:•.\t")
+                else:
+                    text_local = text
+
+                # Default severity: high for errors, medium for warnings, low/medium for suggestions
+                if not severity:
+                    if target == "errors":
+                        severity = "high"
+                    elif target == "warnings":
+                        severity = "medium"
+                    else:
+                        severity = "low"
+
+                result[target].append({
+                    "message": text_local.strip(),
+                    "severity": severity,
+                    "category": "general",
+                    "page_number": None,
+                    "section": None,
+                })
+
+            for raw in lines:
+                if not raw:
+                    continue
+
+                # Inline tag like [ERROR]: something
+                m_inline = inline_tag_re.match(raw)
+                if m_inline:
+                    tag = m_inline.group(1).lower()
+                    text = m_inline.group(2).strip()
+                    mapping = {"error": "errors", "warning": "warnings", "suggestion": "suggestions"}
+                    push(mapping.get(tag, "warnings"), text)
+                    continue
+
+                # Section header
+                m_hdr = header_re.match(raw)
+                if m_hdr:
+                    hdr = m_hdr.group(1).upper()
+                    if hdr.startswith("SUGGEST"):
+                        current_section = "suggestions"
+                    elif hdr.startswith("WARN"):
+                        current_section = "warnings"
+                    elif hdr.startswith("ERROR"):
+                        current_section = "errors"
+                    else:
+                        current_section = None
+                    continue
+
+                # Bullet under a current section
+                m_bullet = bullet_re.match(raw)
+                if m_bullet and current_section:
+                    push(current_section, m_bullet.group(2).strip())
+                    continue
+
+                # If there's no explicit bullet but we are in a section, treat as a continuation/item
+                if current_section:
+                    push(current_section, raw)
+
+            return result
+
+        except Exception as e:
+            logging.error(f"Error parsing analysis result: {str(e)}")
+            return {"suggestions": [], "warnings": [], "errors": []}
     
     @staticmethod
     def create_analysis_summary(successful_results, all_error_messages, categorized_errors, phase_summary):

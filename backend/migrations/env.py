@@ -18,6 +18,7 @@ from models.base import Base
 from models.user import User
 from models.admin import Admin
 from models.faq import FAQ
+from models.issue import Issue
 from models.user_otp import UserOTP
 from database.config import db_config
 

@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import axios from "axios"
 import { useRouter } from "next/router"
-import { useAuth } from "@/contexts/AuthContext"
+import { archiveAPI } from "@/lib/api"
 
 interface UploadedFile {
   file: File
@@ -80,12 +79,12 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
   }
 
   const getProgressMessage = (percentage: number): string => {
-    if (percentage < 20) return "Uploading PDF file..."
-    if (percentage < 40) return "Extracting text from pages..."
-    if (percentage < 60) return "Analyzing format compliance..."
-    if (percentage < 80) return "Checking TU standards..."
-    if (percentage < 100) return "Finalizing results..."
-    return "Analysis complete!"
+    if (percentage < 20) return "Uploading PDF file to archive..."
+    if (percentage < 40) return "Extracting text from document..."
+    if (percentage < 60) return "Analyzing with Ollama AI..."
+    if (percentage < 80) return "Generating suggestions and warnings..."
+    if (percentage < 100) return "Saving analysis results to archive..."
+    return "Analysis complete! Results ready to view."
   }
 
   const analyzeFiles = async () => {
@@ -107,7 +106,7 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
     // Start progress simulation
     const progressInterval = setInterval(() => {
       setProgress(prev => {
-        const newPercentage = Math.min(prev.percentage + Math.random() * 15, 90)
+        const newPercentage = Math.min(prev.percentage + Math.random() * 15, 85)
         return {
           ...prev,
           percentage: newPercentage
@@ -116,43 +115,112 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
     }, 1000)
     
     try {
+      // First, check if backend is ready
+      try {
+        const healthCheck = await fetch('http://localhost:8000/health');
+        const healthData = await healthCheck.json();
+        
+        if (healthData.status !== 'healthy') {
+          console.warn('Backend not fully ready, but proceeding with upload...');
+        }
+      } catch (healthError) {
+        console.warn('Health check failed, but proceeding with upload...');
+      }
+      
       // For now, analyze the first file (can be extended for batch processing)
       const firstFile = uploadedFiles[0].file
       
-      const formData = new FormData()
-      formData.append("file", firstFile)
+      // Upload document to archive with retry logic
+      let uploadResponse;
+      let uploadAttempts = 0;
+      const maxUploadAttempts = 3;
       
-      const res = await axios.post(
-        "http://localhost:8000/analyze-batch?max_pages=10",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" }
+      while (uploadAttempts < maxUploadAttempts) {
+        try {
+          uploadResponse = await archiveAPI.uploadDocument(firstFile)
+          break; // Success, exit retry loop
+        } catch (uploadError: any) {
+          uploadAttempts++;
+          console.warn(`Upload attempt ${uploadAttempts} failed:`, uploadError);
+          
+          if (uploadAttempts >= maxUploadAttempts) {
+            throw uploadError; // Final attempt failed
+          }
+          
+          // Wait before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * uploadAttempts));
         }
-      )
-      
-      // Complete the progress
-      setProgress(prev => ({ ...prev, percentage: 100 }))
-      
-      if (setResults) {
-        setResults(res.data)
       }
-      setAnalysisCompleted(true)
-      if (onAnalysisComplete) {
-        onAnalysisComplete(true)
+      
+      if (!uploadResponse) {
+        throw new Error('Upload failed after multiple attempts');
       }
+      
+      // Wait for analysis to complete by polling the archive
+      const archiveId = uploadResponse.data.id
+      let analysisComplete = false
+      let attempts = 0
+      const maxAttempts = 60 // Wait up to 60 seconds
+      
+      while (!analysisComplete && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second
+        attempts++
+        
+        try {
+          const archiveResponse = await archiveAPI.getArchive(archiveId)
+          const archive = archiveResponse.data
+          
+          if (archive.processing_status === 'completed') {
+            analysisComplete = true
+            
+            // Complete the progress
+            setProgress(prev => ({ ...prev, percentage: 100 }))
+            
+            // Format results for backward compatibility
+            const results = {
+              suggestions: archive.suggestions || [],
+              warnings: archive.warnings || [],
+              errors: archive.errors || [],
+              analysis_content: archive.analysis_content || '',
+              file_name: archive.file_name,
+              archive_id: archive.id
+            }
+            
+            if (setResults) {
+              setResults(results)
+            }
+            setAnalysisCompleted(true)
+            if (onAnalysisComplete) {
+              onAnalysisComplete(true)
+            }
 
-      // Persist results and navigate to results page
-      try {
-        const resultData = {
-          ...res.data,
-          fileName: firstFile.name,
-          analysisStartTime: Date.now()
+            // Stay on dashboard to show results instead of navigating away
+            // router.push('/archive') - commented out to stay on dashboard
+            break
+          } else if (archive.processing_status === 'failed') {
+            throw new Error(archive.error_message || 'Analysis failed')
+          }
+          
+          // Update progress based on status
+          if (archive.processing_status === 'processing') {
+            setProgress(prev => ({
+              ...prev,
+              percentage: Math.min(prev.percentage + 2, 80)
+            }))
+          }
+        } catch (pollError: any) {
+          if (pollError.response?.status === 404) {
+            // Archive not found yet, continue polling
+            continue
+          }
+          throw pollError
         }
-        localStorage.setItem("analysisResults", JSON.stringify(resultData))
-      } catch (_) {
-        // ignore storage errors
       }
-      router.push('/results')
+      
+      if (!analysisComplete) {
+        throw new Error('Analysis timed out. Please check your archive later.')
+      }
+      
     } catch (err: any) {
       console.error("Upload error:", err)
       if (err.response) {

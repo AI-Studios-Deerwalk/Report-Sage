@@ -9,6 +9,44 @@ load_dotenv()
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 MODEL_NAME = os.getenv("OLLAMA_MODEL", "llama3.2:3b")  # Much faster than 8b model
 
+class OllamaClient:
+    """Class-based Ollama client to match the expected interface"""
+    
+    def __init__(self):
+        self.url = OLLAMA_URL
+        self.model = MODEL_NAME
+    
+    async def analyze_document(self, content: str, temperature: float = 0.1, timeout_seconds: int = 60) -> str:
+        """Analyze document content using Ollama"""
+        # Create a more structured prompt for document analysis
+        prompt = f"""
+        You are an expert academic document reviewer. Analyze the following document content for format compliance, writing quality, and academic standards.
+
+        Please provide your feedback in this EXACT format:
+
+        SUGGESTIONS:
+        - [Suggestion 1 about improving the document]
+        - [Suggestion 2 about enhancing content quality]
+        - [Additional suggestions as needed]
+
+        WARNINGS:
+        - [Warning 1 about potential formatting issues]
+        - [Warning 2 about style or structure concerns]
+        - [Additional warnings as needed]
+
+        ERRORS:
+        - [Error 1 about definitive formatting violations]
+        - [Error 2 about missing required sections]
+        - [Additional errors as needed]
+
+        Document content to analyze:
+        {content[:5000]}
+
+        Please be specific and actionable in your feedback. Focus on academic writing standards, formatting consistency, and document structure.
+        """
+        
+        return ask_ollama_fast(prompt, temperature=temperature, timeout_seconds=timeout_seconds)
+
 def ask_ollama(prompt: str, max_tokens: int = -1, temperature: float = 0.1, timeout_seconds: int = 60, stream: bool = False) -> str:
     payload = {
         "model": MODEL_NAME,

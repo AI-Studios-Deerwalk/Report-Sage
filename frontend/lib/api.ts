@@ -214,53 +214,32 @@ export const userAPI = {
   }) => apiClient.get('/api/v1/users/', { params }),
 };
 
-// Admin API endpoints
-export const adminAPI = {
-  login: (credentials: {
-    email: string;
-    password: string;
-  }) => apiClient.post('/api/v1/admin/login', credentials),
+// Archive API endpoints
+export const archiveAPI = {
+  getArchives: (params?: {
+    skip?: number;
+    limit?: number;
+  }) => apiClient.get('/api/v1/archive/archives/', { params }),
 
-  getCurrentAdmin: () => adminApiClient.get('/api/v1/admin/me'),
+  getArchive: (archiveId: number) => 
+    apiClient.get(`/api/v1/archive/archives/${archiveId}`),
 
-  // FAQ Management
-  getFaqs: (params?: {
-    page?: number;
-    page_size?: number;
-    only_active?: boolean;
-  }) => adminApiClient.get('/api/v1/faqs/getAll', { params }),
+  uploadDocument: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.post('/api/v1/archive/archives/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 30000, // 30 second timeout for file uploads
+    });
+  },
 
-  createFaq: (faqData: {
-    question: string;
-    answer: string;
-  }) => adminApiClient.post('/api/v1/faqs/createOne', faqData),
+  deleteArchive: (archiveId: number) => 
+    apiClient.delete(`/api/v1/archive/archives/${archiveId}`),
 
-  createFaqsBulk: (faqs: Array<{
-    question: string;
-    answer: string;
-  }>) => adminApiClient.post('/api/v1/faqs/createBulk', { faqs }),
-
-  updateFaq: (faqId: number, faqData: {
-    question?: string;
-    answer?: string;
-    priority?: string;
-  }) => adminApiClient.put(`/api/v1/faqs/update/${faqId}`, faqData),
-
-  deleteFaq: (faqId: number) => adminApiClient.delete(`/api/v1/faqs/delete/${faqId}`),
-
-  getFaq: (faqId: number) => adminApiClient.get(`/api/v1/faqs/${faqId}`),
-};
-
-// FAQ API endpoints (public)
-export const faqAPI = {
-  getFaqs: (params?: {
-    page?: number;
-    page_size?: number;
-    only_active?: boolean;
-    sort_by_priority?: boolean;
-  }) => apiClient.get('/api/v1/faqs/getAll', { params }),
-
-  getFaq: (faqId: number) => apiClient.get(`/api/v1/faqs/${faqId}`),
+  reanalyzeArchive: (archiveId: number) => 
+    apiClient.post(`/api/v1/archive/archives/${archiveId}/reanalyze`),
 };
 
 export default apiClient;
