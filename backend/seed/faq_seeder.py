@@ -11,8 +11,9 @@ from sqlalchemy.future import select
 import sys
 import os
 
-# Add the parent directory to the Python path (adjust depth if needed)
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# Add the backend root to the Python path
+backend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(backend_root)
 
 
 from database.connection import db_manager
@@ -30,19 +31,23 @@ class FaqSeeder:
         self.faqs: List[FAQCreate] = [
             FAQCreate(
                 question="What is Report Sage?",
-                answer="Report Sage is a reporting and analytics tool to simplify data insights."
+                answer="Report Sage is a reporting and analytics tool to simplify data insights.",
+                priority="1"
             ),
             FAQCreate(
                 question="How can I reset my password?",
-                answer="Click on 'Forgot Password' at login and follow the instructions."
+                answer="Click on 'Forgot Password' at login and follow the instructions.",
+                priority="2"
             ),
             FAQCreate(
                 question="Can I export reports?",
-                answer="NOPE."
+                answer="NOPE.",
+                priority="3"
             ),
             FAQCreate(
                 question="Who do I contact for support?",
-                answer="You can email our support team at support@reportsage.com."
+                answer="You can email our support team at support@reportsage.com.",
+                priority="4"
             ),
         ]
 
@@ -71,7 +76,8 @@ class FaqSeeder:
                 # Create new FAQ
                 faq = FAQ(
                     question=faq_data.question,
-                    answer=faq_data.answer
+                    answer=faq_data.answer,
+                    priority=faq_data.priority
                 )
                 session.add(faq)
                 await session.flush()
@@ -107,6 +113,7 @@ class FaqSeeder:
         for i, f in enumerate(self.faqs, 1):
             print(f"\n{i}. Q: {f.question}")
             print(f"   A: {f.answer}")
+            print(f"   Priority: {f.priority}")
         print("\n" + "=" * 50)
 
 

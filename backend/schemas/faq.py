@@ -9,6 +9,7 @@ class FAQBase(BaseModel):
     """Base FAQ schema with common fields"""
     question: str = Field(..., min_length=1, max_length=255, description="FAQ question")
     answer: str = Field(..., min_length=1, description="FAQ answer")
+    priority: Optional[str] = Field(None, description="FAQ priority level (1-1000)")
 
 
 class FAQCreate(FAQBase):
@@ -27,6 +28,7 @@ class FAQUpdate(BaseModel):
     """Schema for updating an existing FAQ"""
     question: Optional[str] = Field(None, min_length=1, max_length=255, description="FAQ question")
     answer: Optional[str] = Field(None, min_length=1, description="FAQ answer")
+    priority: Optional[str] = Field(None, description="FAQ priority level (1-1000)")
 
 class FAQResponse(FAQBase):
     """Schema for returning FAQ details"""

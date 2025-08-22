@@ -10,7 +10,8 @@ import sys
 import os
 
 # Add backend root to sys.path so seeders can import correctly
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+backend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(backend_root)
 
 from admin_seeder import admin_seeder
 from user_seeder import user_seeder
