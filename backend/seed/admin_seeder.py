@@ -4,7 +4,7 @@ Admin seeder for creating predefined admins in the database
 
 import asyncio
 import logging
-from typing import List
+from typing import List, Dict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -34,16 +34,26 @@ class AdminSeeder:
             AdminCreate(email="admin@admin.com", password="aprojectisnevertrulycomplete"),
         ]
 
-    async def seed_admins(self, session: AsyncSession) -> List[int]:
-        created_ids: List[int] = []
+    async def seed_admins(self, session: AsyncSession) -> Dict[str, List[str]]:
+        """
+        Seed admins in the database while checking for duplicates.
+
+        Returns:
+            Dictionary with 'created' and 'skipped' lists
+        """
+        result = {
+            "created": [],
+            "skipped": []
+        }
 
         for admin_data in self.admins:
             try:
-                # Check if exists
-                result = await session.execute(select(Admin).where(Admin.email == admin_data.email))
-                existing = result.scalar_one_or_none()
+                # Check if admin already exists
+                query = await session.execute(select(Admin).where(Admin.email == admin_data.email))
+                existing = query.scalar_one_or_none()
                 if existing:
                     logger.info(f"Admin {admin_data.email} already exists, skipping")
+                    result["skipped"].append(admin_data.email)
                     continue
 
                 # Create new admin with hashed password
@@ -53,25 +63,26 @@ class AdminSeeder:
                 )
                 session.add(admin)
                 await session.flush()
-                created_ids.append(admin.aid)
+                result["created"].append(admin.email)
                 logger.info(f"Created admin: {admin.email}")
 
             except Exception as e:
                 logger.error(f"Failed to create admin {admin_data.email}: {e}")
+                result["skipped"].append(admin_data.email)
                 continue
 
-        return created_ids
+        return result
 
     async def run(self) -> bool:
         """Run the admin seeding process"""
         try:
             db_manager.initialize()
             async with db_manager.get_async_session() as session:
-                created = await self.seed_admins(session)
-                if created:
-                    logger.info(f"✅ Successfully created {len(created)} admins")
-                else:
-                    logger.info("No new admins created (they may already exist)")
+                result = await self.seed_admins(session)
+                await session.commit()
+
+                logger.info(f"✅ Admins created: {result['created'] or 'None'}")
+                logger.info(f"⚠️ Admins skipped (already exist or failed): {result['skipped'] or 'None'}")
                 return True
         except Exception as e:
             logger.error(f"Admin seeding failed: {e}")
