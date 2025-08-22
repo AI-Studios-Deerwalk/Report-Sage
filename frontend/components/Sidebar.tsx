@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Archive, Plus, ChevronLeft, ChevronRight, User, LogOut, Settings } from "lucide-react"
+import { Archive, Plus, ChevronLeft, ChevronRight, User, LogOut, Settings, HelpCircle } from "lucide-react"
 import { useRouter } from "next/router"
 import { useAuth } from "@/contexts/AuthContext"
 import {
@@ -162,6 +162,33 @@ export function Sidebar() {
             >
               <Settings className="h-4 w-4" />
               <span>Settings</span>
+            </Button>
+          )}
+        </TooltipProvider>
+
+        {/* FAQs */}
+        <TooltipProvider>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  onClick={() => router.push('/faqs')}
+                  className={`w-full justify-center gap-3 ${router.pathname === '/faqs' ? 'bg-gray-100' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">FAQs</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              variant="ghost"
+              onClick={() => router.push('/faqs')}
+              className={`w-full justify-start gap-3 ${router.pathname === '/faqs' ? 'bg-gray-100' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span>FAQs</span>
             </Button>
           )}
         </TooltipProvider>

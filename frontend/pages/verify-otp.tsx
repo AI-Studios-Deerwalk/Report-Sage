@@ -113,11 +113,11 @@ export default function VerifyOTPPage() {
       
       toast({
         title: "Email verified successfully!",
-        description: "Your account is now active. Please login to continue.",
+        description: "Your account is now active. You can now upload and analyze PDF files.",
       })
 
-      // Redirect to login page after successful verification
-      router.push("/login")
+      // Redirect to dashboard after successful verification
+      router.push("/dashboard")
     } catch (err: any) {
       console.error("OTP verification error:", err)
       setError(err.message || "Invalid OTP code. Please try again.")
