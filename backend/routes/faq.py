@@ -51,13 +51,22 @@ async def list_faqs(
     session: AsyncSession = Depends(get_db_session),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Number of FAQs per page"),
-    only_active: bool = Query(False, description="Filter only active FAQs")
+    only_active: bool = Query(False, description="Filter only active FAQs"),
+    sort_by_priority: bool = Query(True, description="Sort FAQs by priority (default: True)")
 ):
     """
     List FAQs with pagination (public)
     """
+    import logging
+    logging.info(f"FAQ API called with sort_by_priority={sort_by_priority}")
+    
     pagination = PaginationParams(page=page, page_size=page_size)
-    result = await faq_crud.list_faqs(session, pagination, only_active=only_active)
+    result = await faq_crud.list_faqs(session, pagination, only_active=only_active, sort_by_priority=sort_by_priority)
+    
+    # Debug: Log the order of FAQs being returned
+    faq_order = [f"ID:{faq.fid}(Priority:{faq.priority})" for faq in result.items]
+    logging.info(f"Returning FAQs in order: {faq_order}")
+    
     return result
 
 

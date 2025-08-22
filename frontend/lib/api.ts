@@ -35,6 +35,69 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Create admin API client with admin token
+const adminApiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000,
+});
+
+// Admin request interceptor
+adminApiClient.interceptors.request.use(
+  (config) => {
+    // Add admin auth header if admin token exists
+    const adminToken = localStorage.getItem('adminToken');
+    if (adminToken) {
+      config.headers.Authorization = `Bearer ${adminToken}`;
+    }
+    
+    // Add timestamp to prevent caching issues
+    config.headers['X-Requested-At'] = new Date().toISOString();
+    
+    return config;
+  },
+  (error) => {
+    console.error('Admin request interceptor error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Admin response interceptor
+adminApiClient.interceptors.response.use(
+  (response) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`✅ ADMIN ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    }
+    return response;
+  },
+  (error: AxiosError) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`❌ ADMIN ${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response?.status}`, error.response?.data);
+    }
+    
+    // Handle admin authentication errors
+    if (error.response?.status === 401) {
+      console.warn('Admin authentication failed, clearing admin tokens and redirecting to admin login');
+      
+      // Clear invalid admin tokens
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminData');
+      
+      // Only redirect if we're not already on admin login page
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes('/admin/login')) {
+        setTimeout(() => {
+          window.location.href = '/admin/login';
+        }, 100);
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
 // Response interceptor to handle auth errors and token refresh
 apiClient.interceptors.response.use(
   (response) => {
@@ -149,6 +212,55 @@ export const userAPI = {
     is_active?: boolean;
     search?: string;
   }) => apiClient.get('/api/v1/users/', { params }),
+};
+
+// Admin API endpoints
+export const adminAPI = {
+  login: (credentials: {
+    email: string;
+    password: string;
+  }) => apiClient.post('/api/v1/admin/login', credentials),
+
+  getCurrentAdmin: () => adminApiClient.get('/api/v1/admin/me'),
+
+  // FAQ Management
+  getFaqs: (params?: {
+    page?: number;
+    page_size?: number;
+    only_active?: boolean;
+  }) => adminApiClient.get('/api/v1/faqs/getAll', { params }),
+
+  createFaq: (faqData: {
+    question: string;
+    answer: string;
+  }) => adminApiClient.post('/api/v1/faqs/createOne', faqData),
+
+  createFaqsBulk: (faqs: Array<{
+    question: string;
+    answer: string;
+  }>) => adminApiClient.post('/api/v1/faqs/createBulk', { faqs }),
+
+  updateFaq: (faqId: number, faqData: {
+    question?: string;
+    answer?: string;
+    priority?: string;
+  }) => adminApiClient.put(`/api/v1/faqs/update/${faqId}`, faqData),
+
+  deleteFaq: (faqId: number) => adminApiClient.delete(`/api/v1/faqs/delete/${faqId}`),
+
+  getFaq: (faqId: number) => adminApiClient.get(`/api/v1/faqs/${faqId}`),
+};
+
+// FAQ API endpoints (public)
+export const faqAPI = {
+  getFaqs: (params?: {
+    page?: number;
+    page_size?: number;
+    only_active?: boolean;
+    sort_by_priority?: boolean;
+  }) => apiClient.get('/api/v1/faqs/getAll', { params }),
+
+  getFaq: (faqId: number) => apiClient.get(`/api/v1/faqs/${faqId}`),
 };
 
 export default apiClient;

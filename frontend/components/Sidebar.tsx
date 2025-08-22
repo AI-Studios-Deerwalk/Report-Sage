@@ -93,7 +93,7 @@ export function Sidebar() {
                 <Button
                   variant="ghost"
                   onClick={() => router.push('/dashboard')}
-                  className={`w-full justify-center gap-3 ${(router.pathname === '/dashboard' || router.pathname === '/results') ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+                  className={`w-full justify-center gap-3 ${(router.pathname === '/dashboard' || router.pathname === '/results') ? '!bg-gray-200 !text-gray-800 hover:!bg-gray-300' : 'text-sidebar-foreground hover:!bg-gray-100'}`}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -104,7 +104,7 @@ export function Sidebar() {
             <Button
               variant="ghost"
               onClick={() => router.push('/dashboard')}
-              className={`w-full justify-start gap-3 ${(router.pathname === '/dashboard' || router.pathname === '/results') ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+              className={`w-full justify-start gap-3 ${(router.pathname === '/dashboard' || router.pathname === '/results') ? '!bg-gray-200 !text-gray-800 hover:!bg-gray-300' : 'text-sidebar-foreground hover:!bg-gray-100'}`}
             >
               <Plus className="h-4 w-4" />
               <span>New Submission</span>
@@ -120,7 +120,7 @@ export function Sidebar() {
                 <Button
                   variant="ghost"
                   onClick={() => router.push('/archive')}
-                  className={`w-full justify-center gap-3 ${router.pathname === '/archive' ? 'bg-gray-100' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+                  className={`w-full justify-center gap-3 ${router.pathname === '/archive' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
                 >
                   <Archive className="h-4 w-4" />
                 </Button>
@@ -131,7 +131,7 @@ export function Sidebar() {
             <Button
               variant="ghost"
               onClick={() => router.push('/archive')}
-              className={`w-full justify-start gap-3 ${router.pathname === '/archive' ? 'bg-gray-100' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+              className={`w-full justify-start gap-3 ${router.pathname === '/archive' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
             >
               <Archive className="h-4 w-4" />
               <span>Archive</span>
@@ -147,7 +147,7 @@ export function Sidebar() {
                 <Button
                   variant="ghost"
                   onClick={() => router.push('/settings')}
-                  className={`w-full justify-center gap-3 ${router.pathname === '/settings' ? 'bg-gray-100' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+                  className={`w-full justify-center gap-3 ${router.pathname === '/settings' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
                 >
                   <Settings className="h-4 w-4" />
                 </Button>
@@ -158,7 +158,7 @@ export function Sidebar() {
             <Button
               variant="ghost"
               onClick={() => router.push('/settings')}
-              className={`w-full justify-start gap-3 ${router.pathname === '/settings' ? 'bg-gray-100' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+              className={`w-full justify-start gap-3 ${router.pathname === '/settings' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
             >
               <Settings className="h-4 w-4" />
               <span>Settings</span>
@@ -174,7 +174,7 @@ export function Sidebar() {
                 <Button
                   variant="ghost"
                   onClick={() => router.push('/faqs')}
-                  className={`w-full justify-center gap-3 ${router.pathname === '/faqs' ? 'bg-gray-100' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+                  className={`w-full justify-center gap-3 ${router.pathname === '/faqs' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
                 >
                   <HelpCircle className="h-4 w-4" />
                 </Button>
@@ -185,7 +185,7 @@ export function Sidebar() {
             <Button
               variant="ghost"
               onClick={() => router.push('/faqs')}
-              className={`w-full justify-start gap-3 ${router.pathname === '/faqs' ? 'bg-gray-100' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+              className={`w-full justify-start gap-3 ${router.pathname === '/faqs' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
             >
               <HelpCircle className="h-4 w-4" />
               <span>FAQs</span>

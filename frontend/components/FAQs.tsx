@@ -1,59 +1,59 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronDown, ChevronUp, HelpCircle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { faqAPI } from "@/lib/api"
 
 interface FAQItem {
+  fid: number
   question: string
   answer: string
+  priority: string | null
+  created_at: string
+  updated_at: string | null
 }
-
-const faqData: FAQItem[] = [
-  {
-    question: "How do I create an account?",
-    answer:
-      "Simply click on the 'Create Account' button and fill in your details including your name, student email, password, and phone number. You'll receive an OTP for verification.",
-  },
-  {
-    question: "What are the password requirements?",
-    answer:
-      "Your password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number for security.",
-  },
-  {
-    question: "Can I use any email address?",
-    answer:
-      "We require a valid student email address for registration. This helps us verify your student status and provide appropriate services.",
-  },
-  {
-    question: "Is my personal information secure?",
-    answer:
-      "Yes, we take data security seriously. All your personal information is encrypted and stored securely. We never share your data with third parties without your consent.",
-  },
-  {
-    question: "What if I forget my password?",
-    answer:
-      "You can reset your password by clicking the 'Forgot Password' link on the login page. We'll send a reset link to your registered email address.",
-  },
-  {
-    question: "How do I verify my phone number?",
-    answer:
-      "After registration, you'll receive an OTP (One-Time Password) via SMS to verify your phone number. Enter this code to complete your account setup.",
-  },
-  {
-    question: "Can I change my information later?",
-    answer:
-      "Yes, you can update your profile information, including your name and phone number, from your account settings after logging in.",
-  },
-  {
-    question: "What if I don't receive the verification code?",
-    answer:
-      "If you don't receive the OTP within a few minutes, check your spam folder or try requesting a new code. Make sure your phone number is entered correctly.",
-  },
-]
 
 export function FAQSection() {
   const [openItems, setOpenItems] = useState<number[]>([])
+  const [faqData, setFaqData] = useState<FAQItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [sortByPriority, setSortByPriority] = useState(true)
+
+  useEffect(() => {
+    const loadFAQs = async () => {
+      try {
+        setIsLoading(true)
+        // Fetch FAQs with priority sorting enabled on the backend
+        const response = await faqAPI.getFaqs({ 
+          page: 1, 
+          page_size: 100, 
+          sort_by_priority: sortByPriority 
+        })
+        const faqs = response.data.items || response.data
+        
+        // Debug: Log the full response and FAQs
+        console.log('Full API Response:', response)
+        console.log('FAQs data:', faqs)
+        console.log('FAQs with priority sorting:', faqs.map((faq: FAQItem) => ({
+          fid: faq.fid,
+          question: faq.question.substring(0, 50) + '...',
+          priority: faq.priority
+        })))
+        
+        // Backend now handles priority sorting, so we can use the data directly
+        setFaqData(faqs)
+      } catch (err: any) {
+        console.error('Error loading FAQs:', err)
+        setError('Failed to load FAQs. Please try again later.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadFAQs()
+  }, [sortByPriority])
 
   const toggleItem = (index: number) => {
     setOpenItems((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]))
@@ -181,32 +181,67 @@ export function FAQSection() {
               Frequently Asked Questions
             </h1>
           </div>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
             Find answers to common questions about creating your account and using our platform.
           </p>
         </div>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-12">
+            <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading FAQs...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <HelpCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <p className="text-red-600 mb-4">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
         {/* FAQ Items */}
-        <div className="space-y-4">
-          {faqData.map((item, index) => (
+        {!isLoading && !error && (
+          <div className="space-y-4">
+            {faqData.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <HelpCircle className="w-8 h-8 text-gray-400" />
+                </div>
+                <p className="text-gray-500">No FAQs available at the moment.</p>
+              </div>
+            ) : (
+              faqData.map((item, index) => (
             <Card
               key={index}
               className="bg-white/95 backdrop-blur-sm shadow-lg border-0 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl"
             >
               <CardContent className="p-0">
-                <button
-                  onClick={() => toggleItem(index)}
-                  className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50/50 transition-colors duration-200"
-                >
-                  <h3 className="text-lg font-semibold text-gray-900 pr-4">{item.question}</h3>
-                  <div className="flex-shrink-0">
-                    {openItems.includes(index) ? (
-                      <ChevronUp className="w-5 h-5 text-emerald-600 transition-transform duration-200" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-gray-400 transition-transform duration-200" />
-                    )}
-                  </div>
-                </button>
+                                 <button
+                   onClick={() => toggleItem(index)}
+                   className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50/50 transition-colors duration-200"
+                 >
+                   <div className="flex items-center gap-3 flex-1">
+                     <h3 className="text-lg font-semibold text-gray-900">{item.question}</h3>
+                   </div>
+                   <div className="flex-shrink-0">
+                     {openItems.includes(index) ? (
+                       <ChevronUp className="w-5 h-5 text-emerald-600 transition-transform duration-200" />
+                     ) : (
+                       <ChevronDown className="w-5 h-5 text-gray-400 transition-transform duration-200" />
+                     )}
+                   </div>
+                 </button>
 
                 {openItems.includes(index) && (
                   <div className="px-6 pb-6 animate-in slide-in-from-top-2 duration-200">
@@ -217,8 +252,10 @@ export function FAQSection() {
                 )}
               </CardContent>
             </Card>
-          ))}
-        </div>
+              ))
+            )}
+          </div>
+        )}
 
         {/* Contact section */}
         <Card className="mt-8 bg-gradient-to-r from-emerald-50 to-teal-50 border-0 rounded-2xl">

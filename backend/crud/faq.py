@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func
+from sqlalchemy import func, cast, Integer
 from models.faq import FAQ
 from schemas.faq import FAQCreate, FAQUpdate, FAQResponse
 from utils.pagination import PaginationParams, PaginatedResult
@@ -18,6 +18,7 @@ class FAQCRUD:
         new_faq = FAQ(
             question=faq_data.question,
             answer=faq_data.answer,
+            priority=faq_data.priority,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow()
         )
@@ -30,6 +31,7 @@ class FAQCRUD:
             FAQ(
                 question=faq.question,
                 answer=faq.answer,
+                priority=faq.priority,
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow()
             )
@@ -51,6 +53,8 @@ class FAQCRUD:
             faq.question = faq_data.question
         if faq_data.answer is not None:
             faq.answer = faq_data.answer
+        if faq_data.priority is not None:
+            faq.priority = faq_data.priority
         faq.updated_at = datetime.utcnow()
         await session.flush()
         return faq
@@ -67,11 +71,25 @@ class FAQCRUD:
         self,
         session: AsyncSession,
         pagination: PaginationParams,
-        only_active: bool = False
+        only_active: bool = False,
+        sort_by_priority: bool = True
     ) -> PaginatedResult[FAQResponse]:
         query = select(FAQ)
-        if only_active:
-            query = query.where(FAQ.is_active == True)
+        # Note: FAQ model doesn't have is_active field, so we ignore the only_active parameter
+        # TODO: Add is_active field to FAQ model if needed
+        
+        # Add priority sorting if requested
+        if sort_by_priority:
+            # Sort by priority (null values last), then by creation date
+            # Use a safer approach for priority sorting
+            query = query.order_by(
+                FAQ.priority.is_(None),  # Null values last
+                FAQ.priority.asc(),      # String-based priority (works for numeric strings)
+                FAQ.created_at.desc()    # Newer items first for same priority
+            )
+        else:
+            # Default sorting by creation date (newest first)
+            query = query.order_by(FAQ.created_at.desc())
         
         total_result = await session.execute(query)
         total_count = (await session.execute(select(func.count()).select_from(query.subquery()))).scalar()

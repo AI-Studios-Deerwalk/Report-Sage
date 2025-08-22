@@ -2,6 +2,7 @@ import Head from "next/head";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import AdminLayout from "../../components/AdminLayout";
+import { adminAPI } from "../../lib/api";
 import { 
   HelpCircle, 
   Plus, 
@@ -44,12 +45,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { motion, Reorder } from "framer-motion"
 
 interface FAQ {
-  id: number
+  fid: number
   question: string
   answer: string
-  priority: number
+  priority: string | null
   created_at: string
-  updated_at: string
+  updated_at: string | null
 }
 
 interface FAQFormData {
@@ -57,60 +58,21 @@ interface FAQFormData {
   answer: string
 }
 
-// Mock data for FAQs with priority
-const mockFAQs: FAQ[] = [
-  {
-    id: 1,
-    question: "How do I create an account?",
-    answer: "Simply click on the 'Create Account' button and fill in your details including your name, student email, password, and phone number. You'll receive an OTP for verification.",
-    priority: 1,
-    created_at: "2024-01-15T10:30:00Z",
-    updated_at: "2024-01-15T10:30:00Z"
-  },
-  {
-    id: 2,
-    question: "What are the password requirements?",
-    answer: "Your password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number for security.",
-    priority: 2,
-    created_at: "2024-01-15T11:00:00Z",
-    updated_at: "2024-01-15T11:00:00Z"
-  },
-  {
-    id: 3,
-    question: "Can I use any email address?",
-    answer: "We require a valid student email address for registration. This helps us verify your student status and provide appropriate services.",
-    priority: 3,
-    created_at: "2024-01-15T11:30:00Z",
-    updated_at: "2024-01-15T11:30:00Z"
-  },
-  {
-    id: 4,
-    question: "Is my personal information secure?",
-    answer: "Yes, we take data security seriously. All your personal information is encrypted and stored securely. We never share your data with third parties without your consent.",
-    priority: 4,
-    created_at: "2024-01-15T12:00:00Z",
-    updated_at: "2024-01-15T12:00:00Z"
-  },
-  {
-    id: 5,
-    question: "What if I forget my password?",
-    answer: "You can reset your password by clicking the 'Forgot Password' link on the login page. We'll send a reset link to your registered email address.",
-    priority: 5,
-    created_at: "2024-01-15T12:30:00Z",
-    updated_at: "2024-01-15T12:30:00Z"
-  }
-]
+// Initial empty state for FAQs
+const initialFAQs: FAQ[] = []
 
 export default function AdminFAQsPage() {
   const [isLoading, setIsLoading] = useState(true);
-  const [faqs, setFaqs] = useState<FAQ[]>(mockFAQs)
-  const [filteredFaqs, setFilteredFaqs] = useState<FAQ[]>(mockFAQs)
+  const [faqs, setFaqs] = useState<FAQ[]>(initialFAQs)
+  const [filteredFaqs, setFilteredFaqs] = useState<FAQ[]>(initialFAQs)
   const [searchTerm, setSearchTerm] = useState("")
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isPriorityDialogOpen, setIsPriorityDialogOpen] = useState(false)
+  const [isSavingPriority, setIsSavingPriority] = useState(false)
+  const [priorityOrderChanged, setPriorityOrderChanged] = useState(false)
   const [editingFaq, setEditingFaq] = useState<FAQ | null>(null)
   const [formData, setFormData] = useState<FAQFormData>({
     question: "",
@@ -128,8 +90,24 @@ export default function AdminFAQsPage() {
       return;
     }
 
-    setIsLoading(false);
+    // Load FAQs from API
+    loadFAQs();
   }, []);
+
+  const loadFAQs = async () => {
+    try {
+      setIsLoading(true);
+      const response = await adminAPI.getFaqs({ page: 1, page_size: 100 });
+      const faqsData = response.data.items || response.data;
+      setFaqs(faqsData);
+      setFilteredFaqs(faqsData);
+    } catch (err: any) {
+      console.error('Error loading FAQs:', err);
+      setError(err.response?.data?.detail || 'Failed to load FAQs');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Filter FAQs based on search term
@@ -145,45 +123,57 @@ export default function AdminFAQsPage() {
     setFilteredFaqs(filtered)
   }, [searchTerm, faqs])
 
-  const handleAddFAQ = () => {
-    const newFAQ: FAQ = {
-      id: Math.max(...faqs.map(f => f.id)) + 1,
-      question: formData.question,
-      answer: formData.answer,
-      priority: Math.max(...faqs.map(f => f.priority)) + 1,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+  const handleAddFAQ = async () => {
+    try {
+      const response = await adminAPI.createFaq({
+        question: formData.question,
+        answer: formData.answer
+      });
+      
+      const newFAQ = response.data;
+      setFaqs(prev => [...prev, newFAQ])
+      setFormData({ question: "", answer: "" })
+      setIsAddDialogOpen(false)
+      setSuccess('FAQ added successfully')
+      setTimeout(() => setSuccess(""), 3000)
+    } catch (err: any) {
+      console.error('Error adding FAQ:', err);
+      setError(err.response?.data?.detail || 'Failed to add FAQ');
     }
-    
-    setFaqs(prev => [...prev, newFAQ])
-    setFormData({ question: "", answer: "" })
-    setIsAddDialogOpen(false)
-    setSuccess('FAQ added successfully')
-    setTimeout(() => setSuccess(""), 3000)
   }
 
-  const handleEditFAQ = () => {
+  const handleEditFAQ = async () => {
     if (!editingFaq) return
 
-    const updatedFAQ: FAQ = {
-      ...editingFaq,
-      question: formData.question,
-      answer: formData.answer,
-      updated_at: new Date().toISOString()
+    try {
+             const response = await adminAPI.updateFaq(editingFaq.fid, {
+        question: formData.question,
+        answer: formData.answer
+      });
+      
+      const updatedFAQ = response.data;
+      setFaqs(prev => prev.map(faq => faq.fid === editingFaq.fid ? updatedFAQ : faq))
+      setFormData({ question: "", answer: "" })
+      setEditingFaq(null)
+      setIsEditDialogOpen(false)
+      setSuccess('FAQ updated successfully')
+      setTimeout(() => setSuccess(""), 3000)
+    } catch (err: any) {
+      console.error('Error updating FAQ:', err);
+      setError(err.response?.data?.detail || 'Failed to update FAQ');
     }
-    
-    setFaqs(prev => prev.map(faq => faq.id === editingFaq.id ? updatedFAQ : faq))
-    setFormData({ question: "", answer: "" })
-    setEditingFaq(null)
-    setIsEditDialogOpen(false)
-    setSuccess('FAQ updated successfully')
-    setTimeout(() => setSuccess(""), 3000)
   }
 
-  const handleDeleteFAQ = (faqId: number) => {
-    setFaqs(prev => prev.filter(faq => faq.id !== faqId))
-    setSuccess('FAQ deleted successfully')
-    setTimeout(() => setSuccess(""), 3000)
+  const handleDeleteFAQ = async (faqId: number) => {
+    try {
+      await adminAPI.deleteFaq(faqId);
+      setFaqs(prev => prev.filter(faq => faq.fid !== faqId))
+      setSuccess('FAQ deleted successfully')
+      setTimeout(() => setSuccess(""), 3000)
+    } catch (err: any) {
+      console.error('Error deleting FAQ:', err);
+      setError(err.response?.data?.detail || 'Failed to delete FAQ');
+    }
   }
 
   const openEditDialog = (faq: FAQ) => {
@@ -200,20 +190,47 @@ export default function AdminFAQsPage() {
     setEditingFaq(null)
   }
 
+  const openPriorityDialog = () => {
+    setPriorityOrderChanged(false) // Reset change flag when opening dialog
+    setIsPriorityDialogOpen(true)
+  }
+
   const handlePriorityReorder = (newOrder: FAQ[]) => {
     // Update priorities based on new order
     const updatedFaqs = newOrder.map((faq, index) => ({
       ...faq,
-      priority: index + 1
+      priority: (index + 1).toString()
     }))
     
     setFaqs(updatedFaqs)
+    setFilteredFaqs(updatedFaqs) // Also update filtered FAQs to reflect the new order
+    setPriorityOrderChanged(true) // Mark that the order has changed
   }
 
-  const savePriorityOrder = () => {
-    setIsPriorityDialogOpen(false)
-    setSuccess('FAQ priorities updated successfully')
-    setTimeout(() => setSuccess(""), 3000)
+  const savePriorityOrder = async () => {
+    try {
+      setIsSavingPriority(true)
+      setError("") // Clear any previous errors
+      
+      // Update priorities for each FAQ
+      const updatePromises = faqs.map((faq, index) => 
+        adminAPI.updateFaq(faq.fid, { priority: (index + 1).toString() })
+      );
+      
+      await Promise.all(updatePromises);
+      setIsPriorityDialogOpen(false)
+      setPriorityOrderChanged(false) // Reset the change flag
+      setSuccess('FAQ priorities updated successfully')
+      setTimeout(() => setSuccess(""), 3000)
+      
+      // Reload FAQs to ensure we have the latest data from the server
+      await loadFAQs()
+    } catch (err: any) {
+      console.error('Error updating priorities:', err);
+      setError(err.response?.data?.detail || 'Failed to update priorities. Please try again.')
+    } finally {
+      setIsSavingPriority(false)
+    }
   }
 
   if (isLoading) {
@@ -270,16 +287,17 @@ export default function AdminFAQsPage() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Dialog open={isPriorityDialogOpen} onOpenChange={setIsPriorityDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="outline"
-                    className="border-slate-300 hover:bg-slate-50 text-slate-700"
-                  >
-                    <ListOrdered className="h-4 w-4 mr-2" />
-                    Manage Priority
-                  </Button>
-                </DialogTrigger>
+                             <Dialog open={isPriorityDialogOpen} onOpenChange={setIsPriorityDialogOpen}>
+                 <DialogTrigger asChild>
+                   <Button 
+                     variant="outline"
+                     className="border-slate-300 hover:bg-slate-50 text-slate-700"
+                     onClick={openPriorityDialog}
+                   >
+                     <ListOrdered className="h-4 w-4 mr-2" />
+                     Manage Priority
+                   </Button>
+                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto bg-white">
                   <DialogHeader className="pb-4">
                     <DialogTitle className="text-xl font-semibold">Manage FAQ Priority</DialogTitle>
@@ -295,9 +313,9 @@ export default function AdminFAQsPage() {
                       className="space-y-2"
                     >
                       {faqs.map((faq) => (
-                        <Reorder.Item
-                          key={faq.id}
-                          value={faq}
+                                                 <Reorder.Item
+                           key={faq.fid}
+                           value={faq}
                           className="border border-slate-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow cursor-move"
                         >
                           <motion.div
@@ -308,12 +326,9 @@ export default function AdminFAQsPage() {
                               <GripVertical className="h-5 w-5 text-slate-400" />
                             </div>
                             <div className="flex-1">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <Badge variant="secondary" className="text-xs">
-                                  Priority {faq.priority}
-                                </Badge>
-                                <h3 className="font-semibold text-slate-900 text-sm">{faq.question}</h3>
-                              </div>
+                                                             <div className="flex items-center space-x-2 mb-1">
+                                 <h3 className="font-semibold text-slate-900 text-sm">{faq.question}</h3>
+                               </div>
                               <p className="text-slate-600 text-xs line-clamp-2">{faq.answer}</p>
                             </div>
                           </motion.div>
@@ -325,13 +340,27 @@ export default function AdminFAQsPage() {
                     <Button variant="outline" onClick={() => setIsPriorityDialogOpen(false)} className="h-9">
                       Cancel
                     </Button>
-                    <Button 
-                      onClick={savePriorityOrder}
-                      className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white h-9"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Priority Order
-                    </Button>
+                                         <Button 
+                       onClick={savePriorityOrder}
+                       disabled={isSavingPriority || !priorityOrderChanged}
+                       className={`h-9 ${
+                         priorityOrderChanged 
+                           ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white" 
+                           : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                       }`}
+                     >
+                       {isSavingPriority ? (
+                         <>
+                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                           Saving...
+                         </>
+                       ) : (
+                         <>
+                           <Save className="h-4 w-4 mr-2" />
+                           Save Priority Order
+                         </>
+                       )}
+                     </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -421,23 +450,20 @@ export default function AdminFAQsPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {filteredFaqs.map((faq) => (
-                    <div key={faq.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                     {filteredFaqs.map((faq) => (
+                     <div key={faq.fid} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <Badge variant="outline" className="text-xs">
-                              Priority {faq.priority}
-                            </Badge>
-                            <h3 className="font-semibold text-slate-900">{faq.question}</h3>
-                          </div>
+                                                     <div className="flex items-center space-x-2 mb-2">
+                             <h3 className="font-semibold text-slate-900">{faq.question}</h3>
+                           </div>
                           <p className="text-slate-600 text-sm leading-relaxed">{faq.answer}</p>
-                          <div className="flex items-center space-x-4 mt-3 text-xs text-slate-400">
-                            <span>Created: {new Date(faq.created_at).toLocaleDateString()}</span>
-                            {faq.updated_at !== faq.created_at && (
-                              <span>Updated: {new Date(faq.updated_at).toLocaleDateString()}</span>
-                            )}
-                          </div>
+                                                     <div className="flex items-center space-x-4 mt-3 text-xs text-slate-400">
+                             <span>Created: {new Date(faq.created_at).toLocaleDateString()}</span>
+                             {faq.updated_at && faq.updated_at !== faq.created_at && (
+                               <span>Updated: {new Date(faq.updated_at).toLocaleDateString()}</span>
+                             )}
+                           </div>
                         </div>
                         <div className="flex items-center space-x-2 ml-4">
                           <Button
@@ -462,10 +488,10 @@ export default function AdminFAQsPage() {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel className="border-slate-300 text-slate-700 hover:bg-slate-50">Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDeleteFAQ(faq.id)}
-                                  className="bg-red-600 hover:bg-red-700 text-white"
-                                >
+                                                                 <AlertDialogAction
+                                   onClick={() => handleDeleteFAQ(faq.fid)}
+                                   className="bg-red-600 hover:bg-red-700 text-white"
+                                 >
                                   Delete
                                 </AlertDialogAction>
                               </AlertDialogFooter>
