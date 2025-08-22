@@ -9,14 +9,42 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.connection import get_db_session
 from crud.faq import faq_crud
 from models.faq import FAQ
-from schemas.faq import FAQCreate, FAQUpdate, FAQResponse
+from schemas.faq import FAQCreate, FAQUpdate, FAQResponse, FAQBulkCreate
 from utils.pagination import PaginationParams, PaginatedResult
 from .dependencies_admin import get_current_active_admin
 from models.admin import Admin
 
 router = APIRouter()
 
-# -------------------- Public / Read Endpoints --------------------
+@router.post("/createBulk", response_model=List[FAQResponse])
+async def create_faqs_bulk(
+    bulk_data: FAQBulkCreate,
+    current_admin: Admin = Security(get_current_active_admin),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Create multiple FAQs at once (Admin only)
+    """
+    faqs = await faq_crud.create_faqs_bulk(session, bulk_data.faqs)
+    await session.commit()
+    for faq in faqs:
+        await session.refresh(faq)
+    return faqs
+
+
+@router.post("/createOne", response_model=FAQResponse)
+async def create_faq(
+    faq_data: FAQCreate,
+    current_admin: Admin = Security(get_current_active_admin),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Create a new FAQ (Admin only)
+    """
+    faq = await faq_crud.create_faq(session, faq_data)
+    await session.commit()
+    await session.refresh(faq)
+    return faq
 
 @router.get("/getAll", response_model=PaginatedResult[FAQResponse])
 async def list_faqs(
@@ -32,6 +60,7 @@ async def list_faqs(
     result = await faq_crud.list_faqs(session, pagination, only_active=only_active)
     return result
 
+
 @router.get("/{fid}", response_model=FAQResponse)
 async def get_faq(fid: int, session: AsyncSession = Depends(get_db_session)):
     """
@@ -42,25 +71,6 @@ async def get_faq(fid: int, session: AsyncSession = Depends(get_db_session)):
         raise HTTPException(status_code=404, detail="FAQ not found")
     return faq
 
-
-
-
-
-# -------------------- Admin-only Endpoints --------------------
-
-@router.post("/create", response_model=FAQResponse)
-async def create_faq(
-    faq_data: FAQCreate,
-    current_admin: Admin = Security(get_current_active_admin),
-    session: AsyncSession = Depends(get_db_session)
-):
-    """
-    Create a new FAQ (Admin only)
-    """
-    faq = await faq_crud.create_faq(session, faq_data)
-    await session.commit()
-    await session.refresh(faq)
-    return faq
 
 
 @router.put("/update/{fid}", response_model=FAQResponse)

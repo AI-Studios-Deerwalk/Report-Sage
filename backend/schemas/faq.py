@@ -2,7 +2,7 @@
 Pydantic schemas for FAQs
 """
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field
 
 class FAQBase(BaseModel):
@@ -14,6 +14,14 @@ class FAQBase(BaseModel):
 class FAQCreate(FAQBase):
     """Schema for creating a new FAQ"""
     pass
+
+class FAQBulkCreate(BaseModel):
+    faqs: List[FAQCreate]
+
+    model_config = {
+        "from_attributes": True
+    }
+
 
 class FAQUpdate(BaseModel):
     """Schema for updating an existing FAQ"""

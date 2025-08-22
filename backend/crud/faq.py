@@ -3,7 +3,7 @@ FAQ CRUD Operations
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
@@ -24,6 +24,20 @@ class FAQCRUD:
         session.add(new_faq)
         await session.flush()
         return new_faq
+    
+    async def create_faqs_bulk(self, session: AsyncSession, faqs_data: List[FAQCreate]) -> List[FAQ]:
+        new_faqs = [
+            FAQ(
+                question=faq.question,
+                answer=faq.answer,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow()
+            )
+            for faq in faqs_data
+        ]
+        session.add_all(new_faqs)
+        await session.flush()
+        return new_faqs
 
     async def get_faq_by_id(self, session: AsyncSession, faq_fid: int) -> Optional[FAQ]:
         result = await session.execute(select(FAQ).where(FAQ.fid == faq_fid))
