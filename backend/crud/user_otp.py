@@ -3,12 +3,13 @@ UserOTP CRUD operations
 Database operations for UserOTP model
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 from sqlalchemy import and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy import delete
 
 from models.user_otp import UserOTP
 from models.user import User
@@ -67,8 +68,8 @@ class UserOTPCRUD:
         # Generate OTP code
         otp_code = self._generate_otp_code(otp_length)
         
-        # Calculate expiration time
-        expires_at = datetime.utcnow() + timedelta(minutes=expires_in_minutes)
+        # Calculate expiration time - strip timezone for database compatibility
+        expires_at = (datetime.now(timezone.utc) + timedelta(minutes=expires_in_minutes)).replace(tzinfo=None)
         
         # Create OTP object
         otp = UserOTP(
@@ -123,7 +124,7 @@ class UserOTPCRUD:
             and_(
                 UserOTP.user_id == user_id,
                 UserOTP.is_used == False,
-                UserOTP.expires_at > datetime.utcnow()
+                UserOTP.expires_at > datetime.now(timezone.utc).replace(tzinfo=None)
             )
         )
         
@@ -251,12 +252,10 @@ class UserOTPCRUD:
         Returns:
             Number of OTPs removed
         """
+        # Delete expired OTPs
         result = await session.execute(
-            select(UserOTP).where(
-                or_(
-                    UserOTP.expires_at < datetime.utcnow(),
-                    UserOTP.is_used == True
-                )
+            delete(UserOTP).where(
+                UserOTP.expires_at < datetime.now(timezone.utc).replace(tzinfo=None),
             )
         )
         expired_otps = result.scalars().all()
@@ -296,7 +295,7 @@ class UserOTPCRUD:
             }
         
         # Calculate time remaining
-        time_remaining = valid_otp.expires_at - datetime.utcnow()
+        time_remaining = valid_otp.expires_at - datetime.now(timezone.utc).replace(tzinfo=None)
         expires_in_seconds = int(time_remaining.total_seconds())
         
         # Calculate attempts remaining (assuming max 5 attempts)

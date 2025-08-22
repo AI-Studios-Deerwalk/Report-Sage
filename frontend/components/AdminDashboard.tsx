@@ -66,28 +66,6 @@ interface User {
   created_at: string
 }
 
-interface UserActivity {
-  id: number
-  user_id: number
-  action_type: string
-  action_description: string
-  ip_address?: string
-  user_agent?: string
-  created_at: string
-}
-
-interface SystemHealth {
-  cpu_usage: number
-  memory_usage: number
-  disk_usage: number
-  active_connections: number
-  total_users: number
-  active_users_24h: number
-  is_healthy: boolean
-  status_message: string
-  timestamp: string
-}
-
 interface AdminData {
   aid: number
   email: string
@@ -111,8 +89,6 @@ export default function AdminDashboard() {
     recent_7d: 0,
     verification_rate: 0
   })
-  const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null)
-  const [recentActivities, setRecentActivities] = useState<UserActivity[]>([])
 
   const router = useRouter()
 
@@ -166,13 +142,13 @@ export default function AdminDashboard() {
     }
     
     setFilteredUsers(filtered)
-  }, [searchTerm, statusFilter, users])
+  }, [users, searchTerm, statusFilter])
 
   const fetchDashboardData = async () => {
     try {
       const adminToken = localStorage.getItem('adminToken')
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      
+
       // Fetch users
       const usersResponse = await fetch(`${API_BASE_URL}/api/v1/admin/users`, {
         headers: { 'Authorization': `Bearer ${adminToken}` }
@@ -190,24 +166,6 @@ export default function AdminDashboard() {
       if (statsResponse.ok) {
         const statsData = await statsResponse.json()
         setUserStats(statsData)
-      }
-
-      // Fetch system health
-      const healthResponse = await fetch(`${API_BASE_URL}/api/v1/admin/system/health`, {
-        headers: { 'Authorization': `Bearer ${adminToken}` }
-      })
-      if (healthResponse.ok) {
-        const healthData = await healthResponse.json()
-        setSystemHealth(healthData)
-      }
-
-      // Fetch recent activities
-      const activitiesResponse = await fetch(`${API_BASE_URL}/api/v1/admin/activities/recent?limit=20`, {
-        headers: { 'Authorization': `Bearer ${adminToken}` }
-      })
-      if (activitiesResponse.ok) {
-        const activitiesData = await activitiesResponse.json()
-        setRecentActivities(activitiesData)
       }
 
     } catch (err: any) {
@@ -403,7 +361,7 @@ export default function AdminDashboard() {
 
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-white/80 backdrop-blur-sm border border-slate-200/50 p-1 rounded-xl shadow-lg">
+          <TabsList className="grid w-full grid-cols-4 bg-white/80 backdrop-blur-sm border border-slate-200/50 p-1 rounded-xl shadow-lg">
             <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">
               <BarChart3 className="h-4 w-4 mr-2" />
               Overview
@@ -411,10 +369,6 @@ export default function AdminDashboard() {
             <TabsTrigger value="users" className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">
               <Users className="h-4 w-4 mr-2" />
               Users
-            </TabsTrigger>
-            <TabsTrigger value="activities" className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">
-              <Activity className="h-4 w-4 mr-2" />
-              Activities
             </TabsTrigger>
             <TabsTrigger value="system" className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white">
               <Server className="h-4 w-4 mr-2" />
@@ -484,44 +438,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* System Health Overview */}
-            {systemHealth && (
-              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Server className="h-5 w-5 text-blue-600" />
-                    <span>System Health Overview</span>
-                    <Badge variant={systemHealth.is_healthy ? "default" : "destructive"}>
-                      {systemHealth.is_healthy ? "Healthy" : "Warning"}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-600">CPU Usage</span>
-                        <span className="font-medium">{systemHealth.cpu_usage.toFixed(1)}%</span>
-                      </div>
-                      <Progress value={systemHealth.cpu_usage} className="h-2" />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-600">Memory Usage</span>
-                        <span className="font-medium">{systemHealth.memory_usage.toFixed(1)}%</span>
-                      </div>
-                      <Progress value={systemHealth.memory_usage} className="h-2" />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-600">Disk Usage</span>
-                        <span className="font-medium">{systemHealth.disk_usage.toFixed(1)}%</span>
-                      </div>
-                      <Progress value={systemHealth.disk_usage} className="h-2" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {/* This section is removed as per the edit hint */}
           </TabsContent>
 
           {/* Users Tab */}
@@ -688,118 +605,9 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          {/* Activities Tab */}
-          <TabsContent value="activities" className="space-y-6">
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Activity className="h-5 w-5 text-blue-600" />
-                  <span>User Activity Log</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentActivities.map((activity) => (
-                    <div key={activity.id} className="flex items-start space-x-4 p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full mt-2"></div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-slate-900">{activity.action_description}</h4>
-                          <Badge variant="outline" className="text-xs">
-                            {activity.action_type}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center space-x-4 mt-2 text-sm text-slate-500">
-                          <span className="flex items-center">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {formatDate(activity.created_at)}
-                          </span>
-                          {activity.ip_address && (
-                            <span className="flex items-center">
-                              <Globe className="h-3 w-3 mr-1" />
-                              {activity.ip_address}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
           {/* System Tab */}
           <TabsContent value="system" className="space-y-6">
-            {systemHealth && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* System Metrics */}
-                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Cpu className="h-5 w-5 text-blue-600" />
-                      <span>System Metrics</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex items-center justify-between text-sm mb-2">
-                          <span className="text-slate-600">CPU Usage</span>
-                          <span className="font-medium">{systemHealth.cpu_usage.toFixed(1)}%</span>
-                        </div>
-                        <Progress value={systemHealth.cpu_usage} className="h-3" />
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between text-sm mb-2">
-                          <span className="text-slate-600">Memory Usage</span>
-                          <span className="font-medium">{systemHealth.memory_usage.toFixed(1)}%</span>
-                        </div>
-                        <Progress value={systemHealth.memory_usage} className="h-3" />
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between text-sm mb-2">
-                          <span className="text-slate-600">Disk Usage</span>
-                          <span className="font-medium">{systemHealth.disk_usage.toFixed(1)}%</span>
-                        </div>
-                        <Progress value={systemHealth.disk_usage} className="h-3" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Application Metrics */}
-                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <BarChart3 className="h-5 w-5 text-blue-600" />
-                      <span>Application Metrics</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-4 bg-slate-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">{systemHealth.total_users}</div>
-                        <div className="text-sm text-slate-600">Total Users</div>
-                      </div>
-                      <div className="text-center p-4 bg-slate-50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">{systemHealth.active_users_24h}</div>
-                        <div className="text-sm text-slate-600">Active (24h)</div>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-slate-50 rounded-lg">
-                      <div className="text-sm text-slate-600 mb-2">System Status</div>
-                      <div className="flex items-center space-x-2">
-                        <div className={`w-3 h-3 rounded-full ${systemHealth.is_healthy ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                        <span className="text-sm font-medium">
-                          {systemHealth.status_message}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+            {/* This section is removed as per the edit hint */}
           </TabsContent>
 
           {/* Tools Tab */}

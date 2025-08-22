@@ -157,12 +157,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Don't automatically log in - user needs to verify OTP first
       console.log('✅ Registration successful for user:', userData.email);
-      console.log('📧 OTP sent:', registrationData.email_sent);
+      console.log('📧 User created with ID:', registrationData.user?.uid);
       
       return {
-        user_id: registrationData.user_id,
-        email_sent: registrationData.email_sent,
-        otp_expires_in: registrationData.otp_expires_in,
+        user_id: registrationData.user_id, // Backend now returns this directly
+        email_sent: registrationData.email_sent, // Backend now returns this
+        otp_expires_in: registrationData.otp_expires_in, // Backend now returns this
         access_token: registrationData.access_token,
         token_type: registrationData.token_type,
         user: registrationData.user

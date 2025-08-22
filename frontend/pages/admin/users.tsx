@@ -20,7 +20,9 @@ import {
   Clock,
   Globe,
   ArrowLeft,
-  Menu
+  Menu,
+  BarChart3,
+  Server
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -338,9 +340,7 @@ export default function AdminUsersPage() {
   const sidebarItems = [
     { id: "overview", label: "Overview", icon: <Shield className="h-5 w-5" /> },
     { id: "users", label: "User Management", icon: <Users className="h-5 w-5" /> },
-    { id: "activities", label: "Activities", icon: <Activity className="h-5 w-5" /> },
-    { id: "system", label: "System", icon: <CheckCircle className="h-5 w-5" /> },
-    { id: "tools", label: "Tools", icon: <Download className="h-5 w-5" /> }
+    { id: "system", label: "System", icon: <Server className="h-5 w-5" /> },
   ]
 
   const handleSidebarItemClick = (itemId: string) => {
@@ -354,14 +354,8 @@ export default function AdminUsersPage() {
       case "users":
         router.push('/admin/users')
         break
-      case "activities":
-        router.push('/admin/activities')
-        break
       case "system":
         router.push('/admin/system')
-        break
-      case "tools":
-        router.push('/admin/tools')
         break
       default:
         router.push('/admin/dashboard')

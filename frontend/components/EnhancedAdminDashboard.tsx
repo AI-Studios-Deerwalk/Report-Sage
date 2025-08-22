@@ -65,30 +65,8 @@ interface User {
   phone_number?: string
   is_active: boolean
   is_email_verified: boolean
-  is_blocked: boolean
+  is_blocked?: boolean
   created_at: string
-}
-
-interface UserActivity {
-  id: number
-  user_id: number
-  action_type: string
-  action_description: string
-  ip_address?: string
-  user_agent?: string
-  created_at: string
-}
-
-interface SystemHealth {
-  cpu_usage: number
-  memory_usage: number
-  disk_usage: number
-  active_connections: number
-  total_users: number
-  active_users_24h: number
-  is_healthy: boolean
-  status_message: string
-  timestamp: string
 }
 
 interface AdminData {
@@ -115,8 +93,6 @@ export default function EnhancedAdminDashboard() {
     recent_7d: 0,
     verification_rate: 0
   })
-  const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null)
-  const [recentActivities, setRecentActivities] = useState<UserActivity[]>([])
 
   const router = useRouter()
 
@@ -124,7 +100,6 @@ export default function EnhancedAdminDashboard() {
   const sidebarItems = [
     { id: "overview", label: "Overview", icon: <Home className="h-5 w-5" /> },
     { id: "users", label: "User Management", icon: <Users className="h-5 w-5" /> },
-    { id: "activities", label: "Activities", icon: <Activity className="h-5 w-5" /> },
     { id: "system", label: "System", icon: <Server className="h-5 w-5" /> },
     { id: "tools", label: "Tools", icon: <Settings className="h-5 w-5" /> }
   ]
@@ -139,9 +114,6 @@ export default function EnhancedAdminDashboard() {
         break
       case "users":
         router.push('/admin/users')
-        break
-      case "activities":
-        router.push('/admin/activities')
         break
       case "system":
         router.push('/admin/system')
@@ -204,13 +176,13 @@ export default function EnhancedAdminDashboard() {
     }
     
     setFilteredUsers(filtered)
-  }, [searchTerm, statusFilter, users])
+  }, [users, searchTerm, statusFilter])
 
   const fetchDashboardData = async () => {
     try {
       const adminToken = localStorage.getItem('adminToken')
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      
+
       // Fetch users
       const usersResponse = await fetch(`${API_BASE_URL}/api/v1/admin/users`, {
         headers: { 'Authorization': `Bearer ${adminToken}` }
@@ -228,24 +200,6 @@ export default function EnhancedAdminDashboard() {
       if (statsResponse.ok) {
         const statsData = await statsResponse.json()
         setUserStats(statsData)
-      }
-
-      // Fetch system health
-      const healthResponse = await fetch(`${API_BASE_URL}/api/v1/admin/system/health`, {
-        headers: { 'Authorization': `Bearer ${adminToken}` }
-      })
-      if (healthResponse.ok) {
-        const healthData = await healthResponse.json()
-        setSystemHealth(healthData)
-      }
-
-      // Fetch recent activities
-      const activitiesResponse = await fetch(`${API_BASE_URL}/api/v1/admin/activities/recent?limit=20`, {
-        headers: { 'Authorization': `Bearer ${adminToken}` }
-      })
-      if (activitiesResponse.ok) {
-        const activitiesData = await activitiesResponse.json()
-        setRecentActivities(activitiesData)
       }
 
     } catch (err: any) {

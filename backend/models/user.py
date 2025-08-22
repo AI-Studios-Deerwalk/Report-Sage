@@ -2,7 +2,7 @@
 User model for the DWIT Academia application
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Boolean, DateTime, Integer
 from sqlalchemy.orm import relationship
 
@@ -35,9 +35,9 @@ class User(Base):
     # Verification
     is_email_verified = Column(Boolean, default=False, nullable=False)
     
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    # Timestamps - use timezone-aware datetime but strip timezone for database
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
     
     # Status
     is_active = Column(Boolean, default=True, nullable=False)

@@ -1,7 +1,7 @@
 """
 Admin management routes
 Admin authentication and user management endpoints
-Enhanced with user activity tracking, system health monitoring, and email functionality
+Enhanced with email functionality
 """
 
 from typing import List, Optional, Dict, Any
@@ -78,16 +78,6 @@ async def admin_login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
-    
-    # Log admin login activity
-    await admin_crud.log_user_activity(
-        session, 
-        admin.aid, 
-        "admin_login", 
-        f"Admin {admin.email} logged in",
-        request.client.host if request.client else None,
-        request.headers.get("user-agent")
-    )
     
     # Generate JWT
     access_token = create_access_token(data={"sub": str(admin.aid)})
@@ -175,14 +165,6 @@ async def block_user(
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
-    # Log the action
-    await admin_crud.log_user_activity(
-        session, 
-        current_admin.aid, 
-        "admin_block_user", 
-        f"Admin blocked user ID {user_id}"
-    )
-    
     return {"message": "User blocked successfully"}
 
 
@@ -198,14 +180,6 @@ async def unblock_user(
     success = await admin_crud.unblock_user(session, user_id)
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    
-    # Log the action
-    await admin_crud.log_user_activity(
-        session, 
-        current_admin.aid, 
-        "admin_unblock_user", 
-        f"Admin unblocked user ID {user_id}"
-    )
     
     return {"message": "User unblocked successfully"}
 
@@ -223,14 +197,6 @@ async def verify_user_email(
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
-    # Log the action
-    await admin_crud.log_user_activity(
-        session, 
-        current_admin.aid, 
-        "admin_verify_user", 
-        f"Admin manually verified user ID {user_id}"
-    )
-    
     return {"message": "User email verified successfully"}
 
 
@@ -247,75 +213,7 @@ async def delete_user_permanently(
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     
-    # Log the action
-    await admin_crud.log_user_activity(
-        session, 
-        current_admin.aid, 
-        "admin_delete_user", 
-        f"Admin permanently deleted user ID {user_id}"
-    )
-    
     return {"message": "User deleted permanently"}
-
-
-# ---------- User Activity Tracking ----------
-
-@router.get("/users/{user_id}/activities")
-async def get_user_activities(
-    user_id: int,
-    limit: int = Query(50, ge=1, le=200, description="Number of activities to return"),
-    current_admin: Admin = Security(get_current_active_admin),
-    session: AsyncSession = Depends(get_db_session)
-):
-    """
-    Get user activity history (Admin only)
-    """
-    activities = await admin_crud.get_user_activities(session, user_id, limit=limit)
-    return [activity.to_dict() for activity in activities]
-
-
-@router.get("/activities/recent")
-async def get_recent_activities(
-    limit: int = Query(100, ge=1, le=500, description="Number of recent activities to return"),
-    current_admin: Admin = Security(get_current_active_admin),
-    session: AsyncSession = Depends(get_db_session)
-):
-    """
-    Get recent activities across all users (Admin only)
-    """
-    activities = await admin_crud.get_recent_activities(session, limit=limit)
-    return [activity.to_dict() for activity in activities]
-
-
-# ---------- System Health Monitoring ----------
-
-@router.get("/system/health")
-async def get_system_health(
-    current_admin: Admin = Security(get_current_active_admin),
-    session: AsyncSession = Depends(get_db_session)
-):
-    """
-    Get current system health metrics (Admin only)
-    """
-    health_data = await admin_crud.get_system_health(session)
-    
-    # Save health data to database
-    await admin_crud.save_system_health(session, health_data)
-    
-    return health_data
-
-
-@router.get("/system/health/history")
-async def get_health_history(
-    hours: int = Query(24, ge=1, le=168, description="Number of hours of history to retrieve"),
-    current_admin: Admin = Security(get_current_active_admin),
-    session: AsyncSession = Depends(get_db_session)
-):
-    """
-    Get system health history (Admin only)
-    """
-    health_history = await admin_crud.get_health_history(session, hours=hours)
-    return [health.to_dict() for health in health_history]
 
 
 # ---------- Email Management ----------
@@ -341,14 +239,6 @@ async def send_user_email(
             subject=email_data.get("subject", "Message from Admin"),
             body=email_data.get("body", ""),
             html_content=email_data.get("html_content")
-        )
-        
-        # Log the action
-        await admin_crud.log_user_activity(
-            session, 
-            current_admin.aid, 
-            "admin_send_email", 
-            f"Admin sent email to user {user.email}: {email_data.get('subject', 'No subject')}"
         )
         
         return {"message": f"Email sent successfully to {user.email}"}
@@ -389,14 +279,6 @@ async def send_bulk_email(
             success_count += 1
         except Exception as e:
             failed_emails.append({"email": user.email, "error": str(e)})
-    
-    # Log the action
-    await admin_crud.log_user_activity(
-        session, 
-        current_admin.aid, 
-        "admin_bulk_email", 
-        f"Admin sent bulk email to {success_count} users, {len(failed_emails)} failed"
-    )
     
     return {
         "message": f"Bulk email completed",

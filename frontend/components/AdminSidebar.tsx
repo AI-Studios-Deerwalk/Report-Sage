@@ -66,12 +66,12 @@ export default function AdminSidebar({
     {
       id: "overview",
       label: "Overview",
-      icon: <Home className="h-5 w-5" />
+      icon: <BarChart3 className="h-4 w-4" />,
     },
     {
       id: "users",
       label: "User Management",
-      icon: <Users className="h-5 w-5" />,
+      icon: <Users className="h-4 w-4" />,
       subItems: [
         { id: "all-users", label: "All Users", icon: <Users className="h-4 w-4" /> },
         { id: "active-users", label: "Active Users", icon: <UserCheck className="h-4 w-4" /> },
@@ -80,19 +80,9 @@ export default function AdminSidebar({
       ]
     },
     {
-      id: "activities",
-      label: "Activities",
-      icon: <Activity className="h-5 w-5" />,
-      subItems: [
-        { id: "user-activities", label: "User Activities", icon: <Activity className="h-4 w-4" /> },
-        { id: "system-logs", label: "System Logs", icon: <FileText className="h-4 w-4" /> },
-        { id: "security-events", label: "Security Events", icon: <AlertTriangle className="h-4 w-4" /> }
-      ]
-    },
-    {
       id: "system",
       label: "System",
-      icon: <Server className="h-5 w-5" />,
+      icon: <Server className="h-4 w-4" />,
       subItems: [
         { id: "system-health", label: "System Health", icon: <Cpu className="h-4 w-4" /> },
         { id: "performance", label: "Performance", icon: <BarChart3 className="h-4 w-4" /> },

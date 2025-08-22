@@ -30,6 +30,11 @@ export function Sidebar() {
   const { user, logout } = useAuth()
   const router = useRouter()
 
+  // If no user, don't render the sidebar (this shouldn't happen with ProtectedRoute)
+  if (!user) {
+    return null
+  }
+
   const toggleCollapsed = () => {
     setCollapsed((v) => {
       const next = !v
@@ -42,10 +47,8 @@ export function Sidebar() {
     })
   }
 
-  const fullName = user ? `${user.fname} ${user.lname}` : "Guest"
-  const roleLabel = user && user.email
-    ? (user.email.toLowerCase().includes('deerwalk.edu.np') ? 'DWIT User' : 'User')
-    : ''
+  const fullName = `${user.fname} ${user.lname}`
+  const roleLabel = user.email.toLowerCase().includes('deerwalk.edu.np') ? 'DWIT User' : 'User'
   const initials = (() => {
     const source = fullName.trim()
     if (!source) return "U"

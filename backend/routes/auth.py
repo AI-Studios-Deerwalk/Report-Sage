@@ -46,11 +46,36 @@ async def register_user(
         # Create user
         user = await user_crud.create(session, user_data)
         
+        # Create email verification OTP
+        otp = await user_otp_crud.create_otp(
+            session=session,
+            user_id=user.uid,
+            for_purpose="verification",
+            expires_in_minutes=10,
+            otp_length=6
+        )
+        
+        # Send OTP email
+        try:
+            email_sent = email_service.send_otp_email(
+                recipient_email=user.email,
+                recipient_name=user.fname,
+                otp_code=otp.otp_code
+            )
+        except Exception as email_error:
+            # Log the error but don't fail registration
+            print(f"⚠️ Email sending failed: {email_error}")
+            print(f"📧 OTP Code for {user.email}: {otp.otp_code}")
+            email_sent = False
+        
         # Create token response
         token_response = create_token_response(user)
         
         return {
             **token_response,
+            "user_id": user.uid,
+            "email_sent": email_sent,
+            "otp_expires_in": 600,  # 10 minutes in seconds
             "message": "User registered successfully. Please verify your email."
         }
         

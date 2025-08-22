@@ -2,14 +2,10 @@
 Admin CRUD operations
 - Admin authentication
 - Admin management actions on Users (block/unblock/delete/list/count)
-- User activity tracking
-- System health monitoring
 """
 
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
-import psutil
-import os
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -17,8 +13,6 @@ from sqlalchemy import func, and_, desc
 
 from models.admin import Admin
 from models.user import User
-from models.user_activity import UserActivity
-from models.system_health import SystemHealth
 from schemas.admin import AdminLogin, AdminPasswordChange
 from utils.password import verify_password, hash_password
 
@@ -203,121 +197,6 @@ class AdminCRUD:
         user.updated_at = datetime.utcnow()
         await session.flush()
         return True
-
-    # ---------- User Activity Tracking ----------
-
-    async def log_user_activity(self, session: AsyncSession, user_id: int, action_type: str, 
-                               action_description: Optional[str] = None, ip_address: Optional[str] = None,
-                               user_agent: Optional[str] = None) -> UserActivity:
-        """Log a user activity"""
-        activity = UserActivity(
-            user_id=user_id,
-            action_type=action_type,
-            action_description=action_description,
-            ip_address=ip_address,
-            user_agent=user_agent
-        )
-        session.add(activity)
-        await session.flush()
-        await session.refresh(activity)
-        return activity
-
-    async def get_user_activities(self, session: AsyncSession, user_id: int, 
-                                 limit: int = 50) -> List[UserActivity]:
-        """Get user activity history"""
-        result = await session.execute(
-            select(UserActivity)
-            .where(UserActivity.user_id == user_id)
-            .order_by(desc(UserActivity.created_at))
-            .limit(limit)
-        )
-        return result.scalars().all()
-
-    async def get_recent_activities(self, session: AsyncSession, limit: int = 100) -> List[UserActivity]:
-        """Get recent activities across all users"""
-        result = await session.execute(
-            select(UserActivity)
-            .order_by(desc(UserActivity.created_at))
-            .limit(limit)
-        )
-        return result.scalars().all()
-
-    # ---------- System Health Monitoring ----------
-
-    async def get_system_health(self, session: AsyncSession) -> Dict[str, Any]:
-        """Get current system health metrics"""
-        # Get system metrics
-        cpu_usage = psutil.cpu_percent(interval=1)
-        memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
-        
-        # Get database connection info (simplified)
-        active_connections = 0  # This would need proper DB connection monitoring
-        
-        # Get application metrics
-        total_users = await self.count_users(session)
-        
-        # Users active in last 24 hours (simplified - would need proper activity tracking)
-        day_ago = datetime.utcnow() - timedelta(days=1)
-        active_24h_result = await session.execute(
-            select(func.count(UserActivity.user_id.distinct()))
-            .where(UserActivity.created_at >= day_ago)
-        )
-        active_users_24h = active_24h_result.scalar() or 0
-        
-        # Determine overall health
-        is_healthy = (
-            cpu_usage < 80 and 
-            memory.percent < 80 and 
-            disk.percent < 90
-        )
-        
-        status_message = "System is healthy"
-        if cpu_usage > 80:
-            status_message = "High CPU usage detected"
-        elif memory.percent > 80:
-            status_message = "High memory usage detected"
-        elif disk.percent > 90:
-            status_message = "High disk usage detected"
-        
-        return {
-            "cpu_usage": cpu_usage,
-            "memory_usage": memory.percent,
-            "disk_usage": disk.percent,
-            "active_connections": active_connections,
-            "total_users": total_users,
-            "active_users_24h": active_users_24h,
-            "is_healthy": is_healthy,
-            "status_message": status_message,
-            "timestamp": datetime.utcnow().isoformat()
-        }
-
-    async def save_system_health(self, session: AsyncSession, health_data: Dict[str, Any]) -> SystemHealth:
-        """Save system health metrics to database"""
-        health = SystemHealth(
-            cpu_usage=health_data.get("cpu_usage"),
-            memory_usage=health_data.get("memory_usage"),
-            disk_usage=health_data.get("disk_usage"),
-            active_connections=health_data.get("active_connections"),
-            total_users=health_data.get("total_users"),
-            active_users_24h=health_data.get("active_users_24h"),
-            is_healthy=health_data.get("is_healthy", True),
-            status_message=health_data.get("status_message")
-        )
-        session.add(health)
-        await session.flush()
-        await session.refresh(health)
-        return health
-
-    async def get_health_history(self, session: AsyncSession, hours: int = 24) -> List[SystemHealth]:
-        """Get system health history"""
-        time_threshold = datetime.utcnow() - timedelta(hours=hours)
-        result = await session.execute(
-            select(SystemHealth)
-            .where(SystemHealth.created_at >= time_threshold)
-            .order_by(desc(SystemHealth.created_at))
-        )
-        return result.scalars().all()
 
 
 # Global instance
