@@ -25,6 +25,8 @@ backend/*.egg-info/
 backend/.eggs/
 backend/.DS_Store
 backend/Thumbs.db
+*.pyc
+*.pdf
 
 # Frontend
 frontend/node_modules/
