@@ -148,4 +148,76 @@
       background-position: 0% 50%;
     }
   }
+
+  /* Modal positioning fixes - only for AlertDialog (delete modals) */
+  [data-radix-alert-dialog-overlay] {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 50 !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 1rem !important;
+  }
+
+  [data-radix-alert-dialog-content] {
+    position: static !important;
+    margin: 0 !important;
+    max-width: 28rem !important;
+    width: 100% !important;
+    transform: none !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    animation: none !important;
+    transition: none !important;
+    translate-x: none !important;
+    translate-y: none !important;
+    /* Force immediate positioning */
+    transform-origin: center !important;
+    will-change: auto !important;
+  }
+
+  /* Override any conflicting animations and transforms for AlertDialog only */
+  [data-radix-alert-dialog-content] * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Override the specific transform classes from the AlertDialog component */
+  [data-radix-alert-dialog-content].translate-x-\[-50\%\],
+  [data-radix-alert-dialog-content].translate-y-\[-50\%\] {
+    transform: none !important;
+  }
+
+  /* Override data state animations for AlertDialog only */
+  [data-radix-alert-dialog-content][data-state="open"],
+  [data-radix-alert-dialog-content][data-state="closed"] {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  /* Override all possible animation classes that might be applied */
+  [data-radix-alert-dialog-content].data-\[state\=open\]\:animate-in,
+  [data-radix-alert-dialog-content].data-\[state\=closed\]\:animate-out,
+  [data-radix-alert-dialog-content].data-\[state\=closed\]\:fade-out-0,
+  [data-radix-alert-dialog-content].data-\[state\=open\]\:fade-in-0,
+  [data-radix-alert-dialog-content].data-\[state\=closed\]\:zoom-out-95,
+  [data-radix-alert-dialog-content].data-\[state\=open\]\:zoom-in-95,
+  [data-radix-alert-dialog-content].data-\[state\=closed\]\:slide-out-to-left-1\/2,
+  [data-radix-alert-dialog-content].data-\[state\=closed\]\:slide-out-to-top-\[48\%\],
+  [data-radix-alert-dialog-content].data-\[state\=open\]\:slide-in-from-left-1\/2,
+  [data-radix-alert-dialog-content].data-\[state\=open\]\:slide-in-from-top-\[48\%\] {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  /* Override any duration classes */
+  [data-radix-alert-dialog-content].duration-200 {
+    transition: none !important;
+  }
 }

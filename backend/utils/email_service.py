@@ -311,3 +311,58 @@ class EmailService:
 
 # Create global instance
 email_service = EmailService()
+
+
+async def send_email(
+    to_email: str,
+    subject: str,
+    body: str = "",
+    html_content: Optional[str] = None
+) -> bool:
+    """
+    Send a general email (async wrapper for admin email functionality)
+    
+    Args:
+        to_email: Email address to send to
+        subject: Email subject
+        body: Plain text email body
+        html_content: HTML email content (optional)
+        
+    Returns:
+        True if email sent successfully, False otherwise
+    """
+    if not email_service.smtp_username or not email_service.smtp_password:
+        logger.warning(f"SMTP not configured. Would send email to {to_email}: {subject}")
+        return False
+    
+    try:
+        # Create message
+        message = MIMEMultipart("alternative")
+        message["Subject"] = subject
+        message["From"] = f"{email_service.from_name} <{email_service.from_email}>"
+        message["To"] = to_email
+        
+        # Create MIME parts
+        text_part = MIMEText(body, "plain")
+        message.attach(text_part)
+        
+        # Add HTML content if provided
+        if html_content:
+            html_part = MIMEText(html_content, "html")
+            message.attach(html_part)
+        
+        # Send email
+        server = email_service._create_smtp_connection()
+        if not server:
+            return False
+        
+        text = message.as_string()
+        server.sendmail(email_service.from_email, to_email, text)
+        server.quit()
+        
+        logger.info(f"Email sent successfully to {to_email}: {subject}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
+        return False

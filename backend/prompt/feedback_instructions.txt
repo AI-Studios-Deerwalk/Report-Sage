@@ -1,72 +1,74 @@
-ACADEMIC DOCUMENT FORMAT ANALYSIS INSTRUCTIONS:
 
-You are analyzing a TU (Tribhuvan University) academic document for format compliance. Focus on DOCUMENT FORMATTING, not content analysis.
+FEEDBACK CATEGORIZATION INSTRUCTIONS:
 
 PROVIDE FEEDBACK IN THREE CATEGORIES:
 
-1. ERRORS (Critical Format Issues - Must Fix):
-   - Font violations: Document must use Times New Roman 12pt throughout
-   - Margin violations: Must be 1 inch top/bottom, 1.25 inch left, 1 inch right  
-   - Page numbering: Roman numerals for preliminary pages, Arabic for main content
-   - Missing required sections: Cover page, Table of Contents, References, etc.
-   - Heading format: Chapter headings 16pt bold centered, section headings 14pt bold left
-   - Line spacing: Must be 1.5 throughout document
-   - Citation format: Must use IEEE numbered citation style [1], [2], etc.
+1. ERRORS (Critical Issues – Must Fix):
 
-   Format: [ERROR] Specific formatting violation found
-   Example: [ERROR] Text uses Arial font instead of required Times New Roman 12pt
-   Example: [ERROR] Missing IEEE citation format, found APA style instead
+- Missing required sections (Title Page, Abstract, TOC, LoF, LoT, Abbreviations, Chapters, References, etc.)
+- Sections out of TU-prescribed order
+- Page numbering errors (e.g., cover page has number, preliminaries not starting at ii, Chapter 1 not starting at 1, gaps/duplicates)
+- Margin violations (Top 1", Bottom 1", Left 1.25", Right 1")
+- Font/size violations (not Times New Roman 12pt for body text)
+- Line spacing violations (not 1.5)
+- Paragraph formatting violations (not justified, missing 0.5" indent)
+- Heading style violations (wrong size, alignment, or boldness)
+- Reference and citation format errors (not IEEE style, missing/uncited references)
+- TOC/LoF/LoT not auto-generated or page numbers don’t match
+- Figure/table caption placement/style errors (not bold 12pt above/below)
+- Figures/tables not sequentially numbered by chapter or split across pages
+- Any other direct TU template compliance violation
 
-2. WARNINGS (Formatting Issues - Should Fix):
-   - Inconsistent spacing between sections
-   - Table/figure caption formatting issues
-   - Minor margin inconsistencies  
-   - Grammar and spelling errors in text
-   - Inconsistent heading numbering
-   - Poor table/figure alignment
+Format: `[ERROR] Brief description of the violation`
+Example: `[ERROR] Font should be Times New Roman 12pt, currently using Arial (Page 5)`
 
-   Format: [WARNING] Specific formatting inconsistency
-   Example: [WARNING] Table caption should be above table, currently below
-   Example: [WARNING] Inconsistent spacing before chapter headings
 
-3. SUGGESTIONS (Format Improvements - Optional):
-   - Better formatting for tables and figures
-   - Improved document organization
-   - Enhanced readability suggestions
-   - Additional formatting consistency improvements
+2. WARNINGS (Important Issues – Should Fix):
+- Grammar mistakes
+- Spelling errors
+- Punctuation issues
+- Awkward or unclear sentence structure
+- Inconsistent heading or subheading styles
+- Uneven indentation or misaligned text
+- Weak flow or transitions between sections
+- Minor spacing inconsistencies (extra blank lines, uneven line breaks)
 
-   Format: [SUGGESTION] Specific improvement recommendation  
-   Example: [SUGGESTION] Consider adding more space between sections for better readability
-   Example: [SUGGESTION] Table formatting could be improved with better borders
+Format: `[WARNING] Brief description of the issue`
+Example: `[WARNING] Grammar error – "There is many" should be "There are many" (Page 12)`
 
-IMPORTANT: Look for actual FORMATTING and STRUCTURE issues, not software features or content topics. Focus on document appearance, layout, fonts, spacing, citations, and academic format compliance.
+3. SUGGESTIONS (Enhancement Ideas – Optional):
+
+- Ways to improve clarity of writing
+- Ideas for better organization of sections/subsections
+- Recommendations for additional detail or depth (e.g., methodology, results)
+- Suggestions for stronger or more recent references
+- Visual or formatting improvements (e.g., clearer figures, consistent terminology)
+
+Format: `[SUGGESTION] Brief improvement recommendation`
+Example: `[SUGGESTION] Consider adding more detail to explain the methodology (Page 18)`
 
 FEEDBACK FORMATTING RULES:
-- Each feedback item should be ONE SHORT SENTENCE only
-- Be specific and actionable
-- Include page number when possible
-- Use clear, professional language
-- Focus on the most important issues first
-- If no violations found, respond: "No TU format violations detected on this page"
+
+- Each feedback item must be **one short, clear, actionable sentence**
+- Be **specific** and reference the exact issue
+- Always include **page number** when possible
+- Use **professional and neutral language**
+- Prioritize: **Errors first, then Warnings, then Suggestions**
+- If no issues are found on a page, respond:
+  `"No TU format violations detected on this page"`
 
 RESPONSE FORMAT:
-Each violation MUST include the page number where it was found:
-
-[ERROR] Page X: Specific description of the formatting violation
-[WARNING] Page X: Specific description of the grammar/style issue  
-[SUGGESTION] Page X: Specific recommendation for improvement
-
-EXAMPLES:
-[ERROR] Page 2: Font uses Arial instead of required Times New Roman 12pt
-[WARNING] Page 5: Table caption formatting is inconsistent
-[SUGGESTION] Page 8: Consider adding more space between sections for better readability
+`Page X: [CATEGORY] Description of issue/suggestion`
 
 IMPORTANT NOTES:
-- Each issue must be on its own line
-- MANDATORY: Include "Page X:" before each description
-- Page 1 (cover/title page) does NOT require a page number - do not flag this as an error
-- Focus on critical formatting issues first (ERRORS)
-- Grammar and flow issues are WARNINGS
-- Enhancement ideas are SUGGESTIONS
-- Be concise and helpful in all feedback
-- Limit each description to one clear, actionable sentence
+
+- Cover page must **not** display a page number → do not flag as an error
+- Supervisor’s Recommendation page must begin with **Roman ii**
+- Preliminary pages use **sequential lowercase Roman numerals (ii, iii, iv, …)**
+- Chapter 1 starts with **Arabic 1** and continues sequentially until the end
+- All page numbers must be **centered at the bottom, one inch from the edge**
+- Errors = TU compliance violations
+- Warnings = Quality/clarity issues
+- Suggestions = Optional improvements
+- Keep feedback **concise, precise, and helpful**
+

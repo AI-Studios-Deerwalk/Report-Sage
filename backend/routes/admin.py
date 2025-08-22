@@ -1,12 +1,13 @@
 """
 Admin management routes
 Admin authentication and user management endpoints
+Enhanced with email functionality
 """
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from jose import jwt
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Security
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Security, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from database.connection import get_db_session
@@ -16,6 +17,7 @@ from schemas.user import UserResponse
 from models.admin import Admin
 from .dependencies_admin import get_current_active_admin 
 from utils.password import hash_password
+from utils.email_service import send_email
 import os
 
 router = APIRouter()
@@ -63,6 +65,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 @router.post("/login", response_model=AdminLoginResponse)
 async def admin_login(
     login_data: AdminLogin,
+    request: Request,
     session: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -75,7 +78,8 @@ async def admin_login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
         )
-        # Generate JWT
+    
+    # Generate JWT
     access_token = create_access_token(data={"sub": str(admin.aid)})
 
     return AdminLoginResponse(
@@ -89,34 +93,63 @@ async def admin_login(
     )
    
 
-
-# ---------- User Management (Admin only) ----------
+# ---------- Enhanced User Management (Admin only) ----------
 
 @router.get("/users", response_model=List[UserResponse])
 async def list_users(
     skip: int = Query(0, ge=0, description="Number of users to skip"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of users to return"),
+    search: Optional[str] = Query(None, description="Search term for email, first name, or last name"),
+    status_filter: Optional[str] = Query(None, description="Filter by status: active, blocked, inactive, verified, unverified"),
     current_admin: Admin = Security(get_current_active_admin),
     session: AsyncSession = Depends(get_db_session)
 ):
     """
-    List all users (Admin only)
+    List all users with search and filtering (Admin only)
     """
-    users = await admin_crud.list_users(session, skip=skip, limit=limit)
+    users = await admin_crud.list_users(session, skip=skip, limit=limit, search=search, status_filter=status_filter)
     return users
+
+
+@router.get("/users/{user_id}", response_model=UserResponse)
+async def get_user_details(
+    user_id: int,
+    current_admin: Admin = Security(get_current_active_admin),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Get detailed user information (Admin only)
+    """
+    user = await admin_crud.get_user_by_id(session, user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
+
+
+@router.get("/users/stats", response_model=Dict[str, Any])
+async def get_user_statistics(
+    current_admin: Admin = Security(get_current_active_admin),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Get comprehensive user statistics (Admin only)
+    """
+    stats = await admin_crud.get_user_stats(session)
+    return stats
 
 
 @router.get("/users/count", response_model=dict)
 async def count_users(
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    is_blocked: Optional[bool] = Query(None, description="Filter by blocked status"),
     current_admin: Admin = Security(get_current_active_admin),
     session: AsyncSession = Depends(get_db_session)
 ):
     """
-    Count users with optional active filter (Admin only)
+    Count users with optional filters (Admin only)
     """
-    total = await admin_crud.count_users(session, is_active=is_active)
-    return {"total_users": total, "filters": {"is_active": is_active}}
+    total = await admin_crud.count_users(session, is_active=is_active, is_blocked=is_blocked)
+    return {"total_users": total, "filters": {"is_active": is_active, "is_blocked": is_blocked}}
 
 
 @router.post("/users/block/{user_id}", response_model=dict)
@@ -131,6 +164,7 @@ async def block_user(
     success = await admin_crud.block_user(session, user_id)
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
     return {"message": "User blocked successfully"}
 
 
@@ -146,7 +180,24 @@ async def unblock_user(
     success = await admin_crud.unblock_user(session, user_id)
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
     return {"message": "User unblocked successfully"}
+
+
+@router.post("/users/verify/{user_id}", response_model=dict)
+async def verify_user_email(
+    user_id: int,
+    current_admin: Admin = Security(get_current_active_admin),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Manually verify a user's email (Admin only)
+    """
+    success = await admin_crud.verify_user_email(session, user_id)
+    if not success:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    return {"message": "User email verified successfully"}
 
 
 @router.delete("/users/delete/{user_id}", response_model=dict)
@@ -161,4 +212,77 @@ async def delete_user_permanently(
     success = await admin_crud.delete_user_permanently(session, user_id)
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
     return {"message": "User deleted permanently"}
+
+
+# ---------- Email Management ----------
+
+@router.post("/users/{user_id}/send-email")
+async def send_user_email(
+    user_id: int,
+    email_data: dict,
+    current_admin: Admin = Security(get_current_active_admin),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Send email to a specific user (Admin only)
+    """
+    user = await admin_crud.get_user_by_id(session, user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    try:
+        # Send email using the email service
+        await send_email(
+            to_email=user.email,
+            subject=email_data.get("subject", "Message from Admin"),
+            body=email_data.get("body", ""),
+            html_content=email_data.get("html_content")
+        )
+        
+        return {"message": f"Email sent successfully to {user.email}"}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to send email: {str(e)}")
+
+
+@router.post("/users/bulk-email")
+async def send_bulk_email(
+    email_data: dict,
+    user_ids: List[int] = Query(..., description="List of user IDs to send email to"),
+    current_admin: Admin = Security(get_current_active_admin),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Send email to multiple users (Admin only)
+    """
+    users = []
+    for user_id in user_ids:
+        user = await admin_crud.get_user_by_id(session, user_id)
+        if user:
+            users.append(user)
+    
+    if not users:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No valid users found")
+    
+    success_count = 0
+    failed_emails = []
+    
+    for user in users:
+        try:
+            await send_email(
+                to_email=user.email,
+                subject=email_data.get("subject", "Message from Admin"),
+                body=email_data.get("body", ""),
+                html_content=email_data.get("html_content")
+            )
+            success_count += 1
+        except Exception as e:
+            failed_emails.append({"email": user.email, "error": str(e)})
+    
+    return {
+        "message": f"Bulk email completed",
+        "success_count": success_count,
+        "failed_count": len(failed_emails),
+        "failed_emails": failed_emails
+    }

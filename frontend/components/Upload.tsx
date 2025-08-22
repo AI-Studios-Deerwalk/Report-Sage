@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import axios from "axios"
 import { useRouter } from "next/router"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface UploadedFile {
   file: File
@@ -33,8 +34,15 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
   const [progress, setProgress] = useState<ProgressState>({ current: 0, total: 0, percentage: 0 })
   const [analysisCompleted, setAnalysisCompleted] = useState<boolean>(false)
   const router = useRouter()
+  const { user } = useAuth()
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
+    // Check if user is verified
+    if (user && !user.is_email_verified) {
+      setError("Please verify your email address before uploading files")
+      return
+    }
+
     // Filter for PDF files only
     const pdfFiles = acceptedFiles.filter(file => file.type === 'application/pdf')
     
@@ -49,7 +57,7 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
     }))
     setUploadedFiles((prev) => [...prev, ...newFiles])
     setError(null)
-  }, [])
+  }, [user])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -81,6 +89,12 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
   }
 
   const analyzeFiles = async () => {
+    // Check if user is verified
+    if (user && !user.is_email_verified) {
+      setError("Please verify your email address before analyzing files")
+      return
+    }
+
     if (uploadedFiles.length === 0) {
       setError("Please select at least one PDF file")
       return

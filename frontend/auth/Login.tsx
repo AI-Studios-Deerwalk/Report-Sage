@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface LoginFormProps {
   onSubmit?: (email: string, password: string) => void
@@ -375,6 +376,7 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
+  const { login } = useAuth()
 
   const router = useRouter()
 
@@ -393,9 +395,10 @@ export default function LoginPage() {
     setError("")
 
     try {
-      // Handle login logic here
-      console.log("Login data:", { email, password })
-      // Redirect to dashboard after successful login
+      // Call the actual login function from AuthContext
+      await login(email, password)
+      
+      // If login is successful, redirect to dashboard
       router.push("/dashboard")
     } catch (err: any) {
       setError(err.message || "Login failed. Please try again.")

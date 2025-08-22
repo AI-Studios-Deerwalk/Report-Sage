@@ -2,7 +2,7 @@
 User OTP model for the DWIT Academia application
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Boolean, DateTime, Integer, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from .user import Base
@@ -50,8 +50,8 @@ class UserOTP(Base):
         index=True
     )
     
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    # Timestamps - use timezone-aware datetime but strip timezone for database
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=False)
     
     # Security
     attempts = Column(Integer, default=0, nullable=False)  # Number of attempts made
@@ -77,7 +77,7 @@ class UserOTP(Base):
     
     def is_expired(self):
         """Check if the OTP has expired"""
-        return datetime.utcnow() > self.expires_at
+        return datetime.now(timezone.utc).replace(tzinfo=None) > self.expires_at
     
     def is_valid(self):
         """Check if the OTP is valid (not used and not expired)"""
