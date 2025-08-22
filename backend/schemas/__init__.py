@@ -31,6 +31,8 @@ from .user_otp import (
 # For admin schemas
 from .admin import *
 
+# For FAQ schemas
+from .faq import *
 
 __all__ = [
     "UserBase",
