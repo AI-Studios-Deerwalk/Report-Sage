@@ -27,7 +27,7 @@ class FaqSeeder:
     """Seeder class for inserting predefined FAQs"""
 
     def __init__(self):
-        # Replace with your real FAQ
+        # Replace with your real FAQs
         self.faqs: List[FAQCreate] = [
             FAQCreate(
                 question="What is Report Sage?",
