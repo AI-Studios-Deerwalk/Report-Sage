@@ -63,10 +63,10 @@ async def get_current_admin(
 
 async def get_current_active_admin(
     current_admin=Depends(get_current_admin),
-) -> AdminResponse:
+):
     """
     Ensure admin is active (not blocked).
-    Converts DB model to Pydantic schema.
+    Returns the DB model directly.
     """
     if getattr(current_admin, "is_blocked", False):
         raise HTTPException(
@@ -74,5 +74,5 @@ async def get_current_active_admin(
             detail="Admin account is blocked",
         )
 
-    # Convert DB model to Pydantic schema
-    return AdminResponse.from_orm(current_admin)
+    # Return the DB model directly
+    return current_admin

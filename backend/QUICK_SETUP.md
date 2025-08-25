@@ -37,16 +37,20 @@ Your OTP email verification system is now fully implemented and ready to use.
 2. **Generate App Password**:
    - Go to Google Account → Security → 2-Step Verification → App passwords
    - Generate password for "Mail"
-3. **Add to your `.env` file**:
+3. **Configure Email Settings**:
 
-```env
-SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=your-email@gmail.com
-SMTP_PASSWORD=your-16-char-app-password
-FROM_EMAIL=your-email@gmail.com
-FROM_NAME=Report Rage
-```
+The system now uses database-based email configuration instead of environment variables. You can configure email settings through the admin interface:
+
+- Navigate to Admin → Email Configuration
+- Enter your SMTP settings:
+  - SMTP Server: `smtp.gmail.com`
+  - SMTP Port: `587`
+  - SMTP Username: `your-email@gmail.com`
+  - SMTP Password: `your-16-char-app-password`
+  - From Email: `your-email@gmail.com`
+  - From Name: `Report Rage`
+
+**Note**: Only Super Administrators can modify email configuration.
 
 ### Option 2: Without SMTP (Development)
 
@@ -54,6 +58,7 @@ The system works without SMTP configuration:
 - OTP codes are logged to console
 - API returns `email_sent: false`
 - All functionality works except actual email sending
+- **Note**: You can still configure email settings through the admin interface, and the system will automatically use them when available
 
 ## 🎯 How to Test
 

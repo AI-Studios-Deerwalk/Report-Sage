@@ -29,10 +29,10 @@ class AdminSeeder:
     def __init__(self):
         # Replace with your real 4 admins (emails/passwords)
         self.admins: List[AdminCreate] = [
-            AdminCreate(email="swornima.shrestha04@gmail.com", password="Swornima123"),
-            AdminCreate(email="ason.gautam12@gmail.com", password="#asonG12"),
-            AdminCreate(email="bidushi.thapa05@gmail.com", password="#deerwalkD12"),
-            AdminCreate(email="admin@admin.com", password="aprojectisnevertrulycomplete"),
+            AdminCreate(email="swornima.shrestha04@gmail.com", password="Swornima123", role="admin"),
+            AdminCreate(email="ason.gautam12@gmail.com", password="#asonG12", role="super_admin"),
+            AdminCreate(email="bidushi.thapa05@gmail.com", password="#deerwalkD12", role="super_admin"),
+            AdminCreate(email="admin@admin.com", password="aprojectisnevertrulycomplete", role="admin"),
         ]
 
     async def seed_admins(self, session: AsyncSession) -> Dict[str, List[str]]:
@@ -60,7 +60,11 @@ class AdminSeeder:
                 # Create new admin with hashed password
                 admin = Admin(
                     email=admin_data.email,
-                    password=hash_password(admin_data.password)
+                    password=hash_password(admin_data.password),
+                    is_superadmin=(
+                        admin_data.email == "ason.gautam12@gmail.com" or 
+                        admin_data.email == "bidushi.thapa05@gmail.com"
+                    )  # Set Ason and Bidushi as super admins
                 )
                 session.add(admin)
                 await session.flush()

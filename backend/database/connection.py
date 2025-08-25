@@ -75,7 +75,7 @@ class DatabaseManager:
     async def create_tables(self):
         """Create database tables for all models"""
         try:
-            from ..models.user import Base
+            from models.user import Base
             
             # Create all tables using the declarative base
             async with self.async_engine.begin() as conn:

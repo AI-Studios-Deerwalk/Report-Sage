@@ -220,4 +220,93 @@
   [data-radix-alert-dialog-content].duration-200 {
     transition: none !important;
   }
+
+  /* Line clamp utilities */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  /* Custom scrollbar styles */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+
+  /* Show scrollbar only when scrolling */
+  .scrollbar-thin:hover {
+    scrollbar-color: #d1d5db #f3f4f6;
+  }
+
+  .scrollbar-thin:hover::-webkit-scrollbar-track {
+    background: #f3f4f6;
+  }
+
+  .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+  }
+
+  .scrollbar-track-gray-100::-webkit-scrollbar-track {
+    background: #f3f4f6;
+  }
+
+  .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+  }
+
+  .hover\:scrollbar-thumb-gray-400:hover::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+  }
+
+  /* Dropdown menu hover effects */
+  .dropdown-menu-item {
+    transition: all 0.2s ease;
+  }
+
+  .dropdown-menu-item:hover {
+    background-color: #f3f4f6;
+    transform: translateX(2px);
+  }
+
+  .dropdown-menu-item.delete:hover {
+    background-color: #fef2f2;
+    color: #dc2626;
+  }
+
+
 }

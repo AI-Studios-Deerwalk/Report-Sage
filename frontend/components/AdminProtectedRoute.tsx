@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/router"
+import { handleAdminAuthError } from "@/lib/adminAuth"
 
 interface AdminProtectedRouteProps {
   children: React.ReactNode
@@ -13,7 +14,7 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
   const router = useRouter()
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       const adminToken = localStorage.getItem('adminToken')
       const adminData = localStorage.getItem('adminData')
 
@@ -25,28 +26,27 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
       try {
         // Verify token is valid by making a test request
         const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-        fetch(`${API_BASE_URL}/api/v1/admin/users/count`, {
+        const response = await fetch(`${API_BASE_URL}/api/v1/admin/users/count`, {
           headers: {
             'Authorization': `Bearer ${adminToken}`
           }
-        }).then(response => {
-          if (response.ok) {
-            setIsAuthenticated(true)
-          } else {
-            // Token is invalid, redirect to login
-            localStorage.removeItem('adminToken')
-            localStorage.removeItem('adminData')
-            router.push('/admin/login')
-          }
-        }).catch((error) => {
-          console.error('Admin auth check error:', error)
-          // Network error or invalid token
+        })
+        
+        if (response.ok) {
+          setIsAuthenticated(true)
+        } else if (handleAdminAuthError(response, router, 'authentication check')) {
+          // Auth error was handled by utility
+          return
+        } else {
+          // Other error, still redirect to login for safety
+          console.error('Admin auth check failed with status:', response.status)
           localStorage.removeItem('adminToken')
           localStorage.removeItem('adminData')
           router.push('/admin/login')
-        })
+        }
       } catch (error) {
         console.error('Admin auth check error:', error)
+        // Network error or invalid token, clear and redirect
         localStorage.removeItem('adminToken')
         localStorage.removeItem('adminData')
         router.push('/admin/login')

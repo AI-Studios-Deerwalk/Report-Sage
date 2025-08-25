@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { useAuth } from "@/contexts/AuthContext"
+import { useToast } from "@/hooks/use-toast"
 
 interface LoginFormProps {
   onSubmit?: (email: string, password: string) => void
@@ -24,6 +25,20 @@ export function LoginForm({ onSubmit, onBackClick, onSignupClick, error, isSubmi
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [focusedField, setFocusedField] = useState<string | null>(null)
+  const { isAuthenticated, user } = useAuth()
+  const router = useRouter()
+  const { toast } = useToast()
+
+  // Check if user is already authenticated and redirect them
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      toast({
+        title: "Already logged in!",
+        description: "You are already logged in. Redirecting to dashboard...",
+      });
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, user, router, toast]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,6 +54,18 @@ export function LoginForm({ onSubmit, onBackClick, onSignupClick, error, isSubmi
   }
 
   const isFormValid = email.trim() && password.trim()
+
+  // Don't render the login form if user is already authenticated
+  if (isAuthenticated && user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Redirecting...</h2>
+          <p className="text-gray-600">You are already logged in.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 flex items-center justify-center p-4">

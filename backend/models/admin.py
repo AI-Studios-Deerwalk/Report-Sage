@@ -29,6 +29,9 @@ class Admin(Base):
 
     # Status
     is_active = Column(Boolean, default=True, nullable=False)
+    
+    # Super admin flag
+    is_superadmin = Column(Boolean, default=False, nullable=False)
 
     def __repr__(self):
         return f"<Admin(aid={self.aid}, email='{self.email}')>"

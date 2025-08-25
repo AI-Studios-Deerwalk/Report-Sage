@@ -1,5 +1,6 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import os
 import logging
 import asyncio
@@ -21,7 +22,16 @@ load_dotenv()
 ANALYSIS_TIMEOUT_SECONDS = int(os.getenv("ANALYSIS_TIMEOUT_SECONDS", 60))
 TEMPERATURE = float(os.getenv("TEMPERATURE", 0.1))
 # No worker limits - process everything simultaneously
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+# Ensure localhost origins are always included
+DEFAULT_CORS_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001"
+]
+# Merge environment origins with defaults, removing duplicates
+CORS_ORIGINS = list(set(CORS_ORIGINS + DEFAULT_CORS_ORIGINS))
 TEMP_DIR = os.getenv("TEMP_DIR", "temp")
 
 app = FastAPI()
@@ -64,16 +74,56 @@ async def startup_event():
 #         # Don't let database errors crash the server
 
 # Add CORS middleware BEFORE including routes
+logging.info(f"Configuring CORS with origins: {CORS_ORIGINS}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,  # Allow frontend origins from env
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],  # Allow all methods including OPTIONS
+    allow_headers=["*"],  # Allow all headers including Authorization, Content-Type, etc.
+    expose_headers=["*"],  # Expose all headers
+    max_age=86400,  # Cache preflight response for 24 hours
+    allow_origin_regex=None,  # No regex patterns
 )
+
+# Global CORS handler for any requests not caught by middleware
+@app.middleware("http")
+async def cors_handler(request, call_next):
+    """Global CORS handler to ensure all responses have proper CORS headers"""
+    response = await call_next(request)
+    
+    # Add CORS headers if they're not already present
+    if "Access-Control-Allow-Origin" not in response.headers:
+        origin = request.headers.get("origin")
+        if origin in CORS_ORIGINS:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+    
+    return response
+
+# Add a simple test endpoint to verify CORS is working
+@app.get("/test-cors")
+async def test_cors():
+    """Test endpoint to verify CORS is working"""
+    return {"message": "CORS is working!", "timestamp": datetime.now().isoformat()}
+
+# Add middleware to log all requests for debugging
+@app.middleware("http")
+async def log_requests(request, call_next):
+    """Log all incoming requests for debugging"""
+    logging.info(f"Request: {request.method} {request.url}")
+    logging.info(f"Headers: {dict(request.headers)}")
+    
+    response = await call_next(request)
+    
+    logging.info(f"Response: {response.status_code}")
+    return response
 
 # Include API routes (includes auth and user routes)
 app.include_router(api_router)
+
+# Mount static files for uploaded images
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Dynamic executor - creates workers based on document size
 

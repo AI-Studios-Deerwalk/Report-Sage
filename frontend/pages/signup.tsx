@@ -2,15 +2,26 @@ import Head from "next/head";
 import { SignupForm } from "../auth/Signup";
 import { useRouter } from "next/router";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Signup() {
   const router = useRouter();
-  const { register } = useAuth();
+  const { register, user, isAuthenticated } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const { toast } = useToast();
+  
+  // Check if user is already verified and redirect them
+  useEffect(() => {
+    if (isAuthenticated && user && user.is_email_verified) {
+      toast({
+        title: "Already signed up!",
+        description: "You are already registered and verified. Redirecting to dashboard...",
+      });
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, user, router, toast]);
   
   const handleBackClick = () => {
     router.push("/");
@@ -79,6 +90,18 @@ export default function Signup() {
       setIsSubmitting(false);
     }
   };
+
+  // Don't render the signup form if user is already verified
+  if (isAuthenticated && user && user.is_email_verified) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Redirecting...</h2>
+          <p className="text-gray-600">You are already registered and verified.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

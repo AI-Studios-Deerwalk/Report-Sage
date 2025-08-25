@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import and_, desc
 from typing import List, Optional, Any, Dict
 
@@ -106,6 +107,25 @@ class CRUDArchive(CRUDBase[Archive, ArchiveCreate, ArchiveUpdate]):
 
     def count_by_user(self, db: Session, *, user_id: int) -> int:
         return db.query(Archive).filter(Archive.user_id == user_id).count()
+
+    def get_total_count(self, db: Session) -> int:
+        """Get total count of all archives"""
+        return db.query(Archive).count()
+
+    def get_max_id(self, db: Session) -> int:
+        """Get the maximum ID from archives table"""
+        result = db.query(Archive.id).order_by(Archive.id.desc()).first()
+        return result[0] if result else 0
+
+    async def get_total_count_async(self, db: AsyncSession) -> int:
+        """Get total count of all archives (async version)"""
+        result = await db.execute("SELECT COUNT(*) FROM archives")
+        return result.scalar() or 0
+
+    async def get_max_id_async(self, db: AsyncSession) -> int:
+        """Get the maximum ID from archives table (async version)"""
+        result = await db.execute("SELECT MAX(id) FROM archives")
+        return result.scalar() or 0
 
 
 archive = CRUDArchive(Archive)

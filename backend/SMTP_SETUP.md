@@ -30,35 +30,38 @@ FROM_NAME=Report Rage
 4. Copy the generated 16-character password
 5. Use this password as `SMTP_PASSWORD` (not your regular Gmail password)
 
-### Step 3: Configure Environment Variables
-```env
-SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=your-gmail@gmail.com
-SMTP_PASSWORD=generated-app-password-here
-FROM_EMAIL=your-gmail@gmail.com
-FROM_NAME=Report Rage
-```
+### Step 3: Configure Email Settings
+
+**Important**: The system now uses database-based email configuration instead of environment variables.
+
+1. **Access Admin Panel**: Navigate to Admin → Email Configuration
+2. **Enter SMTP Settings**:
+   - SMTP Server: `smtp.gmail.com`
+   - SMTP Port: `587`
+   - SMTP Username: `your-gmail@gmail.com`
+   - SMTP Password: `generated-app-password-here`
+   - From Email: `your-gmail@gmail.com`
+   - From Name: `Report Rage`
+
+**Note**: Only Super Administrators can modify email configuration.
 
 ## Other Email Providers
 
+The system supports various email providers. Configure these through the Admin → Email Configuration interface:
+
 ### Outlook/Hotmail
-```env
-SMTP_SERVER=smtp-mail.outlook.com
-SMTP_PORT=587
-```
+- SMTP Server: `smtp-mail.outlook.com`
+- SMTP Port: `587`
 
 ### Yahoo Mail
-```env
-SMTP_SERVER=smtp.mail.yahoo.com
-SMTP_PORT=587
-```
+- SMTP Server: `smtp.mail.yahoo.com`
+- SMTP Port: `587`
 
 ### Custom SMTP Server
-```env
-SMTP_SERVER=your-smtp-server.com
-SMTP_PORT=587
-```
+- SMTP Server: `your-smtp-server.com`
+- SMTP Port: `587` (or your server's port)
+
+**Note**: All SMTP settings are now configured through the admin interface instead of environment variables.
 
 ## Testing Email Service
 

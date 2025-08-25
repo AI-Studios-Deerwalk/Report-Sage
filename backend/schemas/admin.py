@@ -15,12 +15,20 @@ class AdminBase(BaseModel):
 class AdminCreate(AdminBase):
     """Schema for creating a new admin (for seeding or future use)"""
     password: str = Field(..., min_length=1, max_length=128, description="Admin password")
+    role: str = Field(..., description="Admin role: 'admin' or 'super_admin'")
 
     @validator("password")
     def validate_password(cls, v: str) -> str:
         """Relaxed password validation for admin accounts - allows any password"""
         if len(v) < 1:
             raise ValueError("Password cannot be empty")
+        return v
+    
+    @validator("role")
+    def validate_role(cls, v: str) -> str:
+        """Validate role is either 'admin' or 'super_admin'"""
+        if v not in ["admin", "super_admin"]:
+            raise ValueError("Role must be either 'admin' or 'super_admin'")
         return v
 
 
@@ -52,6 +60,7 @@ class AdminResponse(AdminBase):
     """Schema for returning admin details (safe/public info)"""
     aid: int = Field(..., description="Admin ID")
     is_active: bool = Field(..., description="Active status")
+    is_superadmin: bool = Field(..., description="Super admin status")
     created_at: datetime = Field(..., description="Creation timestamp")
 
 
@@ -64,4 +73,4 @@ class AdminLoginResponse(BaseModel):
     admin: AdminResponse  
 
     class Config:
-        orm_mode = True
+        from_attributes = True

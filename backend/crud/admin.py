@@ -126,11 +126,12 @@ class AdminCRUD:
         total_result = await session.execute(select(func.count(User.uid)))
         total_users = total_result.scalar() or 0
         
-        # Active users
-        active_result = await session.execute(
-            select(func.count(User.uid)).where(User.is_active == True, User.is_blocked == False)
+        # New users this month
+        current_month = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        new_users_month_result = await session.execute(
+            select(func.count(User.uid)).where(User.created_at >= current_month)
         )
-        active_users = active_result.scalar() or 0
+        new_users_month = new_users_month_result.scalar() or 0
         
         # Blocked users
         blocked_result = await session.execute(
@@ -153,7 +154,7 @@ class AdminCRUD:
         
         return {
             "total_users": total_users,
-            "active_users": active_users,
+            "new_users_month": new_users_month,
             "blocked_users": blocked_users,
             "verified_users": verified_users,
             "recent_users_7d": recent_users,

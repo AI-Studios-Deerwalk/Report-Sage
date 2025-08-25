@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/router"
 import AdminSidebar from "./AdminSidebar"
 import { cn } from "@/lib/utils"
+import { hasAdminPermission } from "@/lib/adminAuth"
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -14,6 +15,9 @@ export default function AdminLayout({ children, currentPage }: AdminLayoutProps)
   const [activeSection, setActiveSection] = useState(currentPage)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const router = useRouter()
+
+  // Get admin data directly from localStorage
+  const adminData = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('adminData') || '{}') : {}
 
   const handleSectionChange = (section: string) => {
     setActiveSection(section)
@@ -29,11 +33,22 @@ export default function AdminLayout({ children, currentPage }: AdminLayoutProps)
       case "faqs":
         router.push('/admin/faqs')
         break
+      case "issues":
+        router.push('/admin/issues')
+        break
       case "system":
         router.push('/admin/system')
         break
       case "tools":
-        router.push('/admin/tools')
+        // Check if admin has permission to access config
+        if (hasAdminPermission('config')) {
+          router.push('/admin/tools')
+        } else {
+          // Redirect non-super admins to dashboard
+          router.push('/admin/dashboard')
+          // Reset active section to overview
+          setActiveSection('overview')
+        }
         break
       default:
         break
@@ -48,6 +63,7 @@ export default function AdminLayout({ children, currentPage }: AdminLayoutProps)
         onSectionChange={handleSectionChange}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        adminData={adminData}
       />
       
       {/* Main Content */}

@@ -37,5 +37,5 @@ class FAQResponse(FAQBase):
     updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 

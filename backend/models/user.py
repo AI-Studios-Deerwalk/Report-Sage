@@ -76,4 +76,5 @@ class User(Base):
         }
     
     archives = relationship("Archive", back_populates="user", cascade="all, delete-orphan")
+    issues = relationship("Issue", back_populates="user", cascade="all, delete-orphan")
     

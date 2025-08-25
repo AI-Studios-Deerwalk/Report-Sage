@@ -7,11 +7,12 @@ import { useAuth } from "@/contexts/AuthContext"
 import { OTPVerification } from "../components/verifyOTP"
 import { useToast } from "@/hooks/use-toast"
 import { OTPPurpose } from "@/lib/api"
+import { authAPI } from "@/lib/api"
 
 export default function VerifyOTPPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { verifyOTP, resendOTP } = useAuth()
+  const { verifyOTP, resendOTP, user, isAuthenticated } = useAuth()
   const { toast } = useToast()
 
   // Get user data from URL query parameters
@@ -20,6 +21,7 @@ export default function VerifyOTPPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
   const [otpExpiresIn, setOtpExpiresIn] = useState(120) // 120 seconds countdown
+  const [isCheckingVerification, setIsCheckingVerification] = useState(true)
 
   useEffect(() => {
     // Get user data from URL query parameters
@@ -45,9 +47,55 @@ export default function VerifyOTPPage() {
           variant: "destructive",
         })
         router.push("/signup")
+        return
       }
     }
   }, [searchParams, router, toast])
+
+  // Check if user is already verified
+  useEffect(() => {
+    const checkVerificationStatus = async () => {
+      if (!userId) return
+
+      try {
+        // If user is authenticated, check their verification status
+        if (isAuthenticated && user) {
+          if (user.is_email_verified) {
+            // User is already verified, redirect to dashboard
+            toast({
+              title: "Already verified!",
+              description: "Your email is already verified. Redirecting to dashboard...",
+            })
+            router.push("/dashboard")
+            return
+          }
+        } else {
+          // If not authenticated, try to get user info directly
+          try {
+            const response = await authAPI.getCurrentUser()
+            if (response.data.is_email_verified) {
+              // User is already verified, redirect to dashboard
+              toast({
+                title: "Already verified!",
+                description: "Your email is already verified. Redirecting to dashboard...",
+              })
+              router.push("/dashboard")
+              return
+            }
+          } catch (error) {
+            // User not authenticated, continue with OTP verification
+            console.log("User not authenticated, proceeding with OTP verification")
+          }
+        }
+      } catch (error) {
+        console.error("Error checking verification status:", error)
+      } finally {
+        setIsCheckingVerification(false)
+      }
+    }
+
+    checkVerificationStatus()
+  }, [userId, isAuthenticated, user, router, toast])
 
   // Initialize countdown timer from localStorage or start new one
   useEffect(() => {
@@ -152,6 +200,18 @@ export default function VerifyOTPPage() {
 
   const handleBack = () => {
     router.push("/")
+  }
+
+  // Show loading while checking verification status
+  if (isCheckingVerification) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Checking verification status...</h2>
+          <p className="text-gray-600">Please wait while we verify your account status</p>
+        </div>
+      </div>
+    )
   }
 
   if (!userId) {

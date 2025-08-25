@@ -5,6 +5,7 @@ import os
 import shutil
 from pathlib import Path
 import asyncio
+from sqlalchemy import and_
 
 from database.connection import get_db, db_manager
 from routes.dependencies import get_current_user
@@ -22,12 +23,14 @@ from crud.archive import archive as crud_archive
 from utils.pdf_reader import PDFReader
 from utils.ollama_client import OllamaClient
 from prompt.result_formatter import ResultFormatter
+from models.archive import Archive
 
-router = APIRouter(prefix="/archives", tags=["archives"])
+router = APIRouter(prefix="", tags=["archives"])
 
 # Create uploads directory if it doesn't exist
-UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR = Path(__file__).parent.parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
+print(f"Upload directory created/verified at: {UPLOAD_DIR.absolute()}")
 
 async def process_document_analysis(archive_id: int, file_path: str):
     """Background task to process document analysis"""
@@ -145,6 +148,9 @@ async def upload_document(
     file_path = UPLOAD_DIR / f"{current_user.uid}_{file.filename}"
     
     try:
+        # Ensure upload directory exists
+        UPLOAD_DIR.mkdir(exist_ok=True)
+        
         # Save uploaded file
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
@@ -176,10 +182,21 @@ async def upload_document(
     except Exception as e:
         # Clean up file if creation failed
         if file_path.exists():
-            file_path.unlink()
+            try:
+                file_path.unlink()
+            except Exception:
+                pass  # Ignore cleanup errors
+        
+        # Provide more specific error messages
+        error_detail = str(e)
+        if "No such file or directory" in error_detail:
+            error_detail = f"Upload directory not accessible: {UPLOAD_DIR.absolute()}. Please ensure the server has write permissions."
+        elif "Permission denied" in error_detail:
+            error_detail = f"Permission denied when writing to upload directory: {UPLOAD_DIR.absolute()}"
+        
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upload file: {str(e)}"
+            detail=f"Failed to upload file: {error_detail}"
         )
 
 @router.get("/", response_model=ArchiveListResponse)
@@ -230,18 +247,103 @@ def update_archive(
     current_user: User = Depends(get_current_user)
 ):
     """Update archive"""
-    archive = crud_archive.get_by_user_and_id(
-        db, user_id=current_user.uid, archive_id=archive_id
-    )
-    
-    if not archive:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Archive not found"
+    try:
+        print(f"Updating archive {archive_id} for user {current_user.uid}")
+        print(f"Update data: {archive_update.model_dump()}")
+        
+        archive = crud_archive.get_by_user_and_id(
+            db, user_id=current_user.uid, archive_id=archive_id
         )
-    
-    archive = crud_archive.update(db, db_obj=archive, obj_in=archive_update)
-    return archive
+        
+        if not archive:
+            print(f"Archive {archive_id} not found for user {current_user.uid}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Archive not found"
+            )
+        
+        print(f"Found archive: {archive.file_name}")
+        
+        # Update the archive with the new data
+        update_data = archive_update.model_dump(exclude_unset=True)
+        print(f"Processing update data: {update_data}")
+        
+        # Handle file_name update specifically
+        if "file_name" in update_data and update_data["file_name"]:
+            # Validate file name
+            if not update_data["file_name"].strip():
+                print("File name is empty")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="File name cannot be empty"
+                )
+            
+            new_file_name = update_data["file_name"].strip()
+            print(f"Updating file name from '{archive.file_name}' to '{new_file_name}'")
+            
+            # Check if file name already exists for this user
+            existing_archive = db.query(Archive).filter(
+                and_(Archive.user_id == current_user.uid, 
+                     Archive.file_name == new_file_name,
+                     Archive.id != archive_id)
+            ).first()
+            
+            if existing_archive:
+                print(f"File name '{new_file_name}' already exists for user {current_user.uid}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="A file with this name already exists"
+                )
+            
+            # Update the file name
+            archive.file_name = new_file_name
+            print(f"File name updated to: {archive.file_name}")
+        
+        # Handle other fields
+        if "analysis_content" in update_data:
+            archive.analysis_content = update_data["analysis_content"]
+            print(f"Analysis content updated")
+        
+        if "suggestions" in update_data and update_data["suggestions"] is not None:
+            archive.suggestions = crud_archive._normalize_items(update_data["suggestions"]) or []
+            print(f"Suggestions updated: {len(archive.suggestions)} items")
+        
+        if "warnings" in update_data and update_data["warnings"] is not None:
+            archive.warnings = crud_archive._normalize_items(update_data["warnings"]) or []
+            print(f"Warnings updated: {len(archive.warnings)} items")
+        
+        if "errors" in update_data and update_data["errors"] is not None:
+            archive.errors = crud_archive._normalize_items(update_data["errors"]) or []
+            print(f"Errors updated: {len(archive.errors)} items")
+        
+        if "processing_status" in update_data:
+            archive.processing_status = update_data["processing_status"]
+            print(f"Processing status updated to: {archive.processing_status}")
+        
+        if "error_message" in update_data:
+            archive.error_message = update_data["error_message"]
+            print(f"Error message updated")
+        
+        # Commit the changes
+        print("Committing changes to database...")
+        db.commit()
+        db.refresh(archive)
+        print(f"Archive updated successfully: {archive.file_name}")
+        
+        return archive
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        print(f"Error updating archive: {str(e)}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
+        )
 
 @router.delete("/{archive_id}")
 def delete_archive(

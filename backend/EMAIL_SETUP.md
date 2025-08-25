@@ -16,12 +16,14 @@ Create a `.env` file in the `backend` folder with these settings:
 DATABASE_URL=postgresql+asyncpg://username:password@localhost:5432/reportrage
 
 # SMTP Configuration for Gmail
-SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=your-email@gmail.com
-SMTP_PASSWORD=your-gmail-app-password
-FROM_EMAIL=your-email@gmail.com
-FROM_NAME=DWIT Academia
+# Note: The system now uses database-based email configuration instead of environment variables
+# Configure these settings through the Admin → Email Configuration interface
+# SMTP_SERVER=smtp.gmail.com
+# SMTP_PORT=587
+# SMTP_USERNAME=your-email@gmail.com
+# SMTP_PASSWORD=your-gmail-app-password
+# FROM_EMAIL=your-email@gmail.com
+# FROM_NAME=DWIT Academia
 
 # Other settings
 CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
@@ -36,9 +38,21 @@ CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
    - Scroll down to "App passwords"
    - Select "Mail" and your device
    - Copy the 16-character password
-3. **Replace placeholder values**:
-   - `your-email@gmail.com` → Your actual Gmail
-   - `your-gmail-app-password` → The 16-character app password
+
+### Step 3: Configure Email Settings
+
+**Important**: The system now uses database-based email configuration instead of environment variables.
+
+1. **Access Admin Panel**: Navigate to Admin → Email Configuration
+2. **Enter SMTP Settings**:
+   - SMTP Server: `smtp.gmail.com`
+   - SMTP Port: `587`
+   - SMTP Username: `your-email@gmail.com`
+   - SMTP Password: `your-gmail-app-password`
+   - From Email: `your-email@gmail.com`
+   - From Name: `DWIT Academia`
+
+**Note**: Only Super Administrators can modify email configuration.
 
 ## 🚀 API Endpoints
 

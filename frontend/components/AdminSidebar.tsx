@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/router"
 import { 
   Users, 
@@ -9,19 +9,27 @@ import {
   BarChart3,
   Server,
   Settings,
-  Bell,
   HelpCircle,
-  ListOrdered
+  ListOrdered,
+  AlertTriangle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { hasAdminPermission } from "@/lib/adminAuth"
+import { adminAPI } from "@/lib/api"
+
+interface AdminData {
+  email?: string
+}
 
 interface AdminSidebarProps {
   activeSection: string
   onSectionChange: (section: string) => void
   isCollapsed?: boolean
   onToggleCollapse?: () => void
+  adminData?: AdminData | null
+  onUnreadCountChange?: (count: number) => void
 }
 
 interface SidebarItem {
@@ -29,17 +37,50 @@ interface SidebarItem {
   label: string
   icon: React.ReactNode
   badge?: string | number
+  requiresSuperAdmin?: boolean
 }
 
-export default function AdminSidebar({ 
+export default function AdminSidebar({  
   activeSection, 
   onSectionChange, 
   isCollapsed = false,
-  onToggleCollapse 
+  onToggleCollapse,
+  adminData,
+  onUnreadCountChange
 }: AdminSidebarProps) {
   const router = useRouter()
+  const [unreadCount, setUnreadCount] = useState<number>(0)
 
-  const sidebarItems: SidebarItem[] = [
+  // Fetch unread issue count
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await adminAPI.getUnreadCount()
+      const count = response.data.unread_count
+      setUnreadCount(count)
+      // Notify parent component of unread count change
+      if (onUnreadCountChange) {
+        onUnreadCountChange(count)
+      }
+    } catch (error) {
+      console.error('Error fetching unread count:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchUnreadCount()
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Expose refresh function to parent component
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).refreshAdminSidebarUnreadCount = fetchUnreadCount
+    }
+  }, [])
+
+  const allSidebarItems: SidebarItem[] = [
     {
       id: "overview",
       label: "Overview",
@@ -56,22 +97,31 @@ export default function AdminSidebar({
       icon: <HelpCircle className="h-4 w-4" />,
     },
     {
+      id: "issues",
+      label: "Issue Reports",
+      icon: <AlertTriangle className="h-4 w-4" />,
+      badge: unreadCount > 0 ? unreadCount.toString() : undefined
+    },
+    {
       id: "system",
       label: "System",
       icon: <Server className="h-4 w-4" />,
     },
     {
       id: "tools",
-      label: "Tools",
+      label: "Config",
       icon: <Settings className="h-5 w-5" />,
-    },
-    {
-      id: "notifications",
-      label: "Notifications",
-      icon: <Bell className="h-5 w-5" />,
-      badge: "3"
+      requiresSuperAdmin: true
     }
   ]
+
+  // Filter sidebar items based on admin permissions
+  const sidebarItems = allSidebarItems.filter(item => {
+    if (item.requiresSuperAdmin) {
+      return hasAdminPermission('config')
+    }
+    return true
+  })
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken')
@@ -147,11 +197,11 @@ export default function AdminSidebar({
 
       {/* Footer */}
       <div className="p-4 border-t border-slate-200 space-y-2">
-        {!isCollapsed && (
-          <div className="text-center mb-3">
-            <Badge variant="outline" className="text-xs">
-              Super Admin
-            </Badge>
+        {!isCollapsed && adminData?.email && (
+          <div className="text-center mb-3 space-y-2">
+            <div className="text-xs text-slate-500">
+              {adminData.email}
+            </div>
           </div>
         )}
         

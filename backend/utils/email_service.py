@@ -12,6 +12,9 @@ from dotenv import load_dotenv
 import logging
 import secrets
 import string
+from sqlalchemy.ext.asyncio import AsyncSession
+from database.connection import get_db_session
+from crud.config import config_crud
 
 load_dotenv()
 
@@ -22,16 +25,71 @@ class EmailService:
     """Email service for sending emails via SMTP"""
     
     def __init__(self):
-        """Initialize email service with configuration from environment variables"""
-        self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.smtp_username = os.getenv("SMTP_USERNAME")
-        self.smtp_password = os.getenv("SMTP_PASSWORD")
-        self.from_email = os.getenv("FROM_EMAIL", self.smtp_username)
-        self.from_name = os.getenv("FROM_NAME", "DWIT Academia")
+        """Initialize email service with default configuration"""
+        # Default values (fallback)
+        self.smtp_server = "smtp.gmail.com"
+        self.smtp_port = 587
+        self.smtp_username = None
+        self.smtp_password = None
+        self.from_email = None
+        self.from_name = "DWIT Academia"
         
-        if not self.smtp_username or not self.smtp_password:
-            logger.warning("SMTP credentials not configured. Email sending will be disabled.")
+        # Try to load configuration from database
+        self._load_config_from_db()
+    
+    def _load_config_from_db(self):
+        """Load SMTP configuration from database"""
+        try:
+            # Use synchronous session for initialization
+            from database.connection import db_manager
+            db_manager.initialize()
+            session = db_manager.get_sync_session()
+            
+            try:
+                config = config_crud.get_email_config_sync(session)
+                if config:
+                    self.smtp_server = config.smtp_server
+                    self.smtp_port = int(config.smtp_port)
+                    self.smtp_username = config.smtp_username
+                    self.smtp_password = config.smtp_password
+                    self.from_email = config.from_email
+                    self.from_name = config.from_name
+                    logger.info("SMTP configuration loaded from database successfully")
+                else:
+                    logger.warning("No SMTP configuration found in database, using defaults")
+            finally:
+                session.close()
+                
+        except Exception as e:
+            logger.error(f"Failed to load SMTP configuration from database: {e}")
+            logger.warning("Using default SMTP configuration")
+    
+    async def refresh_config_from_db(self, db: AsyncSession):
+        """Refresh SMTP configuration from database (async version)"""
+        try:
+            config = await config_crud.get_email_config(db)
+            if config:
+                self.smtp_server = config.smtp_server
+                self.smtp_port = int(config.smtp_port)
+                self.smtp_username = config.smtp_username
+                self.smtp_password = config.smtp_password
+                self.from_email = config.from_email
+                self.from_name = config.from_name
+                logger.info("SMTP configuration refreshed from database successfully")
+                return True
+            else:
+                logger.warning("No SMTP configuration found in database")
+                return False
+        except Exception as e:
+            logger.error(f"Failed to refresh SMTP configuration from database: {e}")
+            return False
+    
+    def _validate_config(self) -> bool:
+        """Validate that all required SMTP configuration is present"""
+        if not all([self.smtp_server, self.smtp_port, self.smtp_username, self.smtp_password, self.from_email]):
+            logger.warning("Incomplete SMTP configuration. Email sending will be disabled.")
+            return False
+        return True
     
     def generate_otp(self, length: int = 6) -> str:
         """Generate a random OTP code"""
@@ -97,7 +155,7 @@ class EmailService:
                     <div class="otp-box">
                         <p>Your verification code is:</p>
                         <div class="otp-code">{otp_code}</div>
-                        <p><small>This code will expire in 10 minutes</small></p>
+                        <p><small>This code will expire in 120 seconds</small></p>
                     </div>
                     
                     <div class="warning">
@@ -155,7 +213,7 @@ class EmailService:
         Returns:
             True if email sent successfully, False otherwise
         """
-        if not self.smtp_username or not self.smtp_password:
+        if not self._validate_config():
             logger.warning(f"SMTP not configured. OTP for {recipient_email}: {otp_code}")
             return False
         
@@ -227,7 +285,7 @@ class EmailService:
         Returns:
             True if email sent successfully, False otherwise
         """
-        if not self.smtp_username or not self.smtp_password:
+        if not self._validate_config():
             logger.warning(f"SMTP not configured. Would send welcome email to {recipient_email}")
             return False
         
@@ -331,7 +389,7 @@ async def send_email(
     Returns:
         True if email sent successfully, False otherwise
     """
-    if not email_service.smtp_username or not email_service.smtp_password:
+    if not email_service._validate_config():
         logger.warning(f"SMTP not configured. Would send email to {to_email}: {subject}")
         return False
     

@@ -4,7 +4,7 @@ Request and response models for API endpoints
 """
 
 # Import schemas here
-from .user import (
+from schemas.user import (
     UserBase,
     UserCreate,
     UserUpdate,
@@ -17,7 +17,7 @@ from .user import (
     PasswordResetRequest,
     PasswordReset,
 )
-from .user_otp import (
+from schemas.user_otp import (
     UserOTPBase,
     UserOTPCreate,
     UserOTPUpdate,
@@ -26,6 +26,12 @@ from .user_otp import (
     UserOTPRequest,
     UserOTPResend,
     UserOTPStatus,
+)
+from schemas.config import (
+    ConfigBase,
+    ConfigCreate,
+    ConfigUpdate,
+    ConfigResponse,
 )
 
 __all__ = [
@@ -54,5 +60,9 @@ __all__ = [
     "ArchiveResponse",
     "ArchiveListResponse",
     "ArchiveAnalysisRequest",
-    "ArchiveAnalysisResponse"
+    "ArchiveAnalysisResponse",
+    "ConfigBase",
+    "ConfigCreate",
+    "ConfigUpdate",
+    "ConfigResponse",
 ]

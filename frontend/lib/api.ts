@@ -88,9 +88,28 @@ adminApiClient.interceptors.response.use(
       // Only redirect if we're not already on admin login page
       const currentPath = window.location.pathname;
       if (!currentPath.includes('/admin/login')) {
-        setTimeout(() => {
-          window.location.href = '/admin/login';
-        }, 100);
+        // Use router if available, otherwise use window.location
+        if (typeof window !== 'undefined') {
+          setTimeout(() => {
+            window.location.href = '/admin/login';
+          }, 100);
+        }
+      }
+    }
+    
+    // Handle other authentication-related errors
+    if (error.response?.status === 403) {
+      console.warn('Admin access forbidden, clearing admin tokens and redirecting to admin login');
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminData');
+      
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes('/admin/login')) {
+        if (typeof window !== 'undefined') {
+          setTimeout(() => {
+            window.location.href = '/admin/login';
+          }, 100);
+        }
       }
     }
     
@@ -212,6 +231,19 @@ export const userAPI = {
     is_active?: boolean;
     search?: string;
   }) => apiClient.get('/api/v1/users/', { params }),
+
+  // Issue reporting
+  submitIssue: (issueData: FormData) => apiClient.post('/api/v1/issue/addIssue', issueData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
+
+  // Get user's issues
+  getUserIssues: () => apiClient.get('/api/v1/issue/getUserIssues'),
+
+  // Delete user's issue
+  deleteIssue: (issueId: string) => apiClient.delete(`/api/v1/issue/delete/${issueId}`),
 };
 
 // Archive API endpoints
@@ -219,15 +251,15 @@ export const archiveAPI = {
   getArchives: (params?: {
     skip?: number;
     limit?: number;
-  }) => apiClient.get('/api/v1/archive/archives/', { params }),
+  }) => apiClient.get('/api/v1/archive/', { params }),
 
   getArchive: (archiveId: number) => 
-    apiClient.get(`/api/v1/archive/archives/${archiveId}`),
+    apiClient.get(`/api/v1/archive/${archiveId}`),
 
   uploadDocument: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    return apiClient.post('/api/v1/archive/archives/upload', formData, {
+    return apiClient.post('/api/v1/archive/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -236,10 +268,140 @@ export const archiveAPI = {
   },
 
   deleteArchive: (archiveId: number) => 
-    apiClient.delete(`/api/v1/archive/archives/${archiveId}`),
+    apiClient.delete(`/api/v1/archive/${archiveId}`),
+
+  updateArchive: (archiveId: number, updateData: { file_name?: string }) =>
+    apiClient.put(`/api/v1/archive/${archiveId}`, updateData),
 
   reanalyzeArchive: (archiveId: number) => 
-    apiClient.post(`/api/v1/archive/archives/${archiveId}/reanalyze`),
+    apiClient.post(`/api/v1/archive/${archiveId}/reanalyze`),
+};
+
+// FAQ API endpoints
+export const faqAPI = {
+  getFaqs: (params?: {
+    page?: number;
+    page_size?: number;
+    only_active?: boolean;
+    sort_by_priority?: boolean;
+  }) => apiClient.get('/api/v1/faq/getAll', { params }),
+
+  getFaq: (faqId: number) => 
+    apiClient.get(`/api/v1/faq/${faqId}`),
+
+  createFaq: (faqData: {
+    question: string;
+    answer: string;
+    priority?: string;
+  }) => apiClient.post('/api/v1/faq/createOne', faqData),
+
+  updateFaq: (faqId: number, faqData: {
+    question?: string;
+    answer?: string;
+    priority?: string;
+  }) => apiClient.put(`/api/v1/faq/update/${faqId}`, faqData),
+
+  deleteFaq: (faqId: number) => 
+    apiClient.delete(`/api/v1/faq/delete/${faqId}`),
+
+  createFaqsBulk: (faqsData: {
+    faqs: Array<{
+      question: string;
+      answer: string;
+      priority?: string;
+    }>;
+  }) => apiClient.post('/api/v1/faq/createBulk', faqsData),
+};
+
+// Admin API endpoints
+export const adminAPI = {
+  // Admin authentication
+  login: (credentials: {
+    email: string;
+    password: string;
+  }) => adminApiClient.post('/api/v1/admin/login', credentials),
+
+  // FAQ management (admin only)
+  getFaqs: (params?: {
+    page?: number;
+    page_size?: number;
+    only_active?: boolean;
+    sort_by_priority?: boolean;
+  }) => adminApiClient.get('/api/v1/faq/getAll', { params }),
+
+  createFaq: (faqData: {
+    question: string;
+    answer: string;
+    priority?: string;
+  }) => adminApiClient.post('/api/v1/faq/createOne', faqData),
+
+  updateFaq: (faqId: number, faqData: {
+    question?: string;
+    answer?: string;
+    priority?: string;
+  }) => adminApiClient.put(`/api/v1/faq/update/${faqId}`, faqData),
+
+  deleteFaq: (faqId: number) => 
+    adminApiClient.delete(`/api/v1/faq/delete/${faqId}`),
+
+  createFaqsBulk: (faqsData: {
+    faqs: Array<{
+      question: string;
+      answer: string;
+      priority?: string;
+    }>;
+  }) => adminApiClient.post('/api/v1/faq/createBulk', faqsData),
+
+  // User management (admin only)
+  getUsers: (params?: {
+    skip?: number;
+    limit?: number;
+    is_active?: boolean;
+    search?: string;
+    status_filter?: string;
+  }) => adminApiClient.get('/api/v1/admin/users', { params }),
+
+  getUserStats: () => adminApiClient.get('/api/v1/admin/users/stats'),
+
+  blockUser: (userId: number) => adminApiClient.post(`/api/v1/admin/users/block/${userId}`),
+
+  unblockUser: (userId: number) => adminApiClient.post(`/api/v1/admin/users/unblock/${userId}`),
+
+  verifyUser: (userId: number) => adminApiClient.post(`/api/v1/admin/users/verify/${userId}`),
+
+  deleteUser: (userId: number) => adminApiClient.delete(`/api/v1/admin/users/delete/${userId}`),
+
+  // Archive management (admin only)
+  getArchives: (params?: {
+    skip?: number;
+    limit?: number;
+  }) => adminApiClient.get('/api/v1/archive/', { params }),
+
+  getArchive: (archiveId: number) => 
+    adminApiClient.get(`/api/v1/archive/${archiveId}`),
+
+  deleteArchive: (archiveId: number) => 
+    adminApiClient.delete(`/api/v1/archive/${archiveId}`),
+
+  reanalyzeArchive: (archiveId: number) => 
+    adminApiClient.post(`/api/v1/archive/${archiveId}/reanalyze`),
+
+  // Issue management (admin only)
+  getIssues: (params?: {
+    skip?: number;
+    limit?: number;
+    status?: string;
+    search?: string;
+  }) => adminApiClient.get('/api/v1/issue/getAll', { params }),
+
+  getIssue: (issueId: string) => 
+    adminApiClient.get(`/api/v1/issue/${issueId}`),
+
+  updateIssueStatus: (issueId: string, status: {
+    status: string;
+  }) => adminApiClient.patch(`/api/v1/issue/updateStatus/${issueId}`, status),
+
+  getUnreadCount: () => adminApiClient.get('/api/v1/issue/unread/count'),
 };
 
 export default apiClient;

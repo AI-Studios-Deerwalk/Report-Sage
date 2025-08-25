@@ -135,22 +135,7 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
             <p className="text-sm text-gray-600">
               Analysis completed for: <strong>{results.file_name}</strong>
             </p>
-            {results.archive_id && (
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-xs text-gray-500">
-                  Archive ID: {results.archive_id}
-                </p>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleViewArchives}
-                  className="text-xs"
-                >
-                  <Archive className="h-3 w-3 mr-1" />
-                  View All Archives
-                </Button>
-              </div>
-            )}
+           
           </div>
         </CardContent>
       </Card>

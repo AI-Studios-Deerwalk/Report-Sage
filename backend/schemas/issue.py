@@ -3,6 +3,7 @@ from typing import Annotated,Optional
 from datetime import datetime
 from uuid import UUID
 from enum import Enum
+from .user import UserResponse
 
 class IssueStatusEnum(str, Enum):
     pending = "pending"
@@ -22,10 +23,16 @@ class IssueResponse(BaseModel):
     image: Optional[str]
     status: IssueStatusEnum
     created_at: datetime
+    uid: int  # Changed from user_id to uid
+    user: Optional[UserResponse] = None
+    is_read: bool = False  # New field for read status
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class IssueUpdateStatus(BaseModel):
     status: IssueStatusEnum
+
+class IssueUpdateRead(BaseModel):
+    is_read: bool

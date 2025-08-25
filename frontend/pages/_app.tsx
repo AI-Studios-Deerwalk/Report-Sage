@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import Head from 'next/head'
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 import { useRouter } from 'next/router'
@@ -22,9 +23,18 @@ function MyApp({ Component, pageProps }: AppProps) {
   }, [router.events])
 
   return (
-    <AuthProvider>
-      <Component {...pageProps} />
-    </AuthProvider>
+    <>
+      <Head>
+        <title>Report Rage</title>
+        <meta name="description" content="AI-powered document analysis and formatting tool" />
+        <link rel="icon" href="/Logo.png" />
+        <link rel="apple-touch-icon" href="/Logo.png" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
+      <AuthProvider>
+        <Component {...pageProps} />
+      </AuthProvider>
+    </>
   )
 }
 

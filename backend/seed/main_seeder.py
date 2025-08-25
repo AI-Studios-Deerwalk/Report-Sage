@@ -13,9 +13,10 @@ import os
 backend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(backend_root)
 
-from admin_seeder import admin_seeder
-from user_seeder import user_seeder
-from faq_seeder import faq_seeder
+from seed.admin_seeder import admin_seeder
+from seed.user_seeder import user_seeder
+from seed.faq_seeder import faq_seeder
+from seed.issue_seeder import issue_seeder
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,11 @@ async def run_all_seeders():
     faq_seeder.print_faq_info()
     faq_result = await faq_seeder.run()
     print(f"FAQ seeding {'completed' if faq_result else 'failed'}\n")
+
+    print("\n🌱 Running Issue Seeder...")
+    issue_seeder.print_issue_info()
+    issue_result = await issue_seeder.run()
+    print(f"Issue seeding {'completed' if issue_result else 'failed'}\n")
 
     print("✅ All seeders finished!")
 

@@ -5,7 +5,7 @@ import AdminLayout from "../../components/AdminLayout";
 
 import { 
   Users, 
-  UserCheck, 
+  UserPlus, 
   UserX, 
   Trash2, 
   Search,
@@ -51,17 +51,18 @@ interface User {
 
 export default function AdminUsersPage() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isFetchingData, setIsFetchingData] = useState(false);
   const [users, setUsers] = useState<User[]>([])
   const [filteredUsers, setFilteredUsers] = useState<User[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [error, setError] = useState("")
   const [userStats, setUserStats] = useState({
-    total: 0,
-    active: 0,
-    blocked: 0,
-    verified: 0,
-    recent_7d: 0,
+    total_users: 0,
+    new_users_month: 0,
+    blocked_users: 0,
+    verified_users: 0,
+    recent_users_7d: 0,
     verification_rate: 0
   })
   const router = useRouter();
@@ -76,10 +77,8 @@ export default function AdminUsersPage() {
       return;
     }
 
-    // Only fetch data if we're actually on the users page
-    if (router.pathname === '/admin/users') {
-      fetchUsersData();
-    }
+    // Fetch data when component mounts
+    fetchUsersData();
     setIsLoading(false);
   }, []); // Remove router dependency to prevent unnecessary API calls
 
@@ -97,8 +96,11 @@ export default function AdminUsersPage() {
     
     if (statusFilter !== "all") {
       switch (statusFilter) {
-        case "active":
-          filtered = filtered.filter(user => user.is_active && !user.is_blocked)
+        case "new":
+          const currentMonth = new Date();
+          currentMonth.setDate(1);
+          currentMonth.setHours(0, 0, 0, 0);
+          filtered = filtered.filter(user => new Date(user.created_at) >= currentMonth)
           break
         case "blocked":
           filtered = filtered.filter(user => user.is_blocked)
@@ -117,42 +119,55 @@ export default function AdminUsersPage() {
 
   const fetchUsersData = async () => {
     try {
+      setIsFetchingData(true);
+      setError(""); // Clear any previous errors
       const adminToken = localStorage.getItem('adminToken')
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      console.log('API Base URL:', API_BASE_URL)
 
       if (!adminToken) {
         console.error('No admin token found')
+        setError('No admin token found')
         return
       }
+      console.log('Admin token found, length:', adminToken.length)
 
       // Fetch users
+      console.log('Fetching users from:', `${API_BASE_URL}/api/v1/admin/users`)
       const usersResponse = await fetch(`${API_BASE_URL}/api/v1/admin/users`, {
         headers: { 'Authorization': `Bearer ${adminToken}` }
       })
       
       if (usersResponse.ok) {
         const userData = await usersResponse.json()
+        console.log('Users data received:', userData)
         setUsers(userData)
         setFilteredUsers(userData)
       } else {
         console.error('Failed to fetch users:', usersResponse.status, usersResponse.statusText)
+        setError(`Failed to fetch users: ${usersResponse.status} ${usersResponse.statusText}`)
       }
 
       // Fetch user stats
+      console.log('Fetching stats from:', `${API_BASE_URL}/api/v1/admin/users/stats`)
       const statsResponse = await fetch(`${API_BASE_URL}/api/v1/admin/users/stats`, {
         headers: { 'Authorization': `Bearer ${adminToken}` }
       })
       
       if (statsResponse.ok) {
         const statsData = await statsResponse.json()
+        console.log('User stats received:', statsData)
         setUserStats(statsData)
       } else {
         console.error('Failed to fetch user stats:', statsResponse.status, statsResponse.statusText)
+        setError(`Failed to fetch user stats: ${statsResponse.status} ${statsResponse.statusText}`)
       }
 
     } catch (err: any) {
       console.error('Error fetching users data:', err)
       setError(err.message)
+    } finally {
+      setIsFetchingData(false);
     }
   }
 
@@ -312,10 +327,11 @@ export default function AdminUsersPage() {
             </div>
             <Button 
               onClick={fetchUsersData}
+              disabled={isFetchingData}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+              <RefreshCw className={`h-4 w-4 mr-2 ${isFetchingData ? 'animate-spin' : ''}`} />
+              {isFetchingData ? 'Refreshing...' : 'Refresh'}
             </Button>
           </div>
 
@@ -329,21 +345,33 @@ export default function AdminUsersPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-slate-900">{userStats.total}</div>
+                <div className="text-3xl font-bold text-slate-900">
+                  {isFetchingData ? (
+                    <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                  ) : (
+                    userStats.total_users
+                  )}
+                </div>
                 <p className="text-xs text-slate-500 mt-1">All registered users</p>
               </CardContent>
             </Card>
 
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Active Users</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-600">New Users {new Date().toLocaleDateString('en-US', { month: 'long' })}</CardTitle>
                 <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-                  <UserCheck className="h-4 w-4 text-white" />
+                  <UserPlus className="h-4 w-4 text-white" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-green-600">{userStats.active}</div>
-                <p className="text-xs text-slate-500 mt-1">Currently active</p>
+                <div className="text-3xl font-bold text-green-600">
+                  {isFetchingData ? (
+                    <div className="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                  ) : (
+                    userStats.new_users_month
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 mt-1">This month</p>
               </CardContent>
             </Card>
 
@@ -355,7 +383,13 @@ export default function AdminUsersPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-red-600">{userStats.blocked}</div>
+                <div className="text-3xl font-bold text-red-600">
+                  {isFetchingData ? (
+                    <div className="w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                  ) : (
+                    userStats.blocked_users
+                  )}
+                </div>
                 <p className="text-xs text-slate-500 mt-1">Currently blocked</p>
               </CardContent>
             </Card>
@@ -368,7 +402,13 @@ export default function AdminUsersPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-indigo-600">{userStats.verification_rate.toFixed(1)}%</div>
+                <div className="text-3xl font-bold text-indigo-600">
+                  {isFetchingData ? (
+                    <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                  ) : (
+                    `${(userStats.verification_rate || 0).toFixed(1)}%`
+                  )}
+                </div>
                 <p className="text-xs text-slate-500 mt-1">Email verified</p>
               </CardContent>
             </Card>
@@ -393,7 +433,7 @@ export default function AdminUsersPage() {
                   className="h-11 px-4 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 rounded-xl bg-white"
                 >
                   <option value="all">All Status</option>
-                  <option value="active">Active</option>
+                  <option value="new">New This Month</option>
                   <option value="blocked">Blocked</option>
                   <option value="verified">Verified</option>
                   <option value="unverified">Unverified</option>
@@ -490,7 +530,7 @@ export default function AdminUsersPage() {
                                 onClick={() => handleUnblockUser(user.uid)}
                                 className="text-green-600"
                               >
-                                <UserCheck className="h-4 w-4 mr-2" />
+                                <UserPlus className="h-4 w-4 mr-2" />
                                 Unblock User
                               </DropdownMenuItem>
                             ) : (

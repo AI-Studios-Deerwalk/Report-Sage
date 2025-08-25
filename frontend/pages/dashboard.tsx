@@ -45,22 +45,22 @@ export default function DashboardPage() {
   }
   
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-[#DAF3DA] to-[#E7F0E7]">
+    <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex flex-1 items-center justify-center p-8">
-        <div className="w-full max-w-5xl mx-auto text-center">
-          <h1 className="text-3xl font-semibold text-foreground mb-8 text-center">
-            {greeting}{user ? `, ${user.fname}` : ""}
-          </h1>
-          
-          {!analysisCompleted && (
-            <FileUpload 
-              setResults={handleSetResults}
-              onAnalysisComplete={handleAnalysisComplete}
-            />
-          )}
+      <main className="flex flex-1 w-full">
+        {!analysisCompleted && (
+          <FileUpload 
+            setResults={handleSetResults}
+            onAnalysisComplete={handleAnalysisComplete}
+          />
+        )}
 
-          {analysisCompleted && analysisResults && (
+        {analysisCompleted && analysisResults && (
+          <div className="w-full max-w-5xl mx-auto text-center p-8">
+            <h1 className="text-3xl font-semibold text-foreground mb-8 text-center">
+              {greeting}{user ? `, ${user.fname}` : ""}
+            </h1>
+            
             <div className="space-y-6">
               <AnalysisResults results={analysisResults} />
               
@@ -74,8 +74,8 @@ export default function DashboardPage() {
                 </button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </main>
     </div>
   )
