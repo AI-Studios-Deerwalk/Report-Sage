@@ -1,213 +1,86 @@
-# Report Rage - PDF Analysis Platform
+# Report Rage - TU Project Report Checker
 
-A comprehensive platform for analyzing and generating reports from PDF documents using AI.
+A comprehensive application for analyzing and checking TU (Tribhuvan University) project reports with AI-powered feedback and issue tracking.
 
-## Project Structure
-
-```
-├── backend/          # FastAPI backend with PostgreSQL
-├── frontend/         # Next.js frontend application
-└── ReadMe           # This file
-```
-
-## Backend Setup
+## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8+
-- PostgreSQL
-- Node.js 16+ (for frontend)
 
-### Installation
+- **Python 3.8+** (for backend)
+- **Node.js 18+** (for frontend)
+- **PostgreSQL 12+** (for database)
+- **Ollama** (for AI analysis)
 
-1. **Navigate to backend directory:**
-   ```bash
-   cd backend
-   ```
+### 1. Backend Setup
 
-2. **Install Python dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Set up environment variables:**
-   Create a `.env` file in the backend directory with:
-   ```env
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_NAME=report_rage
-   DB_USER=postgres
-   DB_PASSWORD=your_password
-   ```
-
-4. **Set up PostgreSQL database:**
-   ```sql
-   CREATE DATABASE report_rage;
-   ```
-
-## Database Migrations
-
-This project uses **Alembic** for database migrations with PostgreSQL.
-
-### How to Generate Migration
-
-Generate a new migration based on your model changes:
-
+#### Install Python Dependencies
 ```bash
-# Navigate to backend directory
 cd backend
-
-# Generate migration with autogenerate
-alembic revision --autogenerate -m "Description of changes"
-
-# Example:
-alembic revision --autogenerate -m "Add user avatar field"
+pip install -r requirements.txt
 ```
 
-**Using the migration script:**
-```bash
-python migrate.py create "Add user avatar field"
+#### Environment Configuration
+Create a `.env` file in the `backend` directory:
+```env
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=report_rage
+DB_USER=postgres
+DB_PASSWORD=your_password
+
+# AI Configuration
+OLLAMA_BASE_URL=http://localhost:11434
+ANALYSIS_TIMEOUT_SECONDS=60
+TEMPERATURE=0.1
+
+# Email Configuration (optional)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
+
+# JWT Configuration
+SECRET_KEY=your_secret_key_here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
-### How to Run All Migrations
+#### Database Setup
+1. **Create PostgreSQL Database:**
+```sql
+CREATE DATABASE report_rage;
+```
 
-Apply all pending migrations to the database:
-
+2. **Run Database Migrations:**
 ```bash
-# Using alembic directly
+cd backend
 alembic upgrade head
-
-# Using the migration script
-python migrate.py upgrade
 ```
 
-### How to Run Specific Migration
-
-Apply migrations up to a specific revision:
-
-```bash
-# Upgrade to a specific revision
-alembic upgrade <revision_id>
-
-# Example:
-alembic upgrade 19f27a94658c
-
-# Downgrade to a specific revision
-alembic downgrade <revision_id>
-
-# Downgrade one step back
-alembic downgrade -1
-
-# Downgrade to base (remove all migrations)
-alembic downgrade base
-```
-
-**Using the migration script:**
-```bash
-# Downgrade to base
-python migrate.py downgrade base
-
-# Downgrade to specific revision
-python migrate.py downgrade 19f27a94658c
-```
-
-### How to Check Status
-
-Check the current migration status and history:
-
-```bash
-# Check current migration version
-alembic current
-
-# View migration history
-alembic history
-
-# Show detailed migration info
-alembic show <revision_id>
-```
-
-**Using the migration script:**
-```bash
-# Check current status
-python migrate.py current
-
-# View history
-python migrate.py history
-```
-
-### Migration Management Script
-
-The project includes a convenient `migrate.py` script for easier migration management:
-
-```bash
-# Available commands:
-python migrate.py upgrade          # Apply all pending migrations
-python migrate.py create "message" # Create new migration
-python migrate.py current          # Show current revision
-python migrate.py history          # Show migration history
-python migrate.py downgrade [rev]  # Downgrade to revision
-python migrate.py help             # Show help
-```
-
-### Troubleshooting Migrations
-
-#### If you encounter conflicts with existing database objects:
-
-1. **Reset migration state:**
-   ```bash
-   python reset_migrations.py
-   ```
-
-2. **Clean database (if needed):**
-   ```bash
-   # Drop existing tables and types manually in PostgreSQL
-   DROP TABLE IF EXISTS user_otps, users, admins, alembic_version CASCADE;
-   DROP TYPE IF EXISTS otppurpose CASCADE;
-   ```
-
-3. **Start fresh:**
-   ```bash
-   alembic revision --autogenerate -m "Initial migration"
-   alembic upgrade head
-   ```
-
-#### Common Issues:
-
-- **"type already exists" error**: The enum type or table already exists in the database
-- **"table already exists" error**: Tables were created manually or from previous migrations
-- **"alembic_version table not found"**: Migration state is inconsistent
-
-## Frontend Setup
-
-### Installation
-
-1. **Navigate to frontend directory:**
-   ```bash
-   cd frontend
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Run development server:**
-   ```bash
-   npm run dev
-   ```
-
-## Running the Application
-
-### Backend (FastAPI)
-
+3. **Seed Initial Data:**
 ```bash
 cd backend
-uvicorn main:app --reload
+python seed/main_seeder.py
 ```
 
-The API will be available at: `http://localhost:8000`
+#### Start Backend Server
+```bash
+cd backend
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
 
-### Frontend (Next.js)
+The backend will be available at: `http://localhost:8000`
 
+### 2. Frontend Setup
+
+#### Install Node.js Dependencies
+```bash
+cd frontend
+npm install
+```
+
+#### Start Development Server
 ```bash
 cd frontend
 npm run dev
@@ -215,50 +88,216 @@ npm run dev
 
 The frontend will be available at: `http://localhost:3000`
 
-## API Documentation
+## 📋 Detailed Setup Instructions
 
-Once the backend is running, you can access:
-- **Interactive API docs**: `http://localhost:8000/docs`
-- **ReDoc documentation**: `http://localhost:8000/redoc`
+### Database Migrations
 
-## Database Schema
-
-The application includes the following main tables:
-
-- **users**: User accounts and authentication
-- **admins**: Administrator accounts
-- **user_otps**: One-time passwords for verification
-
-## Environment Variables
-
-### Backend (.env)
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=report_rage
-DB_USER=postgres
-DB_PASSWORD=your_password
-DB_POOL_SIZE=10
-DB_MAX_OVERFLOW=20
-DB_POOL_TIMEOUT=30
-DB_POOL_RECYCLE=1800
+#### Initialize Alembic (if not already done)
+```bash
+cd backend
+alembic init migrations
 ```
 
-## Development Workflow
+#### Create New Migration
+```bash
+cd backend
+alembic revision --autogenerate -m "Description of changes"
+```
 
-1. **Make model changes** in `backend/models/`
-2. **Generate migration**: `alembic revision --autogenerate -m "Description"`
-3. **Review migration file** in `backend/migrations/versions/`
-4. **Apply migration**: `alembic upgrade head`
-5. **Test your changes**
+#### Apply Migrations
+```bash
+cd backend
+alembic upgrade head
+```
 
-## Contributing
+#### Rollback Migration
+```bash
+cd backend
+alembic downgrade -1
+```
 
-1. Make your changes
-2. Generate and apply migrations
-3. Test thoroughly
-4. Submit pull request
+### Database Seeding
 
-## License
+#### Run All Seeders
+```bash
+cd backend
+python seed/main_seeder.py
+```
 
-[Add your license information here]
+#### Run Individual Seeders
+```bash
+cd backend
+# Admin seeder
+python -c "import asyncio; from seed.admin_seeder import admin_seeder; asyncio.run(admin_seeder.run())"
+
+# User seeder
+python -c "import asyncio; from seed.user_seeder import user_seeder; asyncio.run(user_seeder.run())"
+
+# FAQ seeder
+python -c "import asyncio; from seed.faq_seeder import faq_seeder; asyncio.run(faq_seeder.run())"
+
+# Issue seeder
+python -c "import asyncio; from seed.issue_seeder import issue_seeder; asyncio.run(issue_seeder.run())"
+```
+
+### Ollama Setup (for AI Analysis)
+
+1. **Install Ollama:**
+   - Visit [ollama.ai](https://ollama.ai) and download for your OS
+   - Or use: `curl -fsSL https://ollama.ai/install.sh | sh`
+
+2. **Pull Required Model:**
+```bash
+ollama pull llama2
+```
+
+3. **Start Ollama Service:**
+```bash
+ollama serve
+```
+
+## 🏗️ Project Structure
+
+```
+Report Rage/
+├── backend/                 # FastAPI backend
+│   ├── crud/               # Database operations
+│   ├── database/           # Database configuration
+│   ├── models/             # SQLAlchemy models
+│   ├── routes/             # API endpoints
+│   ├── schemas/            # Pydantic schemas
+│   ├── seed/               # Database seeders
+│   ├── utils/              # Utility functions
+│   ├── main.py             # FastAPI application
+│   └── requirements.txt    # Python dependencies
+├── frontend/               # Next.js frontend
+│   ├── components/         # React components
+│   ├── pages/              # Next.js pages
+│   ├── contexts/           # React contexts
+│   ├── lib/                # Utility libraries
+│   └── package.json        # Node.js dependencies
+└── ReadMe                  # This file
+```
+
+## 🔧 Development Commands
+
+### Backend
+```bash
+# Start development server
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+# Run tests
+python -m pytest
+
+# Format code
+black .
+
+# Lint code
+flake8 .
+```
+
+### Frontend
+```bash
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Lint code
+npm run lint
+```
+
+## 🌐 API Endpoints
+
+### Authentication
+- `POST /auth/login` - User login
+- `POST /auth/signup` - User registration
+- `POST /auth/forgot-password` - Forgot password
+- `POST /auth/reset-password` - Reset password
+- `POST /auth/verify-otp` - Verify OTP
+
+### Report Analysis
+- `POST /upload` - Upload and analyze report
+- `GET /results/{id}` - Get analysis results
+- `GET /archive` - Get archived reports
+
+### Admin (Protected)
+- `GET /admin/users` - List all users
+- `GET /admin/issues` - List all issues
+- `POST /admin/faqs` - Create FAQ
+- `GET /admin/faqs` - List FAQs
+
+## 🔐 Default Admin Credentials
+
+After running the seeder, you can login with:
+- **Email:** admin@reportrage.com
+- **Password:** admin123
+
+## 🚨 Troubleshooting
+
+### Common Issues
+
+1. **Database Connection Error:**
+   - Ensure PostgreSQL is running
+   - Check database credentials in `.env`
+   - Verify database exists
+
+2. **Migration Errors:**
+   - Delete `migrations/versions/` folder
+   - Run `alembic revision --autogenerate -m "Initial migration"`
+   - Run `alembic upgrade head`
+
+3. **Ollama Connection Error:**
+   - Ensure Ollama is running: `ollama serve`
+   - Check `OLLAMA_BASE_URL` in `.env`
+   - Verify model is downloaded: `ollama list`
+
+4. **Frontend Build Errors:**
+   - Clear node_modules: `rm -rf node_modules package-lock.json`
+   - Reinstall: `npm install`
+
+### Reset Everything
+```bash
+# Backend
+cd backend
+rm -rf migrations/versions/*
+alembic revision --autogenerate -m "Initial migration"
+alembic upgrade head
+python seed/main_seeder.py
+
+# Frontend
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
+
+## 📝 Environment Variables Reference
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DB_HOST` | PostgreSQL host | localhost |
+| `DB_PORT` | PostgreSQL port | 5432 |
+| `DB_NAME` | Database name | report_rage |
+| `DB_USER` | Database user | postgres |
+| `DB_PASSWORD` | Database password | ason |
+| `OLLAMA_BASE_URL` | Ollama API URL | http://localhost:11434 |
+| `ANALYSIS_TIMEOUT_SECONDS` | AI analysis timeout | 60 |
+| `TEMPERATURE` | AI model temperature | 0.1 |
+| `SECRET_KEY` | JWT secret key | - |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | JWT expiry time | 30 |
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
