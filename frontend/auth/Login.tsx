@@ -1,35 +1,42 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { useRouter } from "next/router"
-import { ArrowLeft, Eye, EyeOff, Mail, Lock } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { useAuth } from "@/contexts/AuthContext"
-import { useToast } from "@/hooks/use-toast"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import { ArrowLeft, Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface LoginFormProps {
-  onSubmit?: (email: string, password: string) => void
-  onBackClick?: () => void
-  onSignupClick?: () => void
-  error?: string
-  isSubmitting?: boolean
-  successMessage?: string
+  onSubmit?: (email: string, password: string) => void;
+  onBackClick?: () => void;
+  onSignupClick?: () => void;
+  error?: string;
+  isSubmitting?: boolean;
+  successMessage?: string;
 }
 
-export function LoginForm({ onSubmit, onBackClick, onSignupClick, error, isSubmitting = false, successMessage }: LoginFormProps) {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [focusedField, setFocusedField] = useState<string | null>(null)
-  const { isAuthenticated, user } = useAuth()
-  const router = useRouter()
-  const { toast } = useToast()
+export function LoginForm({
+  onSubmit,
+  onBackClick,
+  onSignupClick,
+  error,
+  isSubmitting = false,
+  successMessage,
+}: LoginFormProps) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const { isAuthenticated, user } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
 
-  // Check if user is already authenticated and redirect them
+  // Check if user is already authenticated and redirect them:
   useEffect(() => {
     if (isAuthenticated && user) {
       toast({
@@ -41,19 +48,19 @@ export function LoginForm({ onSubmit, onBackClick, onSignupClick, error, isSubmi
   }, [isAuthenticated, user, router, toast]);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit?.(email, password)
-  }
+    e.preventDefault();
+    onSubmit?.(email, password);
+  };
 
   const handleBackClick = () => {
-    onBackClick?.()
-  }
+    onBackClick?.();
+  };
 
   const handleSignupClick = () => {
-    onSignupClick?.()
-  }
+    onSignupClick?.();
+  };
 
-  const isFormValid = email.trim() && password.trim()
+  const isFormValid = email.trim() && password.trim();
 
   // Don't render the login form if user is already authenticated
   if (isAuthenticated && user) {
@@ -75,7 +82,8 @@ export function LoginForm({ onSubmit, onBackClick, onSignupClick, error, isSubmi
         <div
           className="absolute top-10 left-10 w-32 h-32 border-2 border-emerald-200/30 rotate-12 animate-spin"
           style={{
-            clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+            clipPath:
+              "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
             animationDuration: "20s",
             animationDirection: "reverse",
           }}
@@ -84,7 +92,8 @@ export function LoginForm({ onSubmit, onBackClick, onSignupClick, error, isSubmi
         <div
           className="absolute top-1/4 right-16 w-24 h-24 border-2 border-teal-300/40 -rotate-45 animate-pulse"
           style={{
-            clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
+            clipPath:
+              "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
             animationDuration: "3s",
           }}
         ></div>
@@ -183,7 +192,13 @@ export function LoginForm({ onSubmit, onBackClick, onSignupClick, error, isSubmi
             style={{ animationDelay: "0.5s" }}
           />
           <defs>
-            <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient
+              id="emeraldGradient"
+              x1="0%"
+              y1="0%"
+              x2="0%"
+              y2="100%"
+            >
               <stop offset="0%" stopColor="rgb(52 211 153 / 0.6)" />
               <stop offset="100%" stopColor="rgb(20 184 166 / 0.6)" />
             </linearGradient>
@@ -198,7 +213,10 @@ export function LoginForm({ onSubmit, onBackClick, onSignupClick, error, isSubmi
           >
             <div
               className="w-3/4 h-3/4 border border-teal-400 rounded-full m-2 animate-spin"
-              style={{ animationDuration: "10s", animationDirection: "reverse" }}
+              style={{
+                animationDuration: "10s",
+                animationDirection: "reverse",
+              }}
             >
               <div
                 className="w-1/2 h-1/2 border border-green-400 rounded-full m-3 animate-spin"
@@ -228,19 +246,27 @@ export function LoginForm({ onSubmit, onBackClick, onSignupClick, error, isSubmi
       {/* Custom CSS animations */}
       <style jsx>{`
         @keyframes morph {
-          0%, 100% {
+          0%,
+          100% {
             border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
           }
           50% {
             border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
           }
         }
-        
+
         @keyframes twinkle {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.5); }
+          0%,
+          100% {
+            opacity: 0.6;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.5);
+          }
         }
-        
+
         .animate-twinkle {
           animation: twinkle 2s ease-in-out infinite;
         }
@@ -267,7 +293,10 @@ export function LoginForm({ onSubmit, onBackClick, onSignupClick, error, isSubmi
           <form onSubmit={handleSubmit} className="space-y-3">
             {/* Email field */}
             <div className="space-y-1">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+              <Label
+                htmlFor="email"
+                className="text-sm font-medium text-gray-700 flex items-center gap-2"
+              >
                 <Mail className="w-4 h-4" />
                 Student Email
               </Label>
@@ -296,7 +325,10 @@ export function LoginForm({ onSubmit, onBackClick, onSignupClick, error, isSubmi
             {/* Password field */}
             <div className="space-y-1">
               <div className="flex justify-between items-center">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                >
                   <Lock className="w-4 h-4" />
                   Password
                 </Label>
@@ -305,9 +337,11 @@ export function LoginForm({ onSubmit, onBackClick, onSignupClick, error, isSubmi
                   className="text-sm text-teal-600 hover:text-teal-700 font-medium transition-colors duration-200 hover:underline"
                   onClick={() => {
                     if (email.trim()) {
-                      window.location.href = `/forgot-password?email=${encodeURIComponent(email.trim())}&autoSend=true`
+                      window.location.href = `/forgot-password?email=${encodeURIComponent(
+                        email.trim()
+                      )}&autoSend=true`;
                     } else {
-                      window.location.href = "/forgot-password"
+                      window.location.href = "/forgot-password";
                     }
                   }}
                 >
@@ -335,7 +369,11 @@ export function LoginForm({ onSubmit, onBackClick, onSignupClick, error, isSubmi
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
                 {focusedField === "password" && (
                   <div className="absolute inset-0 border-2 border-blue-500 rounded-xl pointer-events-none animate-pulse"></div>
@@ -396,51 +434,53 @@ export function LoginForm({ onSubmit, onBackClick, onSignupClick, error, isSubmi
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 export default function LoginPage() {
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [successMessage, setSuccessMessage] = useState("")
-  const { login } = useAuth()
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const { login } = useAuth();
 
-  const router = useRouter()
+  const router = useRouter();
 
   // Check for success message from password reset
   useEffect(() => {
-    const { resetSuccess } = router.query
-    if (resetSuccess === 'true') {
-      setSuccessMessage("Password reset successfully! Please login with your new password.")
+    const { resetSuccess } = router.query;
+    if (resetSuccess === "true") {
+      setSuccessMessage(
+        "Password reset successfully! Please login with your new password."
+      );
       // Clear the query parameter
-      router.replace('/login', undefined, { shallow: true })
+      router.replace("/login", undefined, { shallow: true });
     }
-  }, [router.query])
+  }, [router.query]);
 
   const handleSubmit = async (email: string, password: string) => {
-    setIsLoading(true)
-    setError("")
+    setIsLoading(true);
+    setError("");
 
     try {
       // Call the actual login function from AuthContext
-      await login(email, password)
-      
+      await login(email, password);
+
       // If login is successful, redirect to dashboard
-      router.push("/dashboard")
+      router.push("/dashboard");
     } catch (err: any) {
-      setError(err.message || "Login failed. Please try again.")
+      setError(err.message || "Login failed. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleBackClick = () => {
-    router.push("/")
-  }
+    router.push("/");
+  };
 
   const handleSignupClick = () => {
-    router.push("/signup")
-  }
+    router.push("/signup");
+  };
 
   return (
     <LoginForm
@@ -451,5 +491,5 @@ export default function LoginPage() {
       isSubmitting={isLoading}
       successMessage={successMessage}
     />
-  )
+  );
 }

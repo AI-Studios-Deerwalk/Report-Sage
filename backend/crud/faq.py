@@ -14,6 +14,7 @@ from utils.pagination import PaginationParams, PaginatedResult
 class FAQCRUD:
     """FAQ CRUD operations"""
 
+    #to add FAQ
     async def create_faq(self, session: AsyncSession, faq_data: FAQCreate) -> FAQ:
         new_faq = FAQ(
             question=faq_data.question,
