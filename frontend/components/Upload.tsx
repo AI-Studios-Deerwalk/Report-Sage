@@ -634,7 +634,7 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
 
       <div className="w-full max-w-4xl z-10">
         {/* Upload Area + Uploaded Files inside the same card */}
-        <Card className="w-full border-2 border-dashed border-green-300 bg-white/95 backdrop-blur-sm shadow-2xl border-0 rounded-2xl transition-colors relative">
+        <Card className="w-full bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl transition-colors relative">
           {/* Drop zone (hidden after at least one file is uploaded) */}
           {uploadedFiles.length === 0 && (
             <div {...getRootProps()} className={`p-12 text-center cursor-pointer transition-all duration-200 ${isDragActive ? "bg-green-50 border-green-400" : "hover:bg-gray-50"}`}>
