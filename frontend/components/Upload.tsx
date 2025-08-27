@@ -634,13 +634,13 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
 
       <div className="w-full max-w-4xl z-10">
         {/* Upload Area + Uploaded Files inside the same card */}
-        <Card className="w-full bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl transition-colors relative">
+        <Card className="w-full bg-white/95 backdrop-blur-sm shadow-lg shadow-emerald-800/10 rounded-2xl transition-colors relative">
           {/* Drop zone (hidden after at least one file is uploaded) */}
           {uploadedFiles.length === 0 && (
-            <div {...getRootProps()} className={`p-12 text-center cursor-pointer transition-all duration-200 ${isDragActive ? "bg-green-50 border-green-400" : "hover:bg-gray-50"}`}>
+            <div {...getRootProps()} className={`p-12 text-center cursor-pointer transition-all duration-200 ${isDragActive ? "bg-green-50 border-green-400 rounded-2xl" : "hover:bg-gray-50 rounded-2xl"}`}>
               <input {...getInputProps()} />
               <div className="flex flex-col items-center gap-4">
-                <div className="p-4 bg-green-100 rounded-full">
+                <div className="p-4 bg-green-100 rounded-2xl">
                   {loading ? (
                     <Loader2 className="h-8 w-8 text-green-600 animate-spin" />
                   ) : (
@@ -671,7 +671,7 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
 
           {/* Uploaded Files (inside the card, below the drop zone) */}
           {uploadedFiles.length > 0 && (
-            <div className="p-12 bg-white min-h-[320px]">
+            <div className="p-12 bg-white min-h-[320px] rounded-xl">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-medium text-foreground">Uploaded Files</h3>
                 <span className="text-sm text-muted-foreground">
