@@ -245,10 +245,10 @@ export function FAQSection() {
 
                 <div
                   className={`px-6 overflow-hidden transition-[max-height] duration-300 ${
-                    openItems.includes(item.fid - 1) ? "max-h-[1000px]" : "max-h-0"
+                    openItems.includes(item.fid-1) ? "max-h-[1000px]" : "max-h-0"
                   }`}
                 >
-                  <div className="border-t border-gray-100 pt-5">
+                  <div className={`border-t border-gray-100 pt-5 ${openItems.includes(item.fid-1) ? "animate-slide-up" : ""}`}>
                     <p className="text-gray-600 leading-relaxed pb-6">{item.answer}</p>
                   </div>
                 </div>
