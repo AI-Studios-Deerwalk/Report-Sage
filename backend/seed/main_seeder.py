@@ -17,10 +17,15 @@ from seed.admin_seeder import admin_seeder
 from seed.user_seeder import user_seeder
 from seed.faq_seeder import faq_seeder
 from seed.issue_seeder import issue_seeder
+from seed.config_seeder import seed_config
 
 logger = logging.getLogger(__name__)
 
 async def run_all_seeders():
+    print("\n🌱 Running Config Seeder...")
+    seed_config()
+    print("Config seeding completed\n")
+
     print("\n🌱 Running Admin Seeder...")
     admin_seeder.print_admin_info()
     admin_result = await admin_seeder.run()
