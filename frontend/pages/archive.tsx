@@ -356,7 +356,7 @@ const ArchivePage: React.FC = () => {
                 {archives.map((archive) => (
                   <AccordionItem key={archive.id} value={archive.id.toString()}>
                     <Card>
-                      <AccordionTrigger className="hover:no-underline p-0">
+                      <AccordionTrigger className="hover:no-underline px-4">
                         <CardHeader className="flex-1 pb-4">
                           <div className="flex items-center justify-between w-full">
                             <div className="flex items-center gap-3">
@@ -483,7 +483,7 @@ const ArchivePage: React.FC = () => {
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                                   <AlertDialogAction
                                     onClick={() => handleDeleteArchive(archive.id)}
-                                    className="bg-red-600 hover:bg-red-700"
+                                    className="bg-red-600 hover:bg-red-700 text-white"
                                   >
                                     Delete
                                   </AlertDialogAction>

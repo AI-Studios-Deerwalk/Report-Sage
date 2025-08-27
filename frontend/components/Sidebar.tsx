@@ -363,7 +363,7 @@ export function Sidebar() {
           )}
         </TooltipProvider>
 
-                 {/* Archive Lists with Submenu */}
+        {/* Archive Lists with Submenu */}
          <div className="space-y-0.5">
            <TooltipProvider>
              {collapsed ? (
@@ -371,6 +371,7 @@ export function Sidebar() {
                  <TooltipTrigger asChild>
                    <Button
                      variant="ghost"
+                     onClick={() => router.push('/archive')}
                      className={`w-full justify-center gap-3 ${router.pathname === '/archive' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
                    >
                      <Archive className="h-4 w-4" />
@@ -379,11 +380,17 @@ export function Sidebar() {
                  <TooltipContent side="right">Archive Lists</TooltipContent>
                </Tooltip>
              ) : (
-               <div className="flex items-center gap-3 px-3 py-2 text-sidebar-foreground">
-                 <Archive className="h-4 w-4" />
-                 <span className="text-xs">Archive Lists</span>
-               </div>
-             )}
+               <div className="flex items-center gap-2 py-2 text-sidebar-foreground">
+                 <Button
+                  variant="ghost"
+                  onClick={() => router.push('/archive')}
+                  className={`w-full justify-start gap-3 ${router.pathname === '/archive' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+                >
+                  <Archive className="h-4 w-4" />
+                  <span className="text-xs">Archive Lists</span>
+                </Button>
+                  </div>
+                )}
            </TooltipProvider>
 
                        {/* Archive Submenu - Always Visible */}
