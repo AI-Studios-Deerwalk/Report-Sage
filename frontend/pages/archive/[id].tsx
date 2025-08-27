@@ -399,13 +399,14 @@ const IndividualArchivePage: React.FC = () => {
                 <CardHeader>
                   <CardTitle>Actions</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-3 ">
                   {(archive.processing_status === 'failed' || archive.processing_status === 'completed') && (
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="w-full hover:scale-105 transition-transform duration-100"
                       onClick={handleReanalyze}
                       disabled={reanalyzing}
+                      
                     >
                       {reanalyzing ? (
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -420,13 +421,13 @@ const IndividualArchivePage: React.FC = () => {
                     <AlertDialogTrigger asChild>
                       <Button 
                         variant="outline" 
-                        className="w-full text-red-600 hover:text-red-700"
+                        className="w-full text-red-600 hover:text-red-700 hover:scale-105 transition-transform duration-100"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete Archive
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className='bg-white'>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Archive</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -437,7 +438,7 @@ const IndividualArchivePage: React.FC = () => {
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
                           onClick={handleDeleteArchive}
-                          className="bg-red-600 hover:bg-red-700"
+                          className="bg-red-600 hover:bg-red-700 text-white"
                         >
                           Delete
                         </AlertDialogAction>
