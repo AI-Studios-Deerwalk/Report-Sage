@@ -390,6 +390,7 @@ export default function IssueReportPage() {
                               Choose File
                             </Button>
                           </div>
+                        
                         ) : (
                           <div className="relative">
                             <img

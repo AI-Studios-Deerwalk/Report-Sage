@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect,useRef } from "react"
 import Image from "next/image"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+
 
 interface ArchiveItem {
   id: number
@@ -163,9 +164,9 @@ export function Sidebar() {
   }
 
   // If no user, don't render the sidebar (this shouldn't happen with ProtectedRoute)
-  if (!user) {
-    return null
-  }
+  // if (!user) {
+  //   return <div className="w-64 p-4">Logging out...</div>;
+  // }
 
   const toggleCollapsed = () => {
     setCollapsed((v) => {
@@ -181,8 +182,8 @@ export function Sidebar() {
 
 
 
-  const fullName = `${user.fname} ${user.lname}`
-  const roleLabel = user.email.toLowerCase().includes('deerwalk.edu.np') ? 'DWIT User' : 'User'
+  const fullName = `${user?.fname} ${user?.lname}`
+  const roleLabel = user?.email.toLowerCase().includes('deerwalk.edu.np') ? 'DWIT User' : 'User'
   const initials = (() => {
     const source = fullName.trim()
     if (!source) return "U"
@@ -219,10 +220,30 @@ export function Sidebar() {
         return 'text-gray-600'
     }
   }
+  //for sidemenu
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+
+    useEffect(() => {
+      function handleClickOutside(event: MouseEvent) {
+        // If menu is open AND logout dialog is open, ignore all outside clicks
+        if (logoutDialogOpen) return;
+        
+        if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+          setMenuOpen(false);
+        }
+      }
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, [logoutDialogOpen]);
 
   return (
     <div
-      className={`${collapsed ? "w-16 p-2" : "w-64 p-4"} sticky top-0 shrink-0 flex flex-col h-screen overflow-hidden bg-[#F9FCF9] border-r border-sidebar-border transition-all duration-200`}
+      className={`${collapsed ? "w-16 p-2" : "w-64 p-4"} sticky top-0 shrink-0 flex flex-col h-screen overflow-hidden bg-[#F9FCF9] border-r border-sidebar-border transition-all duration-200 z-50`}
     >
       {/* Top Section - Brand + Collapse/Expand Toggle */}
       <div className={`flex items-center ${collapsed ? "justify-center" : "justify-between"}`}>
@@ -268,7 +289,7 @@ export function Sidebar() {
                   <Plus className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">New Submission</TooltipContent>
+              <TooltipContent side="right" className="bg-white">New Submission</TooltipContent>
             </Tooltip>
           ) : (
             <Button
@@ -278,87 +299,6 @@ export function Sidebar() {
             >
               <Plus className="h-4 w-4" />
               <span className="text-xs">New Submission</span>
-            </Button>
-          )}
-        </TooltipProvider>
-
-        {/* Settings */}
-        <TooltipProvider>
-          {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  onClick={() => router.push('/settings')}
-                  className={`w-full justify-center gap-3 ${router.pathname === '/settings' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Settings</TooltipContent>
-            </Tooltip>
-          ) : (
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/settings')}
-              className={`w-full justify-start gap-3 ${router.pathname === '/settings' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
-            >
-              <Settings className="h-4 w-4" />
-              <span className="text-xs">Settings</span>
-            </Button>
-          )}
-        </TooltipProvider>
-
-        {/* FAQs */}
-        <TooltipProvider>
-          {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  onClick={() => router.push('/faqs')}
-                  className={`w-full justify-center gap-3 ${router.pathname === '/faqs' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
-                >
-                  <HelpCircle className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">FAQs</TooltipContent>
-            </Tooltip>
-          ) : (
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/faqs')}
-              className={`w-full justify-start gap-3 ${router.pathname === '/faqs' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
-            >
-              <HelpCircle className="h-4 w-4" />
-              <span className="text-xs">FAQs</span>
-            </Button>
-          )}
-        </TooltipProvider>
-
-        {/* Issue a Report */}
-        <TooltipProvider>
-          {collapsed ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  onClick={() => router.push('/issue-report')}
-                  className={`w-full justify-center gap-3 ${router.pathname === '/issue-report' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
-                >
-                  <AlertTriangle className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Issue a Report</TooltipContent>
-            </Tooltip>
-          ) : (
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/issue-report')}
-              className={`w-full justify-start gap-3 ${router.pathname === '/issue-report' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
-            >
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-xs">Issue a Report</span>
             </Button>
           )}
         </TooltipProvider>
@@ -377,7 +317,7 @@ export function Sidebar() {
                      <Archive className="h-4 w-4" />
                    </Button>
                  </TooltipTrigger>
-                 <TooltipContent side="right">Archive Lists</TooltipContent>
+                 <TooltipContent side="right" className="bg-white">Archive Lists</TooltipContent>
                </Tooltip>
              ) : (
                <div className="flex items-center gap-2 py-2 text-sidebar-foreground">
@@ -419,7 +359,7 @@ export function Sidebar() {
                               </span>
                             </div>
                           </TooltipTrigger>
-                                                     <TooltipContent side="top" className="text-[10px] px-2 py-1 bg-white border border-gray-200">
+                            <TooltipContent side="top" className="text-[10px] px-2 py-1 bg-white border border-gray-200">
                              {(() => {
                                try {
                                  const date = new Date(archive.created_at)
@@ -553,13 +493,104 @@ export function Sidebar() {
           </AlertDialogContent>
         </AlertDialog>
 
-       {/* Bottom Section - Logout then User Profile with divider */}
+       {/* Bottom Section - User Profile with divider */}
       <div className="space-y-1 pt-3 border-sidebar-border">
-        <AlertDialog>
+
+        <div className="border-t border-sidebar-border" />
+
+        {menuOpen && (
+        <div
+          ref={menuRef}
+          className={`absolute bottom-20 left-0 w-48 bg-white border border-gray-200 rounded-md shadow-sm z-50 animate-fade-in ${collapsed ? "justify-center ml-0 w-auto" : "ml-12"}`}
+        >
+        {/* Settings */}
+        <TooltipProvider>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  onClick={() => router.push('/settings')}
+                  className={`w-full justify-center gap-3 ${router.pathname === '/settings' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-white">Settings</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              variant="ghost"
+              onClick={() => router.push('/settings')}
+              className={`w-full justify-start gap-3 ${router.pathname === '/settings' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+            >
+              <Settings className="h-4 w-4" />
+              <span className="text-xs">Settings</span>
+            </Button>
+          )}
+        </TooltipProvider>
+
+         {/* FAQs */}
+        <TooltipProvider>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  onClick={() => router.push('/faqs')}
+                  className={`w-full justify-center gap-3 ${router.pathname === '/faqs' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-white">FAQs</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              variant="ghost"
+              onClick={() => router.push('/faqs')}
+              className={`w-full justify-start gap-3 ${router.pathname === '/faqs' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span className="text-xs">FAQs</span>
+            </Button>
+          )}
+        </TooltipProvider>
+
+        {/* Issue a Report */}
+        <TooltipProvider>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  onClick={() => router.push('/issue-report')}
+                  className={`w-full justify-center gap-3 ${router.pathname === '/issue-report' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right"  className="bg-white">Issue a Report</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button
+              variant="ghost"
+              onClick={() => router.push('/issue-report')}
+              className={`w-full justify-start gap-3 ${router.pathname === '/issue-report' ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' : 'text-sidebar-foreground hover:bg-gray-100'}`}
+            >
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-xs">Issue a Report</span>
+            </Button>
+          )}
+        </TooltipProvider>
+
+          {/* Logout Button */}
+          <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
               variant="ghost"
               className={`w-full ${collapsed ? "justify-center" : "justify-start"} gap-3 text-red-600 hover:bg-red-50`}
+              onClick={(e) => { e.stopPropagation(); setLogoutDialogOpen(true);}}            
             >
               <LogOut className="h-4 w-4" />
               <span className={`${collapsed ? "hidden" : "inline"} text-xs`}>Logout</span>
@@ -573,7 +604,7 @@ export function Sidebar() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="hover:!bg-gray-300 hover:!text-gray-900">Cancel</AlertDialogCancel>
+              <AlertDialogCancel className="hover:!bg-gray-300 hover:!text-gray-900" onClick={() => { setLogoutDialogOpen(false); setMenuOpen(false); }}>Cancel</AlertDialogCancel>
               <AlertDialogAction
                 className="bg-red-600 text-white hover:bg-red-700"
                 onClick={() => { logout(); router.push('/login') }}
@@ -582,11 +613,17 @@ export function Sidebar() {
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
-        </AlertDialog>
-
-        <div className="border-t border-sidebar-border" />
+          </AlertDialog>
+          
+        </div>
+      )}
 
         {/* User Profile */}
+
+        <Button
+          className={`text-left hover:bg-gray-100 w-full flex items-center justify-start ${collapsed ? "justify-center" : ""}`}
+          onClick={() => setMenuOpen((prev) => !prev)}
+        >
         <div className={`flex items-center gap-3 p-2 ${collapsed ? "justify-center" : ""}`}>
           <Avatar className="h-8 w-8 rounded-full border-2 border-sidebar-border">
             <AvatarImage src="/professional-headshot.png" alt={fullName} />
@@ -601,6 +638,7 @@ export function Sidebar() {
             )}
           </div>
         </div>
+        </Button>
       </div>
     </div>
   )
