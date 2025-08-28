@@ -1,9 +1,10 @@
-import React from "react"
+import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, CheckCircle, XCircle, Lightbulb, Archive } from "lucide-react"
+import { AlertTriangle, CheckCircle, XCircle, Lightbulb, Archive, Share2, Copy, Check } from "lucide-react"
 import { useRouter } from "next/router"
+import { useToast } from "@/hooks/use-toast"
 
 interface AnalysisItem {
   type: string
@@ -27,9 +28,47 @@ interface AnalysisResultsProps {
 
 export function AnalysisResults({ results }: AnalysisResultsProps) {
   const router = useRouter()
+  const { toast } = useToast()
+  const [copied, setCopied] = useState(false)
 
   const handleViewArchives = () => {
     router.push('/archive')
+  }
+
+  const handleShareResults = async () => {
+    if (results.archive_id) {
+      const shareUrl = `${window.location.origin}/dashboard?archive_id=${results.archive_id}`
+      
+      try {
+        await navigator.clipboard.writeText(shareUrl)
+        setCopied(true)
+        toast({
+          title: "Link Copied!",
+          description: "Analysis results link has been copied to your clipboard.",
+          variant: "default",
+        })
+        
+        // Reset copied state after 2 seconds
+        setTimeout(() => setCopied(false), 2000)
+      } catch (error) {
+        // Fallback for browsers that don't support clipboard API
+        const textArea = document.createElement('textarea')
+        textArea.value = shareUrl
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+        
+        setCopied(true)
+        toast({
+          title: "Link Copied!",
+          description: "Analysis results link has been copied to your clipboard.",
+          variant: "default",
+        })
+        
+        setTimeout(() => setCopied(false), 2000)
+      }
+    }
   }
   const getSeverityColor = (severity: string) => {
     switch (severity.toLowerCase()) {
@@ -135,7 +174,28 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
             <p className="text-sm text-gray-600">
               Analysis completed for: <strong>{results.file_name}</strong>
             </p>
-           
+            {results.archive_id && (
+              <div className="mt-3 flex justify-center gap-2">
+                <Button
+                  onClick={handleShareResults}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="h-4 w-4" />
+                      Share Results
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
