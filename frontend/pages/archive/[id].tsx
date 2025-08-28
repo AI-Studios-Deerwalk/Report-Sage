@@ -403,7 +403,7 @@ const IndividualArchivePage: React.FC = () => {
                   {(archive.processing_status === 'failed' || archive.processing_status === 'completed') && (
                     <Button
                       variant="outline"
-                      className="w-full hover:scale-105 transition-transform duration-100"
+                      className="w-full hover:scale-105 transition-transform duration-100 group"
                       onClick={handleReanalyze}
                       disabled={reanalyzing}
                       
@@ -411,7 +411,7 @@ const IndividualArchivePage: React.FC = () => {
                       {reanalyzing ? (
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       ) : (
-                        <RefreshCw className="h-4 w-4 mr-2" />
+                        <RefreshCw className="h-4 w-4 mr-2 group-hover:animate-spin" />
                       )}
                       Reanalyze Document
                     </Button>

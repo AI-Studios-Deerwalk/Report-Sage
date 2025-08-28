@@ -356,7 +356,7 @@ const ArchivePage: React.FC = () => {
                 {archives.map((archive) => (
                   <AccordionItem key={archive.id} value={archive.id.toString()}>
                     <Card>
-                      <AccordionTrigger className="hover:no-underline px-4">
+                      <AccordionTrigger className="hover:no-underline px-4 pr-6 py-2">
                         <CardHeader className="flex-1 pb-4">
                           <div className="flex items-center justify-between w-full">
                             <div className="flex items-center gap-3">
@@ -455,11 +455,12 @@ const ArchivePage: React.FC = () => {
                                 size="sm"
                                 onClick={() => handleReanalyze(archive.id)}
                                 disabled={reanalyzingIds.has(archive.id)}
+                                className='group hover:scale-105 transition-transform duration-100'
                               >
                                 {reanalyzingIds.has(archive.id) ? (
                                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                 ) : (
-                                  <RefreshCw className="h-4 w-4 mr-2" />
+                                  <RefreshCw className="h-4 w-4 mr-2 group-hover:animate-spin" />
                                 )}
                                 Reanalyze
                               </Button>
@@ -467,13 +468,13 @@ const ArchivePage: React.FC = () => {
                             
                             <AlertDialog >
                               <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                                <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:scale-105 transition-transform duration-100">
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   Delete
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent className='bg-white'>
-                                <AlertDialogHeader >
+                                <AlertDialogHeader>
                                   <AlertDialogTitle>Delete Archive</AlertDialogTitle>
                                   <AlertDialogDescription>
                                     Are you sure you want to delete "{archive.file_name}"? This action cannot be undone.

@@ -169,7 +169,7 @@ export default function IssueReportPage() {
   return (
     <ProtectedRoute>
       <Head>
-        <title>Report an Issue - Report Rage</title>
+        <title>Report an Issue - Academia</title>
       </Head>
       
       <div className="flex h-screen bg-gray-50">
