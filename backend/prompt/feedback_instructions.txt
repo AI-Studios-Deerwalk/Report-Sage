@@ -1,74 +1,210 @@
+TU PROJECT REPORT - FEEDBACK INSTRUCTIONS
 
-FEEDBACK CATEGORIZATION INSTRUCTIONS:
+PURPOSE: This document provides comprehensive instructions for giving effective, constructive feedback on TU final year CSIT project reports.
 
-PROVIDE FEEDBACK IN THREE CATEGORIES:
+ 
+FEEDBACK OBJECTIVES
+ 
 
-1. ERRORS (Critical Issues – Must Fix):
+PRIMARY GOALS:
+1. Help students identify and correct ALL errors before submission
+2. Ensure TU standards compliance at 100%
+3. Prevent report rejection due to formatting or content issues
+4. Guide students toward graduation success
+5. Maintain academic quality and integrity
 
-- Missing required sections (Title Page, Abstract, TOC, LoF, LoT, Abbreviations, Chapters, References, etc.)
-- Sections out of TU-prescribed order
-- Page numbering errors (e.g., cover page has number, preliminaries not starting at ii, Chapter 1 not starting at 1, gaps/duplicates)
-- Margin violations (Top 1", Bottom 1", Left 1.25", Right 1")
-- Font/size violations (not Times New Roman 12pt for body text)
-- Line spacing violations (not 1.5)
-- Paragraph formatting violations (not justified, missing 0.5" indent)
-- Heading style violations (wrong size, alignment, or boldness)
-- Reference and citation format errors (not IEEE style, missing/uncited references)
-- TOC/LoF/LoT not auto-generated or page numbers don’t match
-- Figure/table caption placement/style errors (not bold 12pt above/below)
-- Figures/tables not sequentially numbered by chapter or split across pages
-- Any other direct TU template compliance violation
+ 
+FEEDBACK STRUCTURE
+ 
 
-Format: `[ERROR] Brief description of the violation`
-Example: `[ERROR] Font should be Times New Roman 12pt, currently using Arial (Page 5)`
+EACH FEEDBACK ITEM MUST INCLUDE:
 
+1. ERROR IDENTIFICATION:
+   - Exact location (page number, line number if possible)
+   - Clear description of the error
+   - Specific requirement violated
 
-2. WARNINGS (Important Issues – Should Fix):
-- Grammar mistakes
-- Spelling errors
-- Punctuation issues
-- Awkward or unclear sentence structure
-- Inconsistent heading or subheading styles
-- Uneven indentation or misaligned text
-- Weak flow or transitions between sections
-- Minor spacing inconsistencies (extra blank lines, uneven line breaks)
+2. ERROR CLASSIFICATION:
+   - CRITICAL: Immediate rejection, no resubmission
+   - MAJOR: Significant deduction, resubmission required
+   - MINOR: Small deduction, correction required
 
-Format: `[WARNING] Brief description of the issue`
-Example: `[WARNING] Grammar error – "There is many" should be "There are many" (Page 12)`
+3. CORRECTION INSTRUCTIONS:
+   - Specific steps to fix the error
+   - Reference to exact TU requirement
+   - Example of correct format if applicable
 
-3. SUGGESTIONS (Enhancement Ideas – Optional):
+4. PREVENTION GUIDANCE:
+   - How to avoid similar errors in future
+   - Best practices to follow
+   - Tools or resources to use
 
-- Ways to improve clarity of writing
-- Ideas for better organization of sections/subsections
-- Recommendations for additional detail or depth (e.g., methodology, results)
-- Suggestions for stronger or more recent references
-- Visual or formatting improvements (e.g., clearer figures, consistent terminology)
+ 
+FEEDBACK CATEGORIES
+ 
 
-Format: `[SUGGESTION] Brief improvement recommendation`
-Example: `[SUGGESTION] Consider adding more detail to explain the methodology (Page 18)`
+STRUCTURAL FEEDBACK:
+- Missing or incorrect chapter order
+- Incomplete front matter or back matter
+- Incorrect page numbering system
+- Missing required sections
+- Document organization issues
 
-FEEDBACK FORMATTING RULES:
+FORMATTING FEEDBACK:
+- Font and size violations
+- Margin and spacing errors
+- Header/footer issues
+- Page setup problems
+- Inconsistent formatting
 
-- Each feedback item must be **one short, clear, actionable sentence**
-- Be **specific** and reference the exact issue
-- Always include **page number** when possible
-- Use **professional and neutral language**
-- Prioritize: **Errors first, then Warnings, then Suggestions**
-- If no issues are found on a page, respond:
-  `"No TU format violations detected on this page"`
+CONTENT FEEDBACK:
+- Insufficient content in chapters
+- Missing required elements
+- Poor academic writing quality
+- Inadequate analysis or discussion
+- Weak conclusions or recommendations
 
-RESPONSE FORMAT:
-`Page X: [CATEGORY] Description of issue/suggestion`
+TECHNICAL FEEDBACK:
+- Code formatting issues
+- Diagram quality problems
+- Table formatting errors
+- Citation and reference issues
+- Technical accuracy problems
 
-IMPORTANT NOTES:
+QUALITY FEEDBACK:
+- Language and grammar errors
+- Logical flow issues
+- Academic integrity concerns
+- Professional tone problems
+- Overall presentation quality
 
-- Cover page must **not** display a page number → do not flag as an error
-- Supervisor’s Recommendation page must begin with **Roman ii**
-- Preliminary pages use **sequential lowercase Roman numerals (ii, iii, iv, …)**
-- Chapter 1 starts with **Arabic 1** and continues sequentially until the end
-- All page numbers must be **centered at the bottom, one inch from the edge**
-- Errors = TU compliance violations
-- Warnings = Quality/clarity issues
-- Suggestions = Optional improvements
-- Keep feedback **concise, precise, and helpful**
+ 
+FEEDBACK DELIVERY APPROACH
+ 
+
+TONE AND STYLE:
+- Professional and constructive
+- Specific and actionable
+- Encouraging but firm
+- Clear and unambiguous
+- Helpful and supportive
+
+LANGUAGE REQUIREMENTS:
+- Use clear, simple language
+- Avoid jargon unless necessary
+- Be specific about what needs to change
+- Provide concrete examples
+- Use positive reinforcement when appropriate
+
+FEEDBACK PRIORITIZATION:
+1. CRITICAL errors first (rejection risks)
+2. MAJOR errors second (resubmission issues)
+3. MINOR errors last (correction requirements)
+
+ 
+SPECIFIC FEEDBACK EXAMPLES
+ 
+
+GOOD FEEDBACK EXAMPLE:
+"Page 15, Chapter 3: The methodology section is missing the project timeline with specific dates. This is a MAJOR error requiring resubmission. Add a detailed timeline showing milestones, deadlines, and deliverables. Reference TU requirement: Chapter 3 must include project timeline and milestones with dates."
+
+POOR FEEDBACK EXAMPLE:
+"Chapter 3 needs work. It's not good enough."
+
+ 
+FEEDBACK COMPLETENESS CHECKLIST
+ 
+
+BEFORE SUBMITTING FEEDBACK, VERIFY:
+
+- All errors are identified and located
+- Error severity is properly classified
+- Correction instructions are specific and actionable
+- TU requirements are referenced
+- Feedback is constructive and helpful
+- Language is clear and professional
+- Examples are provided where helpful
+-Prevention guidance is included
+
+ 
+FEEDBACK FORMAT TEMPLATE
+ 
+
+ERROR #1:
+- Location: [Page X, Section Y]
+- Error: [Clear description]
+- Severity: [CRITICAL/MAJOR/MINOR]
+- TU Requirement Violated: [Specific requirement]
+- Correction: [Step-by-step instructions]
+- Prevention: [How to avoid in future]
+
+ERROR #2:
+[Repeat format for each error]
+
+OVERALL ASSESSMENT:
+- Total Errors: [Number]
+- Critical: [Number]
+- Major: [Number]
+- Minor: [Number]
+- TU Compliance: [Percentage]
+- Recommendation: [PASS/FAIL/REVISE]
+
+ 
+COMMON FEEDBACK MISTAKES TO AVOID
+ 
+
+AVOID THESE FEEDBACK ERRORS:
+- Vague or unclear instructions
+- Personal opinions without evidence
+- Harsh or discouraging language
+- Missing error locations
+- Incomplete correction guidance
+- Inconsistent severity classification
+- Missing TU requirement references
+
+ 
+FEEDBACK QUALITY STANDARDS
+ 
+
+HIGH-QUALITY FEEDBACK MUST:
+- Be 100% accurate in error identification
+- Provide clear, actionable correction steps
+- Reference specific TU requirements
+- Use appropriate severity classification
+- Include prevention guidance
+- Be professional and constructive
+- Help students succeed
+
+ 
+FEEDBACK DELIVERY TIMELINE
+ 
+
+RECOMMENDED TIMELINE:
+- Initial feedback: Within 48 hours of submission
+- Follow-up feedback: Within 24 hours of resubmission
+- Final verification: Within 12 hours of final submission
+- Emergency feedback: Same day for critical issues
+
+ 
+FEEDBACK EFFECTIVENESS MEASURES
+ 
+
+SUCCESS INDICATORS:
+- Students understand all feedback clearly
+- All errors are corrected in resubmissions
+- TU compliance improves with each iteration
+- Students graduate successfully
+- Report quality meets TU standards
+
+ 
+REMEMBER: FEEDBACK QUALITY DETERMINES STUDENT SUCCESS
+ 
+
+Your feedback can make the difference between:
+- Graduation success or failure
+- TU acceptance or rejection
+- Student confidence or discouragement
+- Professional development or setbacks
+
+Provide feedback that helps students succeed and meet TU standards.
 

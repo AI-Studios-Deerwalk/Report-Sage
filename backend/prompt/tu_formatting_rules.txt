@@ -1,245 +1,449 @@
-You are an academic document evaluator.
-Evaluate whether a student’s Final Year Project Report complies with the official TU CSIT Final Report Template and Formatting Standards.
+TU FORMATTING RULES 
 
-You must:
-1) Check every requirement below in order.
-2) For each requirement, output a record with:
-   - id: fixed requirement ID (R###)
-   - section: page/section name
-   - requirement: the exact requirement text
-   - status: one of {Compliant, Non-compliant, Not-applicable, Uncertain}
-   - evidence: short quote/observation with page number(s) or “not found”
-   - fix: a concise, actionable correction when Non-compliant or Uncertain
+SECTION 0. GLOBAL SCOPE AND COMPLIANCE
 
-If source is a .docx, prefer style metadata (fonts, sizes, bold, alignment). If source is PDF, use layout/visual heuristics. When uncertain, choose “Uncertain” and explain.
+G001 | Scope | Applies to TU (Tribhuvan University) final year CSIT project reports.
+G002 | Compliance | Zero-tolerance enforcement. All rules are mandatory unless marked optional.
 
-Formatting assumptions:
-- Paper: A4
-- Margins: Top 1", Bottom 1", Left 1.25", Right 1"
-- Body font: Times New Roman, 12pt
-- Line spacing: 1.5
-- Paragraphs: Justified; first-line indent 0.5"
-- Headings: Chapter 16pt bold centered; Section 14pt bold left; Subsection 12pt bold left
-- Page numbering: Roman (i, ii, …) for front matter; Arabic (1, 2, …) from Chapter 1; centered at bottom
-- Figures: caption bold 12pt below figure
-- Tables: caption bold 12pt above table
-- TOC, LoF, LoT auto-generated; List of Abbreviations alphabetical
-
-Page numbering rules:
-- Cover page: no page number displayed
-- Numbering starts from Supervisor’s Recommendation page
-- First visible page number must be lowercase Roman numeral ii
-- Preliminary pages use lowercase Roman numerals (ii, iii, iv, …)
-- Preliminary pages include: Supervisor’s Recommendation, Student’s Declaration, Letter of Approval, Acknowledgement, Abstract, TOC, List of Figures, List of Tables, List of Abbreviations
-- Chapter 1 (Introduction) begins with Arabic numeral 1
-- Arabic numerals (1, 2, 3, …) continue sequentially until the end, including References and Appendices
-- All page numbers must be centered at the bottom, one inch from the edge
-- No pages left unnumbered except the cover page
-- No duplication or gaps in numbering sequence
-- Restart of numbering is only allowed when switching from Roman to Arabic at Chapter 1
-
-OUTPUT FORMAT (for every requirement below):
-{id: "R###", section: "...", requirement: "...", status: "...", evidence: "...", fix: "..."}
 
 SECTION 1. TITLE PAGE
 
-R001 | Title Page | TU logo present at the top of the page.
-R002 | Title Page | Project title text is ALL CAPS.
-R003 | Title Page | Project title is BOLD.
-R004 | Title Page | Project title font size is 16pt.
-R005 | Title Page | Project title is CENTERED horizontally.
-R006 | Title Page | Line “A FINAL PROJECT REPORT” is present and centered under the title.
-R007 | Title Page | “Submitted to” line includes “Department of Computer Science and Information Technology”.
-R008 | Title Page | “Submitted to” block is centered.
-R009 | Title Page | “In partial fulfillment of the requirements for the Bachelor’s Degree in CSIT” is present and centered (or equivalent approved phrasing).
-R010 | Title Page | “Submitted by” block includes Student Name.
-R011 | Title Page | “Submitted by” block includes TU Roll No.
-R012 | Title Page | “Submitted by” block includes Date.
-R013 | Title Page | “Under the supervision of” line includes Supervisor Name.
-R014 | Title Page | Supervisor’s designation and institute are included (e.g., DWIT / IOST).
-R015 | Title Page | All elements on the title page are centered (including “Submitted to/by” and supervisor lines).
-R016 | Title Page | No page number is displayed on the title page.
-R017 | Title Page | Page margins conform to Top 1", Bottom 1", Left 1.25", Right 1".
-R018 | Title Page | Body font used is Times New Roman (or acceptable equivalent); no script/ornamental fonts.
-R019 | Title Page | No extraneous graphics other than TU logo; no watermarks.
+R001 | Title Page | TU logo at top, CENTERED.
+R002 | Title Page | University and Department text 12pt, CENTER, BOLD.
+R003 | Title Page | Project title in ALL CAPS.
+R004 | Title Page | Project title is BOLD.
+R005 | Title Page | Project title font size is 16pt.
+R006 | Title Page | Project title is CENTERED horizontally.
+R007 | Title Page | Line "A FINAL PROJECT REPORT" present, ALL CAPS, centered, 16pt, BOLD.
+R008 | Title Page | "Submitted to" includes "Department of Computer Science and Information Technology".
+R009 | Title Page | "Submitted to" block is centered, font size 12pt, BOLD.
+R010 | Title Page | "In partial fulfillment of the requirements for the Bachelor's Degree in CSIT" present, centered.
+R011 | Title Page | Institute name font size 16pt, BOLD.
+R012 | Title Page | "Submitted by" block includes Student Name, font size 12pt.
+R013 | Title Page | "Submitted by" block includes TU Roll No./BATCH, font size 12pt.
+R014 | Title Page | "Submitted by" block includes Date, font size 12pt.
+R015 | Title Page | "Under the supervision of" font size 14pt, BOLD.
+R016 | Title Page | "Under the supervision of" includes Supervisor Name.
+R017 | Title Page | Supervisor's designation and institute included (e.g., DWIT / IOST).
+R018 | Title Page | All title page elements are centered.
+R019 | Title Page | No page number on title page.
+R020 | Title Page | Margins: Top 1", Bottom 1", Left 1.25" (more margin to left), Right 1".
+R021 | Title Page | Body font: Times New Roman only (no script/ornamental fonts).
+R022 | Title Page | No graphics except TU logo; no watermarks.
 
-SECTION 2. SUPERVISOR’S RECOMMENDATION
+SECTION 2. SUPERVISOR'S RECOMMENDATION
 
-R020 | Supervisor’s Recommendation | Page heading “SUPERVISOR’S RECOMMENDATION” is present, bold, centered.
-R021 | Supervisor’s Recommendation | Formal recommendation paragraph is present.
-R022 | Supervisor’s Recommendation | Student’s name appears in ALL CAPS (not bold) within the text.
-R023 | Supervisor’s Recommendation | Project title appears in ALL CAPS and BOLD within the text.
-R024 | Supervisor’s Recommendation | Supervisor’s name is present under the text.
-R025 | Supervisor’s Recommendation | Supervisor’s designation is present.
-R026 | Supervisor’s Recommendation | College/Institute (DWIT/IOST) correctly stated.
-R027 | Supervisor’s Recommendation | Signature line/space included.
-R028 | Supervisor’s Recommendation | Page numbered with Roman numerals (e.g., i), centered at bottom.
-R029 | Supervisor’s Recommendation | Margins, font family, font size, and spacing conform to standards.
+R023 | Supervisor's Recommendation | Institute name font size 14pt, BOLD.
+R024 | Supervisor's Recommendation | TU logo centered with department name and university name.
+R025 | Supervisor's Recommendation | Heading "SUPERVISOR'S RECOMMENDATION" font size 16pt, BOLD, CENTERED.
+R026 | Supervisor's Recommendation | Formal recommendation paragraph block title ALL CAPS, BOLD, aligned.
+R027 | Supervisor's Recommendation | Student's NAME in ALL CAPS (not bold) within text.
+R028 | Supervisor's Recommendation | Project TITLE in ALL CAPS and BOLD within text.
+R029 | Supervisor's Recommendation | Left salutation aligned left side with name first, then position, then college spaced vertically.
+R030 | Supervisor's Recommendation | Supervisor's name present below.
+R031 | Supervisor's Recommendation | Supervisor's designation present.
+R032 | Supervisor's Recommendation | College/Institute (DWIT/IOST) stated correctly.
+R033 | Supervisor's Recommendation | Signature line/space included.
+R034 | Supervisor's Recommendation | Page number centered at bottom, roman numeral starting from ii.
+R035 | Supervisor's Recommendation | Margins, font, size, spacing conform to global.
 
-SECTION 3. STUDENT’S DECLARATION
+SECTION 3. STUDENT'S DECLARATION
 
-R030 | Student’s Declaration | Heading “STUDENT’S DECLARATION” bold, centered.
-R031 | Student’s Declaration | Declaration states originality and exclusive authorship.
-R032 | Student’s Declaration | Student name provided below declaration.
-R033 | Student’s Declaration | Date provided below declaration.
-R034 | Student’s Declaration | Signature line/space present.
-R035 | Student’s Declaration | Page in Roman numbering; centered at bottom.
-R036 | Student’s Declaration | Margins, font, size, spacing conform.
+R036 | Declaration | College name BOLD, font size 14pt, ALL CAPS.
+R037 | Declaration | Heading "STUDENT'S DECLARATION" font size 16pt, ALL CAPS, BOLD, CENTERED.
+R038 | Declaration | Declaration text below title, font size 12pt.
+R039 | Declaration | Declares originality and exclusive authorship.
+R040 | Declaration | Salutation aligned left with signature, then name, then date spaced vertically.
+R041 | Declaration | Student name below declaration.
+R042 | Declaration | Date below declaration.
+R043 | Declaration | Signature line/space present.
+R044 | Declaration | Roman numbering; centered bottom.
+R045 | Declaration | Margins, font, size, spacing conform.
 
-SECTION 4. LETTER OF APPROVAL
+SECTION 4. LETTER OF APPROVAL (CERTIFICATE)
 
-R037 | Letter of Approval | Heading “LETTER OF APPROVAL” bold, centered.
-R038 | Letter of Approval | Certifying statement text present.
-R039 | Letter of Approval | Supervisor’s block includes name and designation.
-R040 | Letter of Approval | Campus Chief’s block includes correct name and designation.
-R041 | Letter of Approval | External Examiner block with designation/affiliation present.
-R042 | Letter of Approval | Project Coordinator block with designation present.
-R043 | Letter of Approval | Signature lines/spaces included for all signatories.
-R044 | Letter of Approval | Roman page numbering; centered bottom.
-R045 | Letter of Approval | Margins, font, size, spacing conform.
+R046 | Approval | College name BOLD, font size 14pt, ALL CAPS.
+R047 | Approval | Heading "LETTER OF APPROVAL" font size 16pt, BOLD, CENTERED.
+R048 | Approval | Certifying statement present, font size 12pt.
+R049 | Approval | Project title within statement BOLD, ALL CAPS.
+R050 | Approval | Supervisor block includes name and designation.
+R051 | Approval | Campus Chief block includes correct name/designation.
+R052 | Approval | External Examiner block with designation/affiliation.
+R053 | Approval | Project Coordinator block with designation.
+R054 | Approval | Signature lines/spaces for all signatories.
+R055 | Approval | Roman page numbering at bottom, centered.
+R056 | Approval | Margins, font, size, spacing conform.
 
 SECTION 5. ACKNOWLEDGEMENT
 
-R046 | Acknowledgement | Heading “ACKNOWLEDGEMENT” bold, centered.
-R047 | Acknowledgement | Formal academic tone; thanks to contributors (e.g., supervisor, institute).
-R048 | Acknowledgement | Student name at end.
-R049 | Acknowledgement | Roll no. at end.
-R050 | Acknowledgement | Date at end.
-R051 | Acknowledgement | Roman page numbering; centered bottom.
-R052 | Acknowledgement | Margins, font, size, spacing conform.
+R057 | Acknowledgement | Heading BOLD, font size 14pt, CENTERED.
+R058 | Acknowledgement | Acknowledgement paragraph font size 12pt.
+R059 | Acknowledgement | Project title within paragraph BOLD.
+R060 | Acknowledgement | Formal academic tone; thanks to contributors.
+R061 | Acknowledgement | Name, roll number/batch, and date aligned left and vertically spaced.
+R062 | Acknowledgement | Student name at end.
+R063 | Acknowledgement | Roll no. at end.
+R064 | Acknowledgement | Date at end.
+R065 | Acknowledgement | Roman numbering; centered bottom.
+R066 | Acknowledgement | Margins, font, size, spacing conform.
 
 SECTION 6. ABSTRACT
 
-R053 | Abstract | Heading “ABSTRACT” bold, centered.
-R054 | Abstract | Includes Motivation/Problem statement.
-R055 | Abstract | Includes Methods/Approach.
-R056 | Abstract | Includes Results/Findings/Product.
-R057 | Abstract | Includes Conclusion/Implications.
-R058 | Abstract | Keywords present, 4–8 terms, separated by semicolons.
-R059 | Abstract | Roman page numbering; centered bottom.
-R060 | Abstract | Margins, font, size, spacing conform.
+R067 | Abstract | Heading BOLD, font size 16pt, CENTERED: "ABSTRACT".
+R068 | Abstract | Abstract paragraph font size 12pt.
+R069 | Abstract | Includes Motivation/Problem statement.
+R070 | Abstract | Includes Methods/Approach.
+R071 | Abstract | Includes Results/Findings/Product.
+R072 | Abstract | Includes Conclusion/Implications.
+R073 | Abstract | Keywords titled in BOLD.
+R074 | Abstract | Keywords 4—8 terms; semicolon-separated.
+R075 | Abstract | Spacing 1.5 between paragraph and keywords.
+R076 | Abstract | Roman numbering; centered bottom.
+R077 | Abstract | Length is 150—250 words.
 
 SECTION 7. TABLE OF CONTENTS (TOC)
 
-R061 | TOC | Heading “TABLE OF CONTENTS” bold, centered.
-R062 | TOC | TOC is auto-generated using Word (not manual typing).
-R063 | TOC | Shows correct hierarchical indentation for chapters, sections, subsections.
-R064 | TOC | Dot leaders between headings and page numbers.
-R065 | TOC | Page numbers in TOC match actual page numbers in document.
-R066 | TOC | Roman page numbering; centered bottom.
-R067 | TOC | Margins, font, size, spacing conform.
+R078 | TOC | Font Times New Roman.
+R079 | TOC | Heading BOLD, CENTERED.
+R080 | TOC | Alignment perfect throughout.
+R081 | TOC | Auto-generated via Word (not manual typing).
+R082 | TOC | Correct hierarchical indentation (chapters, sections, subsections).
+R083 | TOC | Dot leaders between headings and page numbers.
+R084 | TOC | Page numbers in TOC match actual pages.
+R085 | TOC | Roman numbering; centered bottom.
+R086 | TOC | Margins, font, size, spacing conform.
 
 SECTION 8. LIST OF FIGURES (LoF)
 
-R068 | LoF | Heading “LIST OF FIGURES” bold, centered.
-R069 | LoF | Automatically generated via Word Captions → Table of Figures.
-R070 | LoF | Entries contain sequential figure numbers (Figure 1.1, 1.2, …) with captions.
-R071 | LoF | Page numbers align with actual figure pages.
-R072 | LoF | Roman page numbering; centered bottom.
+R087 | LoF | Heading BOLD, font size 16pt, CENTERED: "LIST OF FIGURES".
+R088 | LoF | No bold text except header.
+R089 | LoF | Auto-generated via Captions → Table of Figures.
+R090 | LoF | Sequential figure numbers (Figure 1.1, 1.2, …) with captions.
+R091 | LoF | Page numbers align with figure pages.
+R092 | LoF | Roman numbering; centered bottom.
 
 SECTION 9. LIST OF TABLES (LoT)
 
-R073 | LoT | Heading “LIST OF TABLES” bold, centered.
-R074 | LoT | Automatically generated via Word Captions → Table of Figures (tables).
-R075 | LoT | Entries contain sequential table numbers (Table 2.1, 2.2, …) with captions.
-R076 | LoT | Page numbers align with actual table pages.
-R077 | LoT | Roman page numbering; centered bottom.
+R093 | LoT | Heading BOLD, font size 16pt, CENTERED: "LIST OF TABLES".
+R094 | LoT | No bold text except header.
+R095 | LoT | Auto-generated via Captions → Table of Figures (tables).
+R096 | LoT | Sequential table numbers (Table 2.1, 2.2, …) with captions.
+R097 | LoT | Page numbers align with table pages.
+R098 | LoT | Roman numbering; centered bottom.
 
 SECTION 10. LIST OF ABBREVIATIONS
 
-R078 | Abbreviations | Heading “LIST OF ABBREVIATIONS” bold, centered.
-R079 | Abbreviations | Entries are alphabetically ordered.
-R080 | Abbreviations | Each abbreviation has a clear expansion (e.g., HTML — Hypertext Markup Language).
-R081 | Abbreviations | Roman page numbering; centered bottom.
+R099 | Abbreviations | Heading BOLD, CENTERED.
+R100 | Abbreviations | Abbreviations in ALL CAPS, alphabetical order.
+R101 | Abbreviations | Full forms NOT in ALL CAPS.
+R102 | Abbreviations | Entries alphabetically ordered.
+R103 | Abbreviations | Each abbreviation expanded clearly.
+R104 | Abbreviations | Roman numbering; centered bottom.
 
-SECTION 11. CHAPTERS (MAIN REPORT)
-General layout:
-- Arabic numbering starts here (1, 2, …)
-- Each chapter starts on a new page
-- Chapter heading: 16pt, bold, centered
-- Sections: 14pt, bold, left
-- Subsections: 12pt, bold, left
-- Body: TNR 12pt, line spacing 1.5, justified, first-line indent 0.5"
+SECTION 11. CHAPTERS (MAIN REPORT) — LAYOUT
 
-CHAPTER 1: INTRODUCTION
-R082 | Ch1 | Heading “CHAPTER 1: INTRODUCTION” uses prescribed heading style.
-R083 | Ch1 | 1.1 Introduction present; gives overview and links to conclusion.
-R084 | Ch1 | 1.2 Problem Statement present; states problem, method claim, purpose/objective.
-R085 | Ch1 | 1.3 Objectives present; begins with “To …” and specific, aligned to problem.
-R086 | Ch1 | 1.4 Scope and Limitation present; clearly narrows study.
-R087 | Ch1 | 1.5 Development Methodology present; identifies chosen methodology.
-R088 | Ch1 | 1.6 Report Organization present; outlines chapter flow.
+R105 | Chapters | Arabic numbering starts at Chapter 1; centered bottom.
+R106 | Chapters | Each chapter starts on a new page.
+R107 | Chapters | Chapter heading 16pt, BOLD, CENTERED.
+R108 | Chapters | Section heading 14pt, BOLD, LEFT.
+R109 | Chapters | Subsection heading 12pt, BOLD, LEFT.
+R110 | Chapters | Body: Times New Roman 12pt, line spacing 1.5, justified, first-line indent 0.5".
+R111 | Chapters | Figures centered; captions BOLD 12pt below figure; not split across pages.
+R112 | Chapters | Tables centered; captions BOLD 12pt above table; not split across pages.
+R113 | Chapters | Figure/Table numbering by chapter (Figure X.Y, Table X.Y).
 
-CHAPTER 2: BACKGROUND STUDY AND LITERATURE REVIEW
-R089 | Ch2 | Heading style correct.
-R090 | Ch2 | 2.1 Background Study present; covers theories, concepts, terms, relevant only.
-R091 | Ch2 | 2.2 Literature Review present; synthesizes, compares, critiques (not mere summaries).
-R092 | Ch2 | 2.3 Current System present; comparable systems described.
-R093 | Ch2 | 2.4 Problems with Current System present; justified with sources or rationale.
+CHAPTER 1: INTRODUCTION — CONTENT
 
-CHAPTER 3: SYSTEM ANALYSIS
-R094 | Ch3 | Heading style correct.
-R095 | Ch3 | 3.1 Requirement Analysis present; process of elicitation and analysis described.
-R096 | Ch3 | 3.1.1 Functional Requirements present; “shall” phrasing; use-case diagram/desc included.
-R097 | Ch3 | 3.1.2 Non-Functional Requirements present; “must” phrasing; performance/usability/security etc.
-R098 | Ch3 | 3.2 Feasibility Analysis present; covers Technical, Operational, Economic, Schedule.
-R099 | Ch3 | 3.3 Analysis Diagrams present per approach:
-R100 | Ch3 | — Structured: ER diagrams and DFDs present, labeled, readable.
-R101 | Ch3 | — Object-Oriented: Class/Object, State/Sequence, Activity diagrams present, labeled, readable.
+R114 | Ch1 | 1.1 Introduction present; overview and flow to conclusion.
+R115 | Ch1 | 1.2 Problem Statement present; clear problem, purpose/objective.
+R116 | Ch1 | 1.3 Objectives present; begin with "To …", specific and aligned.
+R117 | Ch1 | 1.4 Scope and Limitation present; narrows study.
+R118 | Ch1 | 1.5 Development Methodology present; chosen approach mentioned.
+R119 | Ch1 | 1.6 Report Organization present; outlines chapters.
 
-CHAPTER 4: SYSTEM DESIGN
-R102 | Ch4 | 4.1 Design present; approach (Structured/OO) consistent with analysis.
-R103 | Ch4 | Structured: Database design (ER to relations), normalization steps shown.
-R104 | Ch4 | Structured: Forms/Report design described.
-R105 | Ch4 | Structured: Interface/Dialog design described.
-R106 | Ch4 | OO: Refined Class, Object, State, Sequence, Activity diagrams present.
-R107 | Ch4 | OO: Component and Deployment diagrams present where applicable.
-R108 | Ch4 | 4.2 Algorithm Details present; core algorithms clearly specified.
+CHAPTER 2: BACKGROUND STUDY AND LITERATURE REVIEW — CONTENT
 
-CHAPTER 5: IMPLEMENTATION AND TESTING
-R109 | Ch5 | 5.1 Implementation present; critical code areas discussed without dumping large code.
-R110 | Ch5 | 5.1.1 Tools Used present; CASE tools, languages, DB platforms listed.
-R111 | Ch5 | 5.1.2 Implementation Details of Modules present; classes/functions/methods described.
-R112 | Ch5 | 5.2 Testing present; approach and coverage explained.
-R113 | Ch5 | 5.2.1 Unit Testing test cases tabulated.
-R114 | Ch5 | 5.2.2 System Testing test cases tabulated.
-R115 | Ch5 | 5.3 Result Analysis present; tests summarized; strengths/weaknesses discussed; comparisons if appropriate.
+R120 | Ch2 | 2.1 Background Study present; theories/concepts relevant only.
+R121 | Ch2 | 2.2 Literature Review present; synthesizes, compares, critiques.
+R122 | Ch2 | 2.3 Current System present.
+R123 | Ch2 | 2.4 Problems with Current System present; justified.
+R124 | Ch2 | Page span guideline: 15—20 pages minimum.
 
-CHAPTER 6: CONCLUSION AND FUTURE RECOMMENDATION
-R116 | Ch6 | 6.1 Conclusion present; restates thesis, synthesizes key points, final impression.
-R117 | Ch6 | 6.2 Future Recommendation present; limitations acknowledged; realistic improvements.
+CHAPTER 3: SYSTEM ANALYSIS (METHODOLOGY SCOPE INCLUDED) — CONTENT
 
-SECTION 12. REFERENCES (IEEE)
+R125 | Ch3 | 3.1 Requirement Analysis described.
+R126 | Ch3 | 3.1.1 Functional Requirements; "shall" phrasing; use cases/diagram.
+R127 | Ch3 | 3.1.2 Non-Functional Requirements; "must" phrasing (performance/usability/security).
+R128 | Ch3 | 3.2 Feasibility Analysis (Technical/Operational/Economic/Schedule).
+R129 | Ch3 | 3.3 Analysis Diagrams per approach: ER/DFD (Structured) OR Class/State/Sequence/Activity (OO).
+R130 | Ch3 | Page span guideline: 10—12 pages minimum.
 
-R118 | References | Heading “REFERENCES” bold, centered.
-R119 | References | In-text citations use numbered brackets [n].
-R120 | References | Reference list ordered by citation appearance (sequential), not alphabetic.
-R121 | References | Each reference is complete and correctly formatted in IEEE style for its type.
-R122 | References | All cited items appear in list; no missing entries.
-R123 | References | No uncited entries in reference list unless in an optional Bibliography section.
+CHAPTER 4: SYSTEM DESIGN — CONTENT
+
+R131 | Ch4 | 4.1 Design matches chosen analysis approach (Structured/OO).
+R132 | Ch4 | Structured: Database design (ER→relations), normalization steps.
+R133 | Ch4 | Structured: Forms/Reports design.
+R134 | Ch4 | Structured: Interface/Dialog design.
+R135 | Ch4 | OO: Refined Class/Object/State/Sequence/Activity diagrams.
+R136 | Ch4 | OO: Component/Deployment diagrams where appropriate.
+R137 | Ch4 | 4.2 Algorithm details; core algorithms specified.
+R138 | Ch4 | Page span guideline: 12—15 pages minimum.
+
+CHAPTER 5: IMPLEMENTATION AND TESTING — CONTENT
+
+R139 | Ch5 | 5.1 Implementation; critical code areas discussed (no large dumps).
+R140 | Ch5 | 5.1.1 Tools Used; CASE tools, languages, DB platforms.
+R141 | Ch5 | 5.1.2 Module Implementation details; classes/functions/methods described.
+R142 | Ch5 | 5.2 Testing; approach and coverage explained.
+R143 | Ch5 | 5.2.1 Unit Testing; test cases tabulated.
+R144 | Ch5 | 5.2.2 System/Integration Testing; test cases tabulated.
+R145 | Ch5 | 5.3 Result Analysis; strengths/weaknesses; comparisons if apt.
+R146 | Ch5 | Page span guideline: 10—12+ pages; include sufficient evidence.
+
+CHAPTER 6: CONCLUSION AND FUTURE RECOMMENDATION — CONTENT
+
+R147 | Ch6 | 6.1 Conclusion; restates aims; synthesizes findings.
+R148 | Ch6 | 6.2 Future Recommendation; limitations and realistic improvements.
+R149 | Ch6 | Page span guideline: 8—10 pages minimum.
+
+SECTION 12. REFERENCES (IEEE PREFERRED)
+
+R150 | References | Heading BOLD, CENTERED: "REFERENCES".
+R151 | References | In-text citations use numbered brackets [n].
+R152 | References | Reference list ordered by citation appearance (sequential).
+R153 | References | Each entry complete and IEEE-formatted per type.
+R154 | References | All cited items listed; no missing entries.
+R155 | References | No uncited entries unless in optional Bibliography.
 
 SECTION 13. APPENDICES (OPTIONAL)
 
-R124 | Appendices | Heading “APPENDIX” (or “APPENDIX A/B/…”) bold, centered.
-R125 | Appendices | Contains supplementary material (screenshots, logs, code, etc.) only.
-R126 | Appendices | Each appendix labeled and referenced where appropriate.
+R156 | Appendices | Heading "APPENDIX/APPENDIX A/B/…" BOLD, CENTERED.
+R157 | Appendices | Supplementary material only (screenshots/logs/code/etc.).
+R158 | Appendices | Each appendix labeled and referenced.
 
-GLOBAL FORMATTING & PRESENTATION
+SECTION 14. GLOBAL FORMATTING & PRESENTATION
 
-R127 | Global | Paper size A4 across document.
-R128 | Global | Margins: Top 1", Bottom 1", Left 1.25", Right 1" across document.
-R129 | Global | Body font Times New Roman 12pt across document.
-R130 | Global | Line spacing 1.5 across body text.
-R131 | Global | Paragraphs justified with first-line indent 0.5".
-R132 | Global | Chapter/Section/Subsection heading sizes and boldness correct and consistent.
-R133 | Global | Page numbering: Roman for front matter; Arabic from Chapter 1; centered at bottom.
-R134 | Global | Figures centered; captions bold 12pt below figure; not split across pages.
-R135 | Global | Tables centered; captions bold 12pt above table; not split across pages.
-R136 | Global | Figure/Table numbering sequential by chapter (Figure X.Y, Table X.Y).
-R137 | Global | TOC/LoF/LoT are auto-generated (not manually typed).
-R138 | Global | List of Abbreviations alphabetically ordered.
-R139 | Global | No inconsistent fonts, sizes, or spacing anomalies.
-R140 | Global | No watermarks or distracting backgrounds.
-R141 | Global | No plagiarism indicators; all borrowed content cited.
+R159 | Global | Paper size A4.
+R160 | Global | Margins: Top 1", Bottom 1", Left 1.25", Right 1".
+R161 | Global | Body font Times New Roman 12pt across document.
+R162 | Global | Line spacing 1.5 across body text.
+R163 | Global | Paragraphs justified; first-line indent 0.5".
+R164 | Global | Heading sizes/boldness correct and consistent.
+R165 | Global | Page numbering: Roman for front matter; Arabic from Chapter 1; centered bottom.
+R166 | Global | Figures centered; captions BOLD 12pt below; not split across pages.
+R167 | Global | Tables centered; captions BOLD 12pt above; not split across pages.
+R168 | Global | Figure/Table numbering sequential by chapter (Figure X.Y, Table X.Y).
+R169 | Global | TOC/LoF/LoT auto-generated (not manual).
+R170 | Global | Abbreviations list alphabetized.
+R171 | Global | No inconsistent fonts/sizes/spacing.
+R172 | Global | No watermarks/distracting backgrounds.
+R173 | Global | No plagiarism; all borrowed content cited.
 
-END OF REQUIREMENTS
+SECTION 15. TECHNICAL STANDARDS (ENHANCED)
+
+R174 | Technical | Code listings use monospace (Courier New); line numbers enabled.
+R175 | Technical | Proper indentation/formatting; no syntax errors in examples.
+R176 | Technical | Core algorithms described (pseudocode acceptable).
+R177 | Technical | Diagrams minimum 300 DPI; professional tools; consistent style.
+R178 | Technical | Proper scaling/readability for all visuals.
+R179 | Technical | Tables professionally formatted; aligned; clear headers.
+
+SECTION 16. QUALITY & INTEGRITY
+
+R180 | Quality | Academic tone; no spelling/grammar/punctuation errors (use checkers).
+R181 | Quality | Consistent terminology; clear, concise sentences.
+R182 | Integrity | Original content; proper attribution; ethical considerations addressed.
+
+SECTION 17. CHAPTER MINIMUM PAGE GUIDELINES (SUMMARY)
+
+R183 | Pages | Ch1: Intro 8—10; Ch2: Literature 15—20; Ch3: Analysis 10—12; Ch4: Design 12—15; Ch5: Impl/Test 10—12+; Ch6: Conclusion 8—10.
+
+SECTION 18. COMMON FAILURES & SEVERITY
+
+R184 | Critical | Missing required pages/sections; wrong numbering system; missing page breaks; margins/fonts/spacing not per spec; plagiarism.
+R185 | Major | Inconsistent formatting; low-quality diagrams; incorrect citation format; missing captions/tables/figures; insufficient chapter depth.
+R186 | Minor | Minor spacing inconsistencies; typos; small style drifts.
+
+END OF TU FORMATTING RULES — UPDATED FINAL
+
+TU FINAL YEAR CSIT PROJECT REPORT - FORMATTING RULES
+ 
+CRITICAL: These formatting rules are MANDATORY for TU project report submission.
+Any deviation will result in rejection or significant grade deduction.
+
+PAGE SETUP REQUIREMENTS
+
+PAGE SPECIFICATIONS:
+- Page size: A4 (210mm x 297mm) EXACTLY
+- Orientation: Portrait ONLY
+- Margins: Top 2.5cm, Bottom 2.5cm, Left 3cm (more margin to left), Right 2.5cm
+- Header: Project title (right-aligned, 10pt, Times New Roman)
+- Footer: Page numbers (center-aligned, 10pt, Times New Roman)
+
+TEXT FORMATTING STANDARDS
+
+FONT REQUIREMENTS:
+- Body text: Times New Roman, 12pt, normal weight
+- Chapter titles: Times New Roman, 16pt, bold, centered, ALL CAPS
+- Section headings: Times New Roman, 14pt, bold, left-aligned
+- Subsection headings: Times New Roman, 12pt, bold, left-aligned
+- Header/Footer: Times New Roman, 10pt, normal weight
+
+SPACING REQUIREMENTS:
+- Line spacing: 1.5 lines EXACTLY
+- Paragraph spacing: 6pt before, 6pt after
+- Page breaks: Each chapter MUST start on new page
+- No orphaned headings (heading with no text below)
+- No widowed text (single line at top of page)
+- Abstract: 1.5 spacing between paragraph and keywords
+
+NUMBERING SYSTEM
+
+CHAPTER NUMBERING:
+- Chapters: 1, 2, 3, 4, 5, 6, 7, 8 (Arabic numerals)
+- Sections: 1.1, 1.2, 1.3, 2.1, 2.2, etc.
+- Subsections: 1.1.1, 1.1.2, 1.2.1, etc.
+
+PAGE NUMBERING:
+- Front matter: Roman numerals (i, ii, iii, iv, v, vi, vii, viii, ix, x) - starting from ii
+- Main body: Arabic numerals (1, 2, 3, 4, 5, 6, 7, 8, 9, 10...)
+- Start numbering from title page (no number shown on title page)
+
+FIGURE AND TABLE NUMBERING:
+- Figures: Figure 1.1, Figure 1.2, Figure 2.1, etc.
+- Tables: Table 1.1, Table 1.2, Table 2.1, etc.
+- Captions: Figure captions below figures, Table captions above tables
+
+DOCUMENT STRUCTURE
+
+FRONT MATTER (MANDATORY ORDER):
+1. Title page (no page number displayed)
+2. Supervisor's Recommendation (roman ii)
+3. Student's Declaration 
+4. Letter of Approval (Certificate)
+5. Acknowledgments
+6. Abstract (150-250 words EXACTLY)
+7. Table of Contents (with exact page numbers)
+8. List of Figures (if applicable)
+9. List of Tables (if applicable)
+10. List of Abbreviations (if applicable)
+
+MAIN BODY (MANDATORY ORDER):
+1. Chapter 1: Introduction (8-10 pages minimum)
+2. Chapter 2: Literature Review (15-20 pages minimum)
+3. Chapter 3: Methodology (10-12 pages minimum)
+4. Chapter 4: System Design (12-15 pages minimum)
+5. Chapter 5: Implementation (15-18 pages minimum)
+6. Chapter 6: Testing and Evaluation (10-12 pages minimum)
+7. Chapter 7: Results and Discussion (12-15 pages minimum)
+8. Chapter 8: Conclusion and Recommendations (8-10 pages minimum)
+
+BACK MATTER:
+- References (minimum 25-30 sources)
+- Appendices (if applicable)
+- Project timeline/schedule
+- Budget estimation (if applicable)
+
+TECHNICAL FORMATTING
+
+CODE FORMATTING:
+- Use Courier New font or monospace font
+- Proper indentation and formatting
+- Line numbers for code listings
+- Syntax highlighting preferred
+- No syntax errors in examples
+- Algorithm descriptions in pseudocode
+
+DIAGRAMS AND FIGURES:
+- Minimum 300 DPI resolution
+- Professional diagramming tools
+- Consistent style throughout
+- Proper scaling and readability
+- All diagrams must be labeled and numbered
+- Captions with clear descriptions
+
+TABLES:
+- Professional formatting
+- Proper alignment and borders
+- Clear column headers
+- All tables must be labeled and numbered
+- Captions above tables with descriptions
+
+CITATION AND REFERENCE FORMAT
+
+IN-TEXT CITATIONS:
+- Format: (Author, Year)
+- Example: (Smith, 2023)
+- Must be consistent throughout document
+- No citations without references
+- No references without citations
+
+REFERENCE LIST:
+- Alphabetical order by author surname
+- Complete bibliographic information
+- Consistent style (APA or IEEE)
+- Minimum 25-30 sources
+- Include DOI when available
+
+QUALITY STANDARDS
+
+LANGUAGE REQUIREMENTS:
+- Professional academic writing style
+- No spelling errors (use spell checker)
+- No grammatical errors (use grammar checker)
+- No punctuation errors
+- Consistent terminology usage
+- Clear and concise sentences
+
+ACADEMIC INTEGRITY:
+- Original content (no plagiarism)
+- Proper attribution of all sources
+- No copyright violations
+- Ethical considerations addressed
+- Professional tone maintained
+
+COMMON FORMATTING MISTAKES TO AVOID
+
+CRITICAL ERRORS:
+- Wrong page size or orientation
+- Incorrect margins
+- Wrong font or font size
+- Incorrect line spacing
+- Missing page breaks between chapters
+- Wrong numbering system
+
+MAJOR ERRORS:
+- Inconsistent formatting
+- Poor quality diagrams
+- Incorrect citation format
+- Missing captions
+- Poor table formatting
+
+MINOR ERRORS:
+- Minor spacing inconsistencies
+- Typographical errors
+- Formatting inconsistencies
+
+FORMATTING VERIFICATION CHECKLIST
+
+BEFORE SUBMISSION, VERIFY:
+- Page size is A4 (210mm x 297mm)
+- Margins are exactly as specified (Left margin increased)
+- Font is Times New Roman throughout
+- Line spacing is exactly 1.5
+- All chapters start on new pages
+- Page numbering is correct (Roman for front starting ii, Arabic for main)
+- All headings use correct font sizes
+- All figures and tables are properly labeled
+- Citations are consistent format
+- References are alphabetically ordered
+- No formatting inconsistencies
+- Perfect alignment in Table of Contents
+
+CONSEQUENCES OF FORMATTING VIOLATIONS
+
+- CRITICAL ERRORS: Immediate rejection, no resubmission
+- MAJOR ERRORS: Significant grade deduction, resubmission required
+- MINOR ERRORS: Small grade deduction, correction required
+
+REMEMBER: TU standards are non-negotiable. Formatting errors can prevent graduation.
