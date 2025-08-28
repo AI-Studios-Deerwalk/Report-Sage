@@ -35,55 +35,26 @@ export default function DashboardPage() {
   const router = useRouter()
   const [analysisResults, setAnalysisResults] = useState<AnalysisResultData | null>(null)
   const [analysisCompleted, setAnalysisCompleted] = useState(false)
+  const [showUpload, setShowUpload] = useState(true)
   
   const hour = new Date().getHours()
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening"
-
-  // Load analysis results from localStorage on component mount
-  useEffect(() => {
-    try {
-      // Check if we have analysis results in localStorage
-      const storedResults = localStorage.getItem(STORAGE_KEYS.ANALYSIS_RESULTS)
-      const storedCompleted = localStorage.getItem(STORAGE_KEYS.ANALYSIS_COMPLETED)
-      
-      if (storedResults && storedCompleted === 'true') {
-        try {
-          const parsedResults = JSON.parse(storedResults)
-          setAnalysisResults(parsedResults)
-          setAnalysisCompleted(true)
-        } catch (error) {
-          console.error('Error parsing stored analysis results:', error)
-          // Clear invalid data
-          localStorage.removeItem(STORAGE_KEYS.ANALYSIS_RESULTS)
-          localStorage.removeItem(STORAGE_KEYS.ANALYSIS_COMPLETED)
-        }
-      }
-    } catch (error) {
-      console.warn('localStorage not available:', error)
-      // Continue without localStorage - user will need to re-upload if they refresh
-    }
-  }, [])
 
   // Check for archive_id in URL parameters (for direct links to results)
   useEffect(() => {
     const { archive_id } = router.query
     
-    if (archive_id && typeof archive_id === 'string' && !analysisResults) {
-      // Load results from archive if we have an archive_id in URL
+    if (archive_id && typeof archive_id === 'string') {
+      // Only load results from archive if explicitly requested via URL
       loadResultsFromArchive(archive_id)
+      setShowUpload(false)
+    } else {
+      // Default to showing upload page
+      setShowUpload(true)
+      setAnalysisResults(null)
+      setAnalysisCompleted(false)
     }
-  }, [router.query, analysisResults])
-
-  // Update URL when analysis results are displayed
-  useEffect(() => {
-    if (analysisCompleted && analysisResults?.archive_id) {
-      // Update URL to include archive_id for sharing/bookmarking
-      router.replace(`/dashboard?archive_id=${analysisResults.archive_id}`, undefined, { shallow: true })
-    } else if (!analysisCompleted) {
-      // Clear archive_id from URL when no results are displayed
-      router.replace('/dashboard', undefined, { shallow: true })
-    }
-  }, [analysisCompleted, analysisResults?.archive_id, router])
+  }, [router.query])
 
   const loadResultsFromArchive = async (archiveId: string) => {
     try {
@@ -103,63 +74,45 @@ export default function DashboardPage() {
         
         setAnalysisResults(results)
         setAnalysisCompleted(true)
-        
-        // Store in localStorage
-        try {
-          localStorage.setItem(STORAGE_KEYS.ANALYSIS_RESULTS, JSON.stringify(results))
-          localStorage.setItem(STORAGE_KEYS.ANALYSIS_COMPLETED, 'true')
-        } catch (error) {
-          console.warn('Failed to save to localStorage:', error)
-        }
+        setShowUpload(false)
       }
     } catch (error) {
       console.error('Error loading results from archive:', error)
+      // If loading fails, show upload page
+      setShowUpload(true)
     }
   }
 
   const handleAnalysisComplete = (completed: boolean) => {
     setAnalysisCompleted(completed)
-    try {
-      localStorage.setItem(STORAGE_KEYS.ANALYSIS_COMPLETED, completed.toString())
-    } catch (error) {
-      console.warn('Failed to save to localStorage:', error)
-    }
+    setShowUpload(false)
   }
 
   const handleSetResults = (results: AnalysisResultData) => {
     setAnalysisResults(results)
-    // Store results in localStorage
-    try {
-      localStorage.setItem(STORAGE_KEYS.ANALYSIS_RESULTS, JSON.stringify(results))
-    } catch (error) {
-      console.warn('Failed to save to localStorage:', error)
-    }
+    setShowUpload(false)
   }
 
   const handleNewAnalysis = () => {
     setAnalysisResults(null)
     setAnalysisCompleted(false)
-    // Clear localStorage
-    try {
-      localStorage.removeItem(STORAGE_KEYS.ANALYSIS_RESULTS)
-      localStorage.removeItem(STORAGE_KEYS.ANALYSIS_COMPLETED)
-    } catch (error) {
-      console.warn('Failed to clear localStorage:', error)
-    }
+    setShowUpload(true)
+    // Clear URL parameters
+    router.replace('/dashboard', undefined, { shallow: true })
   }
   
   return (
     <div className="flex min-h-screen">
       <Sidebar />
       <main className="flex flex-1 w-full">
-        {!analysisCompleted && (
+        {showUpload && (
           <FileUpload 
             setResults={handleSetResults}
             onAnalysisComplete={handleAnalysisComplete}
           />
         )}
 
-        {analysisCompleted && analysisResults && (
+        {!showUpload && analysisCompleted && analysisResults && (
           <div className="w-full max-w-5xl mx-auto text-center p-8">
             <h1 className="text-3xl font-semibold text-foreground mb-8 text-center">
               {greeting}{user ? `, ${user.fname}` : ""}
