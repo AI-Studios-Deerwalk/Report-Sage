@@ -229,5 +229,5 @@ THEN Tell me: What general problems do you see across the whole document?
 ---
 
 # FINAL STEP: Check if every step listed has been followed or not. Treat those steps like a checklist.
-Also give a summary which :
+
 
