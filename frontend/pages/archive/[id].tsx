@@ -503,7 +503,7 @@ const IndividualArchivePage: React.FC = () => {
                   <>
                     <div className="flex justify-between p-1 mt-10">
                       <h2 className="text-2xl font-bold text-gray-900">Analysis Results</h2>
-                      <div className='flex gap-'>
+                      <div className='flex'>
 
                       {/*Delete Button*/}
                       <AlertDialog>
