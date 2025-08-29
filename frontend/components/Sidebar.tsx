@@ -338,7 +338,7 @@ export function Sidebar() {
 
                        {/* Archive Submenu - Always Visible */}
             {!collapsed && (
-                             <div className="ml-6 space-y-0.5 max-h-80 pb-2 overflow-y-auto scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400">
+                             <div className="ml-6 space-y-0.5 max-h-96 pb-2 overflow-y-auto scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400">
                              {loadingArchives ? (
                  <div className="px-3 py-1 text-[10px] text-gray-500">Loading archives...</div>
                ) : archives.length === 0 ? (
