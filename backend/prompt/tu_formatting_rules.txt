@@ -1,135 +1,246 @@
-TU CSIT FINAL YEAR PROJECT REPORT - CHECKLIST
+# Step Method Promptfor TU CSIT Report Checking
 
-SECTION 1. TITLE PAGE
+#SIMPLE INSTRUCTION
+Check this TU CSIT report step by step. Just tell me what you see vs what should be there.
 
-R001 | Title Page | University name and Department in 12pt font, bold, centered alignment.
-R002 | Title Page | TU logo must be centered on the page.
-R003 | Title Page | Project title in ALL CAPS, bold, font size 16pt, horizontally centered alignment.
-R004 | Title Page | Line 'A FINAL PROJECT REPORT' must be ALL CAPS, bold, 16pt font size, centered.
-R005 | Title Page | 'Submitted to' block includes 'Department of Computer Science and Information Technology', bold, 12pt font, centered alignment.
-R006 | Title Page | 'In partial fulfillment of the requirements for the Bachelor's Degree in CSIT' included, centered alignment (or equivalent approved phrasing).
-R007 | Title Page | Institute name in bold, font size 16pt.
-R008 | Title Page | 'Submitted By' block structure: Name on first line, Roll No./Batch on second line (directly below name), Date on third line (directly below roll no./batch), all in 12pt font, vertically spaced.
-R009 | Title Page | 'Under Supervision of' block in 14pt bold font.
-R010 | Title Page | Page margins set with more margin on the left side.
+THEN WHAT YOU DO IS FOLLOW THESE STEPS:
+---
 
-SECTION 2. SUPERVISOR'S RECOMMENDATION
+# STEP 1: Find the Title Page
+Look for: The very first page of the report
 
-R011 | Supervisor's Recommendation | Institute name in bold, font size 14pt.
-R012 | Supervisor's Recommendation | TU logo centered with Department name and University name.
-R013 | Supervisor's Recommendation | Heading 'SUPERVISOR'S RECOMMENDATION' in bold, font size 16pt, centered.
-R014 | Supervisor's Recommendation | Formal recommendation paragraph present with Student NAME in ALL CAPS and Project TITLE in ALL CAPS + BOLD, properly aligned.
-R015 | Supervisor's Recommendation | Left salutation aligned left with: Name on first line, Position on second line, College on third line, all vertically spaced.
-R016 | Supervisor's Recommendation | Page number at bottom center, Roman numerals starting from ii.
+THEN Check these things:
+- Is "Tribhuvan University" written in 12pt bold centered? (Rule R001)
+- Is there a TU logo in the center? (Rule R002)  
+- Is the project title in ALL CAPS, bold, 16pt, centered? (Rule R003)
+- Does it say "A FINAL PROJECT REPORT" in ALL CAPS, bold, 16pt? (Rule R004)
+- Is there a "Submitted to" section with department name? (Rule R005)
+- Does it mention "Bachelor's Degree in CSIT"? (Rule R006)
+- Is the college name in bold 16pt? (Rule R007)
+- Are student details (name, roll, date) properly stacked? (Rule R008)
+- Is supervisor info in 14pt bold? (Rule R009)
+- Is the left margin bigger than others? (Rule R010)
 
-SECTION 3. STUDENT'S DECLARATION
+THEN tell me: What's wrong or missing? Give this section ID: SEC_001
 
-R017 | Student's Declaration | College name in bold, 14pt font, ALL CAPS.
-R018 | Student's Declaration | Heading 'STUDENT'S DECLARATION' 16pt font, ALL CAPS, centered.
-R019 | Student's Declaration | Declaration text below heading in 12pt font.
-R020 | Student's Declaration | Salutation left-aligned with: Signature line first, Name second, Date third, all vertically spaced.
+---
 
-SECTION 4. LETTER OF APPROVAL (CERTIFICATE)
+# STEP 2: Find Supervisor's Recommendation Page
+Look for: A page with supervisor's signature and recommendation
 
-R021 | Letter of Approval | College name in bold, 14pt font, ALL CAPS.
-R022 | Letter of Approval | Heading 'LETTER OF APPROVAL' in 16pt font, centered.
-R023 | Letter of Approval | Certifying statement in 12pt font; project title within statement is ALL CAPS and bold.
-R024 | Letter of Approval | Page number in Roman numerals at bottom center.
+THEN Check these things:
+- College name in bold 14pt? (Rule R011)
+- TU logo centered with department name? (Rule R012)
+- Title "SUPERVISOR'S RECOMMENDATION" bold, 16pt, centered? (Rule R013)
+- Student name in ALL CAPS, project title in ALL CAPS + BOLD? (Rule R014)
+- Supervisor details left-aligned (name, position, college)? (Rule R015)
+- Page number "ii" at bottom center? (Rule R016)
 
-SECTION 5. ACKNOWLEDGEMENT
+THEN Tell me: What's wrong or missing? Give this section ID: SEC_002
 
-R025 | Acknowledgement | Heading 'ACKNOWLEDGEMENT' in bold, 14pt font.
-R026 | Acknowledgement | Acknowledgement text in 12pt font; project title bold when mentioned within text.
-R027 | Acknowledgement | Name, Roll No./Batch, Date aligned left at end, vertically spaced.
+---
 
-SECTION 6. ABSTRACT
+# STEP 3: Find Student's Declaration Page  
+Look for: A page where student declares the work is original
 
-R028 | Abstract | Heading 'ABSTRACT' bold, 16pt font.
-R029 | Abstract | Abstract paragraph text 12pt font.
-R030 | Abstract | Keywords section labeled in bold with title 'Keywords'; 1.5 line spacing between paragraph and keywords section.
+Check these things:
+- College name bold, 14pt, ALL CAPS? (Rule R017)
+- Title "STUDENT'S DECLARATION" 16pt, ALL CAPS, centered? (Rule R018)
+- Declaration text in 12pt? (Rule R019)
+- Student signature, name, date left-aligned and spaced? (Rule R020)
 
-SECTION 7. TABLE OF CONTENTS
+THEN Tell me: What's wrong or missing? Give this section ID: SEC_003
 
-R031 | TOC | Font must be Times New Roman throughout.
-R032 | TOC | Alignment must be precise and perfect.
+---
 
-SECTION 8. LIST OF FIGURES
+# STEP 4: Find Letter of Approval Page
+THEN Look for: Official approval/certificate page
 
-R033 | LoF | Heading 'LIST OF FIGURES' in bold, 16pt font.
-R034 | LoF | No bold text anywhere except the heading.
+Check these things:
+- College name bold, 14pt, ALL CAPS? (Rule R021)
+- Title "LETTER OF APPROVAL" 16pt, centered? (Rule R022)
+- Project title within text ALL CAPS and bold? (Rule R023)
+- Roman numeral page number at bottom? (Rule R024)
 
-SECTION 9. LIST OF TABLES
+THEN Tell me: What's wrong or missing? Give this section ID: SEC_004
 
-R035 | LoT | Heading 'LIST OF TABLES' in bold, 16pt font.
-R036 | LoT | No bold text anywhere except the heading.
+---
 
-SECTION 10. LIST OF ABBREVIATIONS
+# STEP 5: Find Acknowledgement Page
+THEN Look for: Page where student thanks people who helped
 
-R037 | Abbreviations | All abbreviations written in ALL CAPS, arranged in alphabetical order.
-R038 | Abbreviations | Full forms NOT in ALL CAPS (normal capitalization).
+Check these things:
+- Title "ACKNOWLEDGEMENT" bold, 14pt? (Rule R025)
+- Text in 12pt, project title bold when mentioned? (Rule R026)
+- Name, roll number, date left-aligned at end? (Rule R027)
 
-SECTION 11. CHAPTER 1: INTRODUCTION
+THEN Tell me: What's wrong or missing? Give this section ID: SEC_005
 
-R039 | Ch1 | Heading 'CHAPTER 1: INTRODUCTION' bold, 16pt font.
-R040 | Ch1 | Page numbering starts from 1 in Arabic numerals.
-R041 | Ch1 | Each chapter begins on a new page.
-R042 | Ch1 | Figure titles/captions should NOT be bold.
-R043 | Ch1 | Font should be Times New Roman, body text 12pt.
+---
 
-SECTION 12. CHAPTER 2: BACKGROUND STUDY AND LITERATURE REVIEW
+# STEP 6: Find Abstract Page
+THEN Look for: Page with project summary and keywords
 
-R044 | Ch2 | Font must be Times New Roman throughout chapter.
-R045 | Ch2 | Header 'CHAPTER 2: BACKGROUND STUDY AND LITERATURE REVIEW' font size 16pt, centered, bold.
-R046 | Ch2 | Chapter starts on a new page.
-R047 | Ch2 | Contains sections: Background Study, Literature Review, Current System, Problems with Current System.
-R048 | Ch2 | Section numbering format: 2.1, 2.2, 2.3, 2.4 (chapter number .topic number).
-R049 | Ch2 | Section titles bold, left aligned, font size 14pt.
-R050 | Ch2 | Body text font size 12pt, use bullet points for specifying points.
-R051 | Ch2 | One line spacing after each topic/section.
-R052 | Ch2 | Page numbering continues from previous chapter (typically ends at page 3).
+Check these things:
+- Title "ABSTRACT" bold, 16pt? (Rule R028)
+- Abstract text in 12pt? (Rule R029)
+- Keywords section labeled bold with 1.5 line spacing? (Rule R030)
 
-SECTION 13. CHAPTER 3: SYSTEM ANALYSIS
+THEN Tell me: What's wrong or missing? Give this section ID: SEC_006
 
-R053 | Ch3 | Chapter starts on a new page.
-R054 | Ch3 | Heading 'CHAPTER 3: SYSTEM ANALYSIS' bold, centered, 16pt font.
-R055 | Ch3 | Contains Requirement Analysis with nested subtopics.
-R056 | Ch3 | Numbering structure: chapter number. topic number .subtopic number (e.g., 3.1.1, 3.1.2).
-R057 | Ch3 | Body text font size 12pt, Times New Roman.
-R058 | Ch3 | Topic headings bold, 14pt font, left aligned.
+---
 
-SECTION 14. CHAPTER 4: SYSTEM DESIGN
+# STEP 7: Find Table of Contents
+THEN Look for: Page listing all chapters and page numbers
 
-R059 | Ch4 | Chapter starts on a new page.
-R060 | Ch4 | Heading 'CHAPTER 4: SYSTEM DESIGN' bold, centered, 16pt font.
-R061 | Ch4 | Contains topics: Design and Algorithm Details.
-R062 | Ch4 | Body text font size 12pt, Times New Roman.
-R063 | Ch4 | One line spacing between topics when one topic ends and another begins.
-R064 | Ch4 | Topic headings bold, 14pt font, left aligned.
+Check these things:
+- Font Times New Roman throughout? (Rule R031)
+- Alignment perfect and precise? (Rule R032)
 
-SECTION 15. CHAPTER 5: IMPLEMENTATION AND TESTING
+THEN Tell me: What's wrong or missing? Give this section ID: SEC_007
 
-R065 | Ch5 | Chapter starts on a new page.
-R066 | Ch5 | Heading 'CHAPTER 5: IMPLEMENTATION AND TESTING' bold, centered, 16pt font.
-R067 | Ch5 | Contains topics: Implementation, Testing, Result Analysis.
-R068 | Ch5 | Body text font size 12pt, Times New Roman, no bold or italics in body.
-R069 | Ch5 | Topic headings font size 14pt, bold, left aligned.
-R070 | Ch5 | Critical code areas must be discussed in this chapter.
+---
 
-SECTION 16. CHAPTER 6: CONCLUSION AND FUTURE RECOMMENDATION
+# STEP 8: Find Lists (Figures, Tables, Abbreviations)
+THEN Look for: Three separate listing pages
 
-R071 | Ch6 | Chapter starts on a new page.
-R072 | Ch6 | Heading 'CHAPTER 6: CONCLUSION AND FUTURE RECOMMENDATION' bold, centered, 16pt font.
-R073 | Ch6 | Decimal numbering system: 6.1, 6.2, etc. (chapter number. subsection number).
-R074 | Ch6 | Future Recommendation section must address limitations and suggest how to overcome them.
-R075 | Ch6 | Topic headings bold, 14pt font, left aligned.
-R076 | Ch6 | Body text font size 12pt, Times New Roman.
+For List of Figures:
+- Title "LIST OF FIGURES" bold, 16pt? (Rule R033)
+- No other bold text in section? (Rule R034)
 
-GENERAL FORMATTING RULES
+For List of Tables:
+- Title "LIST OF TABLES" bold, 16pt? (Rule R035)
+- No other bold text in section? (Rule R036)
 
-R077 | General | Font family: Times New Roman throughout the document.
-R078 | General | Each chapter must start on a new page.
-R079 | General | Consistent spacing and alignment throughout.
-R080 | General | Roman numerals for preliminary pages (ii, iii, iv, etc.).
-R081 | General | Arabic numerals for main content starting from Chapter 1.
-R082 | General | Figure captions/titles never bold.
-R083 | General | Proper hierarchical numbering system maintained throughout.
+For List of Abbreviations:
+- All abbreviations in ALL CAPS, alphabetical? (Rule R037)
+- Full forms in normal text (not ALL CAPS)? (Rule R038)
+
+THEN Tell me: What's wrong in each list? Give section IDs: SEC_008, SEC_009, SEC_010
+
+---
+
+# STEP 9: Find Chapter 1 (Introduction)
+Look for: First main chapter of the report
+
+THEN Check these things:
+- Title "CHAPTER 1: INTRODUCTION" bold, 16pt? (Rule R039)
+- Page numbering starts at "1" (Arabic numbers)? (Rule R040)  
+- Chapter starts on new page? (Rule R041)
+- Figure captions are NOT bold? (Rule R042)
+- Font Times New Roman, body text 12pt? (Rule R043)
+
+Tell me: What's wrong or missing? Give this section ID: SEC_011
+
+---
+
+# STEP 10: Find Chapter 2 (Background Study)
+Look for: Literature review and background chapter
+
+THEN Check these things:
+- Font Times New Roman throughout? (Rule R044)
+- Title "CHAPTER 2: BACKGROUND STUDY AND LITERATURE REVIEW" 16pt, centered, bold? (Rule R045)
+- Starts on new page? (Rule R046)
+- Has sections for: Background Study, Literature Review, Current System, Problems? (Rule R047)
+- Section numbers like 2.1, 2.2, 2.3, 2.4? (Rule R048)
+- Section titles bold, left aligned, 14pt? (Rule R049)
+- Body text 12pt with bullet points? (Rule R050)
+- One line spacing after each section? (Rule R051)
+- Page numbering continues (usually ends around page 3)? (Rule R052)
+
+THEN Tell me: What's wrong or missing? Give this section ID: SEC_012
+
+---
+
+# STEP 11: Find Chapter 3 (System Analysis)
+Look for: Requirements and analysis chapter
+
+THEN Check these things:
+- Starts on new page? (Rule R053)
+- Title "CHAPTER 3: SYSTEM ANALYSIS" bold, centered, 16pt? (Rule R054)
+- Has Requirement Analysis with subtopics? (Rule R055)
+- Numbering like 3.1.1, 3.1.2? (Rule R056)
+- Body text 12pt, Times New Roman? (Rule R057)
+- Topic headings bold, 14pt, left aligned? (Rule R058)
+
+THEN Tell me: What's wrong or missing? Give this section ID: SEC_013
+
+---
+
+# STEP 12: Find Chapter 4 (System Design)
+Look for: Design and algorithm chapter
+
+Check these things:
+- Starts on new page? (Rule R059)
+- Title "CHAPTER 4: SYSTEM DESIGN" bold, centered, 16pt? (Rule R060)
+- Has Design and Algorithm Details topics? (Rule R061)
+- Body text 12pt, Times New Roman? (Rule R062)
+- One line spacing between topics? (Rule R063)
+- Topic headings bold, 14pt, left aligned? (Rule R064)
+
+Tell me: What's wrong or missing? Give this section ID: SEC_014
+
+---
+
+# STEP 13: Find Chapter 5 (Implementation)
+Look for: Implementation and testing chapter
+
+Check these things:
+- Starts on new page? (Rule R065)
+- Title "CHAPTER 5: IMPLEMENTATION AND TESTING" bold, centered, 16pt? (Rule R066)
+- Has Implementation, Testing, Result Analysis topics? (Rule R067)
+- Body text 12pt, Times New Roman, no bold/italics in body? (Rule R068)
+- Topic headings 14pt, bold, left aligned? (Rule R069)
+- Discusses critical code areas? (Rule R070)
+
+Tell me: What's wrong or missing? Give this section ID: SEC_015
+
+---
+
+# STEP 14: Find Chapter 6 (Conclusion)
+Look for: Final conclusion and recommendations chapter
+
+Check these things:
+- Starts on new page? (Rule R071)
+- Title "CHAPTER 6: CONCLUSION AND FUTURE RECOMMENDATION" bold, centered, 16pt? (Rule R072)
+- Numbering 6.1, 6.2 format? (Rule R073)
+- Future Recommendation addresses limitations and solutions? (Rule R074)
+- Topic headings bold, 14pt, left aligned? (Rule R075)
+- Body text 12pt, Times New Roman? (Rule R076)
+
+THEN Tell me: What's wrong or missing? Give this section ID: SEC_016
+
+---
+
+# STEP 15: Check Overall Document
+THEN Look at: The whole document for general formatting
+
+Check these things:
+- Times New Roman font used everywhere? (Rule R077)
+- Every chapter starts on new page? (Rule R078)
+- Spacing and alignment consistent throughout? (Rule R079)
+- Roman numerals (ii, iii, iv) for preliminary pages? (Rule R080)
+- Arabic numerals (1, 2, 3) starting from Chapter 1? (Rule R081)
+- Figure captions never bold anywhere? (Rule R082)
+- Proper numbering system throughout? (Rule R083)
+
+THEN Tell me: What general problems do you see across the whole document?
+
+---
+
+# FINAL STEP: Check if every step listed has been followed or not. Treat those steps like a checklist.
+Also give a summary which :
+
+**Answer these questions:**
+1. How many sections are missing completely?
+2. What are the 3 biggest formatting problems?
+3. What can be fixed quickly (under 30 minutes)?
+4. Is this report ready for submission? (Yes/No)
+5. How many hours would it take to fix everything?
+
+**Use this format:**
+- SECTIONS MISSING: [list with SEC_IDs]
+- BIG PROBLEMS: [top 3 issues]
+- QUICK FIXES: [easy fixes]
+- READY?: Yes/No
+- FIX TIME: X hours
