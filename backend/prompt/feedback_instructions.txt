@@ -1,9 +1,10 @@
-
 FEEDBACK CATEGORIZATION INSTRUCTIONS:
 
 PROVIDE FEEDBACK IN THREE CATEGORIES:
 
+
 1. ERRORS (Critical Issues – Must Fix):
+- Previously the R#id with values 0 will be listed as errors.
 
 - Missing required sections (Title Page, Abstract, TOC, LoF, LoT, Abbreviations, Chapters, References, etc.)
 - Sections out of TU-prescribed order
@@ -21,7 +22,6 @@ PROVIDE FEEDBACK IN THREE CATEGORIES:
 
 Format: `[ERROR] Brief description of the violation`
 Example: `[ERROR] Font should be Times New Roman 12pt, currently using Arial (Page 5)`
-
 
 2. WARNINGS (Important Issues – Should Fix):
 - Grammar mistakes
@@ -70,5 +70,5 @@ IMPORTANT NOTES:
 - Errors = TU compliance violations
 - Warnings = Quality/clarity issues
 - Suggestions = Optional improvements
-- Keep feedback **concise, precise, and helpful**
+- Keep feedback concise, precise, and helpful
 
