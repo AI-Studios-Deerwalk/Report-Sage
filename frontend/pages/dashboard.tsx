@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
 import { useRouter } from "next/router"
-const Sidebar = dynamic(() => import("@/components/Sidebar").then(m => m.Sidebar), { ssr: false })
+// const Sidebar = dynamic(() => import("@/components/Sidebar").then(m => m.Sidebar), { ssr: false })
+
 import { FileUpload } from "@/components/Upload"
 import { AnalysisResults } from "@/components/AnalysisResults"
 import { useAuth } from "@/contexts/AuthContext"
+import { Sidebar } from "@/components/Sidebar"
 
 interface AnalysisItem {
   type: string

@@ -344,16 +344,16 @@ export function Sidebar() {
                ) : archives.length === 0 ? (
                  <div className="px-3 py-1 text-[10px] text-gray-500">No archives found</div>
               ) : (
-                                 archives.map((archive) => (
-                                       <div
-                      key={archive.id}
-className={`group flex items-center justify-between rounded-md px-3 py-1 text-sm hover:bg-gray-100 transition-colors ${
+                  archives.map((archive) => (
+                    <div
+                    key={archive.id}
+                    className={`group flex items-center justify-between rounded-md px-3 py-1 text-sm hover:bg-gray-100 transition-colors ${
                     router.asPath === `/archive/${archive.id}`
                         ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
                         : 'text-sidebar-foreground hover:bg-gray-100'
                     }`}
                     >
-                                           <TooltipProvider>
+                        <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div 
@@ -632,11 +632,11 @@ className={`group flex items-center justify-between rounded-md px-3 py-1 text-sm
           onClick={() => setMenuOpen((prev) => !prev)}
         >
         <div className={`flex items-center gap-3 p-2 ${collapsed ? "justify-center" : ""}`}>
-          <Avatar className="h-8 w-8 rounded-full border-2 border-sidebar-border">
-            <AvatarImage src="/professional-headshot.png" alt={fullName} />
-            <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full">
+          <Avatar className="h-8 w-8 rounded-full border-2 border-sidebar-border flex-col items-center justify-center">
+            {/* <AvatarImage src="/professional-headshot.png" alt={fullName} /> */}
+            {/* <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full"> */}
               <User className="h-4 w-4" />
-            </AvatarFallback>
+            {/* </AvatarFallback> */}
           </Avatar>
           <div className={`${collapsed ? "hidden" : "block"} min-w-0`}>
             <h3 className="text-xs font-medium text-sidebar-foreground truncate">{fullName}</h3>
