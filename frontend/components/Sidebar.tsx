@@ -37,6 +37,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+//the three dot in userProfile
+import { MoreVertical } from "lucide-react";
+
 
 interface ArchiveItem {
   id: number
@@ -344,13 +347,17 @@ export function Sidebar() {
                                  archives.map((archive) => (
                                        <div
                       key={archive.id}
-                      className="group flex items-center justify-between rounded-md px-3 py-1 text-sm hover:bg-gray-100 transition-colors"
+className={`group flex items-center justify-between rounded-md px-3 py-1 text-sm hover:bg-gray-100 transition-colors ${
+                    router.asPath === `/archive/${archive.id}`
+                        ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                        : 'text-sidebar-foreground hover:bg-gray-100'
+                    }`}
                     >
                                            <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div 
-                              className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
+                             className={"flex items-center gap-2 min-w-0 flex-1 cursor-pointer"}
                               onClick={() => router.push(`/archive/${archive.id}`)}
                             >
                               <FileText className="h-3 w-3 text-gray-400 flex-shrink-0" />
@@ -496,7 +503,7 @@ export function Sidebar() {
        {/* Bottom Section - User Profile with divider */}
       <div className="space-y-1 pt-3 border-sidebar-border">
 
-        <div className="border-t border-sidebar-border" />
+        <div className="border-t border-sidebar-border mb-3"/>
 
         {menuOpen && (
         <div
@@ -637,6 +644,9 @@ export function Sidebar() {
               <p className="text-[10px] text-sidebar-foreground/70 truncate">{roleLabel}</p>
             )}
           </div>
+          {!collapsed && (
+            <MoreVertical className="h-5 w-5 ml-9"/>
+          )}
         </div>
         </Button>
       </div>
