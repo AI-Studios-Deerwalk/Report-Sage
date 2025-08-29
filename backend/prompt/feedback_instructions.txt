@@ -12,8 +12,7 @@ For EVERY section you check (SEC_001 to SEC_016), use this format:
 
 [SECTION NAME] - [SEC_ID]
 ISSUES FOUND:
-- [Specific issue with rule code]
-- [Another issue with rule code]
+- according to the PRIORITY ORDER FOR ISSUES.
 
 WHAT'S CORRECT:
 - [What they did right]

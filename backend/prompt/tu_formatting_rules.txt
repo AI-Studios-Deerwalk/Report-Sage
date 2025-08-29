@@ -231,16 +231,3 @@ THEN Tell me: What general problems do you see across the whole document?
 # FINAL STEP: Check if every step listed has been followed or not. Treat those steps like a checklist.
 Also give a summary which :
 
-**Answer these questions:**
-1. How many sections are missing completely?
-2. What are the 3 biggest formatting problems?
-3. What can be fixed quickly (under 30 minutes)?
-4. Is this report ready for submission? (Yes/No)
-5. How many hours would it take to fix everything?
-
-**Use this format:**
-- SECTIONS MISSING: [list with SEC_IDs]
-- BIG PROBLEMS: [top 3 issues]
-- QUICK FIXES: [easy fixes]
-- READY?: Yes/No
-- FIX TIME: X hours
