@@ -53,6 +53,10 @@ Page numbering rules:
 - No duplication or gaps in numbering sequence
 - Restart of numbering is only allowed when switching from Roman to Arabic at Chapter 1
 
+Every Section will have subsections which has a unique id R###. This id R### acts as a variable to store values 0 or 1.
+1 means the condition is met while 0 means there is deviations or errors.
+Store each values and lastly the corressponding subsections with R### id 0 will be further evaluated and given as errors in the feedback.
+
 # SECTION 1: TITLE PAGE
 
 if ("Tribhuvan University" title present at top AND font-size=13) R000=1 else R000=0
@@ -132,7 +136,8 @@ if (Margins/font/size/spacing conform) R052=1 else R052=0
 if (Heading “ABSTRACT” bold & centered) R053=1 else R053=0
 if (Includes Motivation/Problem statement) R054=1 else R054=0
 if (Includes Methods/Approach) R055=1 else R055=0
-if (Includes Results/Findings/Product) R056=1 else R056=0
+if (Includes Results/Findings/Product) R056=1 else R056=0 
+
 if (Includes Conclusion/Implications) R057=1 else R057=0
 if (Keywords present; 4–8 terms; semicolon separated) R058=1 else R058=0
 if (Page numbered Roman; centered bottom) R059=1 else R059=0
