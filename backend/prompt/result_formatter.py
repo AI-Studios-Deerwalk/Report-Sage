@@ -32,41 +32,33 @@ class ResultFormatter:
             lines = [ln.strip() for ln in analysis_text.splitlines()]
 
             # Patterns
-            header_re = re.compile(r"^(SUGGESTIONS?|WARNINGS?|ERRORS?)\s*:?$", re.IGNORECASE)
+            header_re = re.compile(r".*?(SUGGESTIONS?|WARNINGS?|ERRORS?)\s*:?$", re.IGNORECASE)
             bullet_re = re.compile(r"^(-|\*|•|\d+[.)])\s+(.*)$")
             inline_tag_re = re.compile(r"^\[(ERROR|WARNING|SUGGESTION)\]\s*[:\-]?\s*(.*)$", re.IGNORECASE)
-            severity_re = re.compile(r"(?:\(|\[)(low|medium|high)(?:\)|\])", re.IGNORECASE)
+            # Additional patterns for better parsing
+            numbered_item_re = re.compile(r"^(\d+[.)])\s+(.*)$")
 
             current_section = None
 
             def push(target: str, text: str):
                 if not text:
                     return
-                # Try to extract severity tokens like (high) or [medium]
-                severity = None
-                sev_match = severity_re.search(text)
-                if sev_match:
-                    severity = sev_match.group(1).lower()
-                    # remove the matched token from message
-                    text_local = severity_re.sub("", text).strip(" -:•.\t")
-                else:
-                    text_local = text
-
-                # Default severity: high for errors, medium for warnings, low/medium for suggestions
-                if not severity:
-                    if target == "errors":
-                        severity = "high"
-                    elif target == "warnings":
-                        severity = "medium"
-                    else:
-                        severity = "low"
-
+                
+                # Filter out prompt instructions that might have been included
+                text_lower = text.lower()
+                instruction_keywords = [
+                    "only the three sections", "do not create", "do not add",
+                    "use only", "follow exactly", "response format",
+                    "instructions:", "critical rules", "format template"
+                ]
+                
+                # Skip if this looks like a prompt instruction
+                if any(keyword in text_lower for keyword in instruction_keywords):
+                    return
+                
                 result[target].append({
-                    "message": text_local.strip(),
-                    "severity": severity,
-                    "category": "general",
+                    "message": text.strip(),
                     "page_number": None,
-                    "section": None,
                 })
 
             for raw in lines:
@@ -85,7 +77,8 @@ class ResultFormatter:
                 # Section header
                 m_hdr = header_re.match(raw)
                 if m_hdr:
-                    hdr = m_hdr.group(1).upper()
+                    hdr = m_hdr.group(1).upper()  # Group 1 contains the actual section name
+                    # Handle any order of sections - be more flexible
                     if hdr.startswith("SUGGEST"):
                         current_section = "suggestions"
                     elif hdr.startswith("WARN"):
@@ -102,9 +95,20 @@ class ResultFormatter:
                     push(current_section, m_bullet.group(2).strip())
                     continue
 
-                # If there's no explicit bullet but we are in a section, treat as a continuation/item
-                if current_section:
-                    push(current_section, raw)
+                # Numbered item under a current section
+                m_numbered = numbered_item_re.match(raw)
+                if m_numbered and current_section:
+                    push(current_section, m_numbered.group(2).strip())
+                    continue
+
+                # If there's no explicit bullet/number but we are in a section, 
+                # only treat as content if it looks like actual content (not a header)
+                # Also, ignore anything that comes after we've seen all three sections
+                if current_section and raw and not raw.endswith(':') and len(raw.strip()) > 10:
+                    # Check if we've already seen all three main sections
+                    sections_seen = sum(1 for section in ['suggestions', 'warnings', 'errors'] if result[section])
+                    if sections_seen < 3:
+                        push(current_section, raw)
 
             return result
 

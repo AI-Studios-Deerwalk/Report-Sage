@@ -5,10 +5,7 @@ from datetime import datetime
 class AnalysisItem(BaseModel):
     type: str = Field(..., description="Type of analysis item (suggestion, warning, error)")
     message: str = Field(..., description="The analysis message")
-    severity: Optional[str] = Field("medium", description="Severity level (low, medium, high)")
-    category: Optional[str] = Field(None, description="Category of the item")
     page_number: Optional[int] = Field(None, description="Page number where issue was found")
-    section: Optional[str] = Field(None, description="Section where issue was found")
 
 class ArchiveBase(BaseModel):
     file_name: str = Field(..., min_length=1, max_length=255)

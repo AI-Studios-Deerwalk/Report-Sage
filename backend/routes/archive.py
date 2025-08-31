@@ -67,10 +67,7 @@ async def process_document_analysis(archive_id: int, file_path: str):
                 suggestions.append(AnalysisItem(
                     type="suggestion",
                     message=item.get("message", ""),
-                    severity=item.get("severity", "medium"),
-                    category=item.get("category", "general"),
-                    page_number=item.get("page_number"),
-                    section=item.get("section")
+                    page_number=item.get("page_number")
                 ))
         
         warnings = []
@@ -79,10 +76,7 @@ async def process_document_analysis(archive_id: int, file_path: str):
                 warnings.append(AnalysisItem(
                     type="warning",
                     message=item.get("message", ""),
-                    severity=item.get("severity", "medium"),
-                    category=item.get("category", "general"),
                     page_number=item.get("page_number"),
-                    section=item.get("section")
                 ))
         
         errors = []
@@ -91,10 +85,7 @@ async def process_document_analysis(archive_id: int, file_path: str):
                 errors.append(AnalysisItem(
                     type="error",
                     message=item.get("message", ""),
-                    severity=item.get("severity", "high"),
-                    category=item.get("category", "general"),
-                    page_number=item.get("page_number"),
-                    section=item.get("section")
+                    page_number=item.get("page_number")
                 ))
         
         # Update archive with results

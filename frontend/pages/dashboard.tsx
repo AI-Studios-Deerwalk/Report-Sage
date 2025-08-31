@@ -9,10 +9,7 @@ import { useAuth } from "@/contexts/AuthContext"
 interface AnalysisItem {
   type: string
   message: string
-  severity: string
-  category?: string
   page_number?: number
-  section?: string
 }
 
 interface AnalysisResultData {

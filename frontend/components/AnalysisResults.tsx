@@ -9,10 +9,7 @@ import { useToast } from "@/hooks/use-toast"
 interface AnalysisItem {
   type: string
   message: string
-  severity: string
-  category?: string
   page_number?: number
-  section?: string
 }
 
 interface AnalysisResultsProps {
@@ -24,9 +21,10 @@ interface AnalysisResultsProps {
     analysis_content?: string
     archive_id?: number
   }
+  onBack?: () => void
 }
 
-export function AnalysisResults({ results }: AnalysisResultsProps) {
+export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [copied, setCopied] = useState(false)
@@ -70,19 +68,6 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
       }
     }
   }
-  const getSeverityColor = (severity: string) => {
-    switch (severity.toLowerCase()) {
-      case 'high':
-        return 'bg-red-100 text-red-800 border-red-200'
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'low':
-        return 'bg-blue-100 text-blue-800 border-blue-200'
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
-    }
-  }
-
   const getIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'error':
@@ -115,28 +100,14 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
                     <p className="text-sm text-left text-gray-800">{item.message}</p>
-                    {(item.page_number || item.section) && (
+                    {item.page_number && (
                       <div className="flex gap-2 mt-2">
-                        {item.page_number && (
-                          <Badge variant="outline" className="text-xs">
-                            Page {item.page_number}
-                            
-                          </Badge>
-                        )}
-                        {item.section && (
-                          <Badge variant="outline" className="text-xs">
-                            {item.section}
-                          </Badge>
-                        )}
+                        <Badge variant="outline" className="text-xs">
+                          Page {item.page_number}
+                        </Badge>
                       </div>
                     )}
                   </div>
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs ${getSeverityColor(item.severity)}`}
-                  >
-                    {item.severity}
-                  </Badge>
                 </div>
               </div>
             ))}
@@ -148,6 +119,18 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
 
   return (
     <div className="w-full max-w-4xl mx-auto mt-8">
+      {onBack && (
+        <div className="mb-4">
+          <Button
+            onClick={onBack}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            ← Back to Upload
+          </Button>
+        </div>
+      )}
       <Card className="mb-6 bg-gradient-to-r from-green-50 to-blue-50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

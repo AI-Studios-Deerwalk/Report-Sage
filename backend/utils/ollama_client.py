@@ -20,29 +20,23 @@ class OllamaClient:
         """Analyze document content using Ollama"""
         # Create a more structured prompt for document analysis
         prompt = f"""
-        You are an expert academic document reviewer. Analyze the following document content for format compliance, writing quality, and academic standards.
+        You are an expert academic document reviewer. Analyze the document for format compliance and academic standards.
 
-        Please provide your feedback in this EXACT format:
-
-        SUGGESTIONS:
-        - [Suggestion 1 about improving the document]
-        - [Suggestion 2 about enhancing content quality]
-        - [Additional suggestions as needed]
+        RESPONSE FORMAT (use plain text, NOT Markdown):
+        ERRORS:
+        - [Your error about definitive formatting violations]
+        - [Your error about missing required sections]
 
         WARNINGS:
-        - [Warning 1 about potential formatting issues]
-        - [Warning 2 about style or structure concerns]
-        - [Additional warnings as needed]
+        - [Your warning about potential formatting issues]
+        - [Your warning about style or structure concerns]
 
-        ERRORS:
-        - [Error 1 about definitive formatting violations]
-        - [Error 2 about missing required sections]
-        - [Additional errors as needed]
+        SUGGESTIONS:
+        - [Your suggestion about improving the document]
+        - [Your suggestion about enhancing content quality]
 
-        Document content to analyze:
+        DOCUMENT TO ANALYZE:
         {content[:5000]}
-
-        Please be specific and actionable in your feedback. Focus on academic writing standards, formatting consistency, and document structure.
         """
         
         return ask_ollama_fast(prompt, temperature=temperature, timeout_seconds=timeout_seconds)
