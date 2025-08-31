@@ -1,74 +1,86 @@
+# FEEDBACK OUTPUT PROMPTS
 
-FEEDBACK CATEGORIZATION INSTRUCTIONS:
+## MAIN DOCUMENT ANALYSIS PROMPT
+You are an expert academic document reviewer. Analyze the document for format compliance and academic standards.
 
-PROVIDE FEEDBACK IN THREE CATEGORIES:
+RESPONSE FORMAT (use plain text, NOT Markdown):
+ERRORS:
+- [Your error about definitive formatting violations]
+- [Your error about missing required sections]
 
-1. ERRORS (Critical Issues – Must Fix):
+WARNINGS:
+- [Your warning about potential formatting issues]
+- [Your warning about style or structure concerns]
 
-- Missing required sections (Title Page, Abstract, TOC, LoF, LoT, Abbreviations, Chapters, References, etc.)
-- Sections out of TU-prescribed order
-- Page numbering errors (e.g., cover page has number, preliminaries not starting at ii, Chapter 1 not starting at 1, gaps/duplicates)
-- Margin violations (Top 1", Bottom 1", Left 1.25", Right 1")
-- Font/size violations (not Times New Roman 12pt for body text)
-- Line spacing violations (not 1.5)
-- Paragraph formatting violations (not justified, missing 0.5" indent)
-- Heading style violations (wrong size, alignment, or boldness)
-- Reference and citation format errors (not IEEE style, missing/uncited references)
-- TOC/LoF/LoT not auto-generated or page numbers don’t match
-- Figure/table caption placement/style errors (not bold 12pt above/below)
-- Figures/tables not sequentially numbered by chapter or split across pages
-- Any other direct TU template compliance violation
+SUGGESTIONS:
+- [Your suggestion about improving the document]
+- [Your suggestion about enhancing content quality]
 
-Format: `[ERROR] Brief description of the violation`
-Example: `[ERROR] Font should be Times New Roman 12pt, currently using Arial (Page 5)`
+## SINGLE PAGE ANALYSIS PROMPT
+You are a TU format analyzer. Analyze page [PAGE_NUMBER] for format violations.
 
+PAGE [PAGE_NUMBER] CONTENT:
+[Page text content]
 
-2. WARNINGS (Important Issues – Should Fix):
-- Grammar mistakes
-- Spelling errors
-- Punctuation issues
-- Awkward or unclear sentence structure
-- Inconsistent heading or subheading styles
-- Uneven indentation or misaligned text
-- Weak flow or transitions between sections
-- Minor spacing inconsistencies (extra blank lines, uneven line breaks)
+ANALYZE AGAINST THESE RULES:
+[TU formatting rules]
 
-Format: `[WARNING] Brief description of the issue`
-Example: `[WARNING] Grammar error – "There is many" should be "There are many" (Page 12)`
+## BATCH ANALYSIS PROMPT
+You are analyzing a TU academic document for FORMAT COMPLIANCE. Analyze [NUMBER] pages for formatting violations.
 
-3. SUGGESTIONS (Enhancement Ideas – Optional):
+SPECIFIC FORMAT REQUIREMENTS TO CHECK:
+- Font: Times New Roman 12pt throughout
+- Margins: 1" top/bottom, 1.25" left, 1" right
+- Line spacing: 1.5 throughout
+- Page numbering: Roman for preliminary, Arabic for main content
+- Headings: Chapter 16pt bold centered, Section 14pt bold left
+- Citations: IEEE numbered format [1], [2], etc.
+- Required sections: Cover, Table of Contents, References
 
-- Ways to improve clarity of writing
-- Ideas for better organization of sections/subsections
-- Recommendations for additional detail or depth (e.g., methodology, results)
-- Suggestions for stronger or more recent references
-- Visual or formatting improvements (e.g., clearer figures, consistent terminology)
+PAGES TO ANALYZE:
+--- PAGE [PAGE_NUMBER] ---
+[Page text content]
 
-Format: `[SUGGESTION] Brief improvement recommendation`
-Example: `[SUGGESTION] Consider adding more detail to explain the methodology (Page 18)`
+FORMAT: [CATEGORY] Page X: Description of violation
 
-FEEDBACK FORMATTING RULES:
+EXAMPLES:
+[ERROR] Page 2: Font uses Arial instead of required Times New Roman 12pt
+[WARNING] Page 5: Table caption should be above table, currently below
+[SUGGESTION] Page 8: Consider adding more space between sections
 
-- Each feedback item must be **one short, clear, actionable sentence**
-- Be **specific** and reference the exact issue
-- Always include **page number** when possible
-- Use **professional and neutral language**
-- Prioritize: **Errors first, then Warnings, then Suggestions**
-- If no issues are found on a page, respond:
-  `"No TU format violations detected on this page"`
+## ANALYSIS SUMMARY FORMAT
+TU FORMAT ANALYSIS COMPLETE
 
-RESPONSE FORMAT:
-`Page X: [CATEGORY] Description of issue/suggestion`
+📊 SUMMARY:
+• Total Pages Analyzed: [NUMBER]
+• Total Issues Found: [NUMBER]
 
-IMPORTANT NOTES:
+🔍 PHASE BREAKDOWN:
+• Phase 1 (Structure): [NUMBER] critical issues
+• Phase 2 (Grammar): [NUMBER] language issues  
+• Phase 3 (Enhancement): [NUMBER] improvement suggestions
 
-- Cover page must **not** display a page number → do not flag as an error
-- Supervisor’s Recommendation page must begin with **Roman ii**
-- Preliminary pages use **sequential lowercase Roman numerals (ii, iii, iv, …)**
-- Chapter 1 starts with **Arabic 1** and continues sequentially until the end
-- All page numbers must be **centered at the bottom, one inch from the edge**
-- Errors = TU compliance violations
-- Warnings = Quality/clarity issues
-- Suggestions = Optional improvements
-- Keep feedback **concise, precise, and helpful**
+## EXCELLENT COMPLIANCE MESSAGE
+TU FORMAT ANALYSIS COMPLETE
 
+📊 SUMMARY:
+• Total Pages Analyzed: [NUMBER]
+• Total Issues Found: 0
+• Compliance Rate: 100%
+
+✅ EXCELLENT! Your document follows TU format standards correctly.
+
+## RESPONSE PARSING RULES
+- Use ONLY the three sections: ERRORS, WARNINGS, SUGGESTIONS
+- Each item should start with a dash (-) followed by a space
+- Do not create any additional sections
+- Do not add any text after the SUGGESTIONS section
+- Each feedback item should be specific and actionable
+
+## ANALYSIS ITEM STRUCTURE
+Each analysis item contains:
+{
+  "type": "suggestion|warning|error",
+  "message": "The actual feedback text",
+  "page_number": null (or page number if available)
+}

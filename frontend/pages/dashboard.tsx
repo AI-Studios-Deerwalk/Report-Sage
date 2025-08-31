@@ -11,10 +11,7 @@ import { Sidebar } from "@/components/Sidebar"
 interface AnalysisItem {
   type: string
   message: string
-  severity: string
-  category?: string
   page_number?: number
-  section?: string
 }
 
 interface AnalysisResultData {

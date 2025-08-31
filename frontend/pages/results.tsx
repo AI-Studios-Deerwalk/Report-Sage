@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
 const Sidebar = dynamic(() => import("@/components/Sidebar").then(m => m.Sidebar), { ssr: false })
-import { AnalysisResults } from "@/components/analyzeresult"
+import { AnalysisResults } from "@/components/AnalysisResults"
 import { useRouter } from "next/router"
 
 interface BackendResultItem {
@@ -27,8 +27,7 @@ interface BackendResults {
 interface AnalysisItem {
   id: string
   message: string
-  page?: number
-  severity: "error" | "warning" | "suggestion"
+  page_number?: number
 }
 
 export default function ResultsPage() {
@@ -75,9 +74,7 @@ export default function ResultsPage() {
 
 				// Transform backend results to match AnalysisResults component format
 				const transformedResults = {
-					fileName: getDisplayFileName(),
-					totalPages: backendResults.pages_analyzed || backendResults.total_pages_analyzed || 0,
-					analysisTime: getAnalysisTime(),
+					file_name: getDisplayFileName(),
 					errors: [] as AnalysisItem[],
 					warnings: [] as AnalysisItem[],
 					suggestions: [] as AnalysisItem[]
@@ -90,8 +87,7 @@ export default function ResultsPage() {
 					transformedResults.errors.push(...categorized.errors.map((item, index) => ({
 						id: `error-${index}`,
 						message: item.text,
-						page: item.page,
-						severity: "error" as const
+						page_number: item.page
 					})))
 				}
 
@@ -100,8 +96,7 @@ export default function ResultsPage() {
 					transformedResults.warnings.push(...categorized.warnings.map((item, index) => ({
 						id: `warning-${index}`,
 						message: item.text,
-						page: item.page,
-						severity: "warning" as const
+						page_number: item.page
 					})))
 				}
 
@@ -110,8 +105,7 @@ export default function ResultsPage() {
 					transformedResults.suggestions.push(...categorized.suggestions.map((item, index) => ({
 						id: `suggestion-${index}`,
 						message: item.text,
-						page: item.page,
-						severity: "suggestion" as const
+						page_number: item.page
 					})))
 				}
 

@@ -37,17 +37,15 @@ import {
   Eye,
   Clock,
   XCircle,
-  Loader2
+  Loader2,
+  Info
 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface AnalysisItem {
   type: string;
   message: string;
-  severity: string;
-  category?: string;
   page_number?: number;
-  section?: string;
 }
 
 interface Archive {
@@ -222,18 +220,7 @@ const ArchivePage: React.FC = () => {
     );
   };
 
-  const getSeverityIcon = (severity: string) => {
-    switch (severity.toLowerCase()) {
-      case 'high':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
-      case 'medium':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case 'low':
-        return <AlertCircle className="h-4 w-4 text-blue-500" />;
-      default:
-        return <AlertCircle className="h-4 w-4 text-gray-500" />;
-    }
-  };
+
 
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return 'Unknown size';
@@ -273,32 +260,18 @@ const ArchivePage: React.FC = () => {
         <div className="space-y-2">
           {items.map((item, index) => (
             <Card key={index} className="p-3 border-l-4 border-l-current">
-              <div className="flex items-start gap-2">
-                {getSeverityIcon(item.severity)}
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{item.message}</p>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    <Badge variant="outline" className="text-xs">
-                      {item.severity} severity
-                    </Badge>
-                    {item.category && (
-                      <Badge variant="outline" className="text-xs">
-                        {item.category}
-                      </Badge>
-                    )}
-                    {item.page_number && (
-                      <Badge variant="outline" className="text-xs">
-                        Page {item.page_number}
-                      </Badge>
-                    )}
-                    {item.section && (
-                      <Badge variant="outline" className="text-xs">
-                        {item.section}
-                      </Badge>
-                    )}
+                              <div className="flex items-start gap-2">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">{item.message}</p>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {item.page_number && (
+                        <Badge variant="outline" className="text-xs">
+                          Page {item.page_number}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
             </Card>
           ))}
         </div>
