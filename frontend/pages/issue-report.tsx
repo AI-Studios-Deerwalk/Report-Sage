@@ -169,7 +169,7 @@ export default function IssueReportPage() {
   return (
     <ProtectedRoute>
       <Head>
-        <title>Report an Issue - Report Rage</title>
+        <title>Report an Issue - Academia</title>
       </Head>
       
       <div className="flex h-screen bg-gray-50">
@@ -304,7 +304,7 @@ export default function IssueReportPage() {
               </div>
 
                              {/* Issue Form */}
-               <Card className="bg-white shadow-lg border border-gray-200 rounded-2xl overflow-hidden">
+               <Card className="bg-white shadow-md border border-gray-200 rounded-2xl overflow-hidden">
                  {success && (
                    <div className="bg-green-50 border-b border-green-200 p-4">
                      <div className="flex items-center justify-center gap-3">
@@ -390,6 +390,7 @@ export default function IssueReportPage() {
                               Choose File
                             </Button>
                           </div>
+                        
                         ) : (
                           <div className="relative">
                             <img
@@ -472,7 +473,7 @@ export default function IssueReportPage() {
               </Card>
 
               {/* Help Information */}
-              <Card className="mt-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-0 rounded-2xl shadow-lg">
+              <Card className="mt-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-0 rounded-2xl shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-lg text-gray-900">Need Help?</CardTitle>
                 </CardHeader>
@@ -499,7 +500,7 @@ export default function IssueReportPage() {
               </Card>
 
               {/* Contact section */}
-              <Card className="mt-8 bg-gradient-to-r from-emerald-50 to-teal-50 border-0 rounded-2xl shadow-lg">
+              <Card className="mt-8 bg-gradient-to-r from-emerald-50 to-teal-50 border-0 rounded-2xl shadow-sm">
                 <CardContent className="p-8 text-center">
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Still need assistance?</h3>
                   <p className="text-gray-600 mb-4">Can't find what you're looking for? We're here to help you get back on track.</p>

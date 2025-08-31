@@ -176,8 +176,8 @@ export function FAQSection() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4 pt-8">
-            <HelpCircle className="w-8 h-8 text-emerald-600" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <HelpCircle className="w-8 h-8 text-emerald-600 mt-1" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent leading-snug">
               Frequently Asked Questions
             </h1>
           </div>
@@ -224,8 +224,8 @@ export function FAQSection() {
               faqData.map((item, index) => (
             <Card
               key={index}
-              className="bg-white/95 backdrop-blur-sm shadow-lg border-0 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl"
-            >
+              className="bg-white/95 backdrop-blur-sm border-0 rounded-2xl overflow-hidden hover:shadow-lg duration-200 hover:shadow-emerald-800/10 hover:scale-105 "
+            > 
               <CardContent className="p-0">
                                  <button
                    onClick={() => toggleItem(index)}
@@ -243,13 +243,15 @@ export function FAQSection() {
                    </div>
                  </button>
 
-                {openItems.includes(index) && (
-                  <div className="px-6 pb-6 animate-in slide-in-from-top-2 duration-200">
-                    <div className="border-t border-gray-100 pt-4">
-                      <p className="text-gray-600 leading-relaxed">{item.answer}</p>
-                    </div>
+                <div
+                  className={`px-6 overflow-hidden transition-[max-height] duration-300 ${
+                    openItems.includes(item.fid-1) ? "max-h-[1000px]" : "max-h-0"
+                  }`}
+                >
+                  <div className={`border-t border-gray-100 pt-5 ${openItems.includes(item.fid-1) ? "animate-slide-up" : ""}`}>
+                    <p className="text-gray-600 leading-relaxed pb-6">{item.answer}</p>
                   </div>
-                )}
+                </div>
               </CardContent>
             </Card>
               ))
@@ -258,7 +260,7 @@ export function FAQSection() {
         )}
 
         {/* Contact section */}
-        <Card className="mt-8 bg-gradient-to-r from-emerald-50 to-teal-50 border-0 rounded-2xl">
+        <Card className="mt-8 rounded-2xl backdrop-blur-md">
           <CardContent className="p-8 text-center">
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Still have questions?</h3>
             <p className="text-gray-600 mb-4">Can't find the answer you're looking for? We're here to help.</p>

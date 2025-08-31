@@ -324,172 +324,178 @@ const ArchivePage: React.FC = () => {
               </Button>
             </Card>
           ) : (
-            <div className="space-y-4">
-              <Accordion type="single" collapsible className="space-y-4">
-                {archives.map((archive) => (
-                  <AccordionItem key={archive.id} value={archive.id.toString()}>
-                    <Card>
-                      <AccordionTrigger className="hover:no-underline p-0">
-                        <CardHeader className="flex-1 pb-4">
-                          <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center gap-3">
-                              {getStatusIcon(archive.processing_status)}
-                              <div className="text-left">
-                                <CardTitle className="text-lg font-semibold text-gray-900">
-                                  {archive.file_name}
-                                </CardTitle>
-                                <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    {format(new Date(archive.created_at), 'MMM dd, yyyy HH:mm')}
+              <div className="space-y-4 ">
+                <Accordion type="single" collapsible className="space-y-4" disabled>
+                  {archives.map((archive) => (
+                    <AccordionItem key={archive.id} value={archive.id.toString()}>
+                      <div className="transform duration-200 hover:[scale:1.02] cursor-pointer" onClick={() => {router.push(`/archive/${archive.id}`)}}>
+                       
+                        <Card>
+                        {/* <AccordionTrigger className="[&>svg]:hidden px-4 py-2 hover:no-underline cursor-pointer"> */}
+                          <CardHeader className="flex-1 pb-4">
+                            <div className="flex items-center justify-between w-full">
+                              <div className="flex items-center gap-3">
+                                {getStatusIcon(archive.processing_status)}
+                                <div className="text-left">
+                                  <CardTitle className="text-lg font-semibold text-gray-900">
+                                    {archive.file_name}
+                                  </CardTitle>
+                                  <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      {format(new Date(archive.created_at), 'MMM dd, yyyy HH:mm')}
+                                    </div>
+                                    <span>{formatFileSize(archive.file_size)}</span>
                                   </div>
-                                  <span>{formatFileSize(archive.file_size)}</span>
                                 </div>
                               </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {getStatusBadge(archive.processing_status)}
-                              {archive.processing_status === 'completed' && (
-                                <div className="flex items-center gap-1 text-xs text-gray-500">
-                                  <span className="text-red-600">{archive.errors?.length || 0} errors</span>
-                                  <span className="text-yellow-600">{archive.warnings?.length || 0} warnings</span>
-                                  <span className="text-blue-600">{archive.suggestions?.length || 0} suggestions</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </CardHeader>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <CardContent className="pt-0">
-                          {archive.processing_status === 'failed' && archive.error_message && (
-                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                              <div className="flex items-center gap-2 text-red-800">
-                                <XCircle className="h-4 w-4" />
-                                <span className="font-medium">Processing Failed</span>
-                              </div>
-                              <p className="text-sm text-red-700 mt-1">{archive.error_message}</p>
-                            </div>
-                          )}
-
-                          {archive.processing_status === 'processing' && (
-                            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                              <div className="flex items-center gap-2 text-blue-800">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                <span className="font-medium">Analysis in Progress</span>
-                              </div>
-                              <p className="text-sm text-blue-700 mt-1">
-                                Your document is being analyzed. This may take a few minutes.
-                              </p>
-                            </div>
-                          )}
-
-                          {archive.processing_status === 'pending' && (
-                            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                              <div className="flex items-center gap-2 text-yellow-800">
-                                <Clock className="h-4 w-4" />
-                                <span className="font-medium">Waiting for Analysis</span>
-                              </div>
-                              <p className="text-sm text-yellow-700 mt-1">
-                                Your document is queued for analysis.
-                              </p>
-                            </div>
-                          )}
-
-                          {archive.processing_status === 'completed' && (
-                            <div className="space-y-6">
-                              {renderAnalysisItems(
-                                archive.errors || [],
-                                "Errors",
-                                <AlertTriangle className="h-4 w-4 text-red-600" />,
-                                "No errors found in this document."
-                              )}
-
-                              {renderAnalysisItems(
-                                archive.warnings || [],
-                                "Warnings",
-                                <AlertCircle className="h-4 w-4 text-yellow-600" />,
-                                "No warnings found in this document."
-                              )}
-
-                              {renderAnalysisItems(
-                                archive.suggestions || [],
-                                "Suggestions",
-                                <CheckCircle className="h-4 w-4 text-blue-600" />,
-                                "No suggestions available for this document."
-                              )}
-                            </div>
-                          )}
-
-                          <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
-                            {(archive.processing_status === 'failed' || archive.processing_status === 'completed') && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleReanalyze(archive.id)}
-                                disabled={reanalyzingIds.has(archive.id)}
-                              >
-                                {reanalyzingIds.has(archive.id) ? (
-                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                ) : (
-                                  <RefreshCw className="h-4 w-4 mr-2" />
+                              <div className="flex items-center gap-2">
+                                {getStatusBadge(archive.processing_status)}
+                                {archive.processing_status === 'completed' && (
+                                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                                    <span className="text-red-600">{archive.errors?.length || 0} errors</span>
+                                    <span className="text-yellow-600">{archive.warnings?.length || 0} warnings</span>
+                                    <span className="text-blue-600">{archive.suggestions?.length || 0} suggestions</span>
+                                  </div>
                                 )}
-                                Reanalyze
-                              </Button>
+                              </div>
+                            </div>
+                          </CardHeader>
+                        {/* </AccordionTrigger> */}
+                        {/* <AccordionContent>
+                          <CardContent className="pt-0">
+                            {archive.processing_status === 'failed' && archive.error_message && (
+                              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                                <div className="flex items-center gap-2 text-red-800">
+                                  <XCircle className="h-4 w-4" />
+                                  <span className="font-medium">Processing Failed</span>
+                                </div>
+                                <p className="text-sm text-red-700 mt-1">{archive.error_message}</p>
+                              </div>
                             )}
-                            
-                            <AlertDialog >
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent className='bg-white'>
-                                <AlertDialogHeader >
-                                  <AlertDialogTitle>Delete Archive</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete "{archive.file_name}"? This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteArchive(archive.id)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </CardContent>
-                      </AccordionContent>
-                    </Card>
-                  </AccordionItem>
-                ))}
-              </Accordion>
 
-              {hasMore && (
-                <div className="flex justify-center mt-6">
-                  <Button
-                    variant="outline"
-                    onClick={handleLoadMore}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : null}
-                    Load More
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
+                            {archive.processing_status === 'processing' && (
+                              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                <div className="flex items-center gap-2 text-blue-800">
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  <span className="font-medium">Analysis in Progress</span>
+                                </div>
+                                <p className="text-sm text-blue-700 mt-1">
+                                  Your document is being analyzed. This may take a few minutes.
+                                </p>
+                              </div>
+                            )}
+
+                            {archive.processing_status === 'pending' && (
+                              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                                <div className="flex items-center gap-2 text-yellow-800">
+                                  <Clock className="h-4 w-4" />
+                                  <span className="font-medium">Waiting for Analysis</span>
+                                </div>
+                                <p className="text-sm text-yellow-700 mt-1">
+                                  Your document is queued for analysis.
+                                </p>
+                              </div>
+                            )}
+
+                            {archive.processing_status === 'completed' && (
+                              <div className="space-y-6">
+                                {renderAnalysisItems(
+                                  archive.errors || [],
+                                  "Errors",
+                                  <AlertTriangle className="h-4 w-4 text-red-600" />,
+                                  "No errors found in this document."
+                                )}
+
+                                {renderAnalysisItems(
+                                  archive.warnings || [],
+                                  "Warnings",
+                                  <AlertCircle className="h-4 w-4 text-yellow-600" />,
+                                  "No warnings found in this document."
+                                )}
+
+                                {renderAnalysisItems(
+                                  archive.suggestions || [],
+                                  "Suggestions",
+                                  <CheckCircle className="h-4 w-4 text-blue-600" />,
+                                  "No suggestions available for this document."
+                                )}
+                              </div>
+                            )}
+
+                            <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
+                              {(archive.processing_status === 'failed' || archive.processing_status === 'completed') && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleReanalyze(archive.id)}
+                                  disabled={reanalyzingIds.has(archive.id)}
+                                  className='group hover:scale-105 transition-transform duration-100'
+                                >
+                                  {reanalyzingIds.has(archive.id) ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  ) : (
+                                    <RefreshCw className="h-4 w-4 mr-2 group-hover:animate-spin" />
+                                  )}
+                                  Reanalyze
+                                </Button>
+                              )}
+                              
+                              <AlertDialog >
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:scale-105 transition-transform duration-100">
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className='bg-white'>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Archive</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete "{archive.file_name}"? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeleteArchive(archive.id)}
+                                      className="bg-red-600 hover:bg-red-700 text-white"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </CardContent>
+                        </AccordionContent> */}
+                      </Card>
+                      </div>
+                      
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+
+                {hasMore && (
+                  <div className="flex justify-center mt-6">
+                    <Button
+                      variant="outline"
+                      onClick={handleLoadMore}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : null}
+                      Load More
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+      
   );
 };
 
