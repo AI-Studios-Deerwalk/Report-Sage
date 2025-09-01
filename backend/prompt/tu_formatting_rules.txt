@@ -1,7 +1,7 @@
 # Step Method Promptfor TU CSIT Report Checking
 
 #SIMPLE INSTRUCTION
-Check this TU CSIT report step by step. Just tell me what you see vs what should be there.
+Check this TU CSIT report step by step. Just tell me what you see vs what should be there. 
 
 THEN WHAT YOU DO IS FOLLOW THESE STEPS:
 ---
