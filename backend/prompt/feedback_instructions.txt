@@ -117,8 +117,9 @@ Before submitting feedback, verify you have:
 - Referenced rule codes for all violations
 - Provided specific fix instructions
 - Included final summary in exact format
-- Made sure if u have given no false suggestions and gave suggestions to fix issues which are properly reviewed.
+- Made sure if u have given no false suggestions and gave suggestions to fix issues which are properly reviewed
 - Been helpful and constructive
+- Given precise ERRORS, WARNINGS and SUGGESTIONS (with reference rule codes)
 
 ---
 
