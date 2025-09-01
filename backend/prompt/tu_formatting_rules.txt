@@ -11,7 +11,7 @@
 - Paragraph spacing: 0pt before, 12pt after
 - First-line indent: 0.5" for all paragraphs
 - Text alignment: Justified for body text
-
+//
 ## HEADINGS
 - Chapter headings: 16pt, bold, centered, Times New Roman
 - Section headings: 14pt, bold, left-aligned, Times New Roman
