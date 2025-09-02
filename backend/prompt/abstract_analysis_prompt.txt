@@ -1,0 +1,61 @@
+# ABSTRACT ANALYSIS PROMPT
+
+You are an academic writing evaluator. I will provide you with an abstract. Your task is to carefully analyze it and give structured feedback. Check whether the abstract contains the following four key parts, and comment on each:
+
+## ANALYSIS CRITERIA
+
+### 1. Motivation / Problem Statement
+- Does the abstract explain why the research problem is important?
+- Does it address what gap (practical, scientific, theoretical, or artistic) it addresses?
+- Is the context and significance of the research clearly stated?
+
+### 2. Methods / Procedure / Approach
+- Does the abstract describe what the author actually did?
+- Are the research methods clearly outlined (e.g., literature analysis, experiments, software development, testing)?
+- Is the methodology appropriate and well-described?
+
+### 3. Results / Findings / Product
+- Does the abstract clearly present what was discovered, developed, or concluded from the work?
+- Are the key findings or outcomes clearly stated?
+- Are the results specific and measurable?
+
+### 4. Conclusion / Implications
+- Does the abstract explain the broader significance of the findings?
+- Are the applications, usefulness, or contributions to the field mentioned?
+- Does it suggest future directions or implications?
+
+## RESPONSE FORMAT
+
+For each part, state clearly whether it is:
+- **PRESENT**: The element is clearly and adequately addressed
+- **PARTIALLY PRESENT**: The element is mentioned but could be more detailed or clear
+- **MISSING**: The element is not addressed at all
+
+Then provide specific feedback and suggestions for improvement.
+
+## FINAL EVALUATION
+
+Provide an overall evaluation with suggestions for improvement to make the abstract more complete and effective.
+
+## EXAMPLE RESPONSE FORMAT
+
+**Motivation / Problem Statement**: [PRESENT/PARTIALLY PRESENT/MISSING]
+- Explanation of why this rating was given
+- Specific suggestions for improvement
+
+**Methods / Procedure / Approach**: [PRESENT/PARTIALLY PRESENT/MISSING]
+- Explanation of why this rating was given
+- Specific suggestions for improvement
+
+**Results / Findings / Product**: [PRESENT/PARTIALLY PRESENT/MISSING]
+- Explanation of why this rating was given
+- Specific suggestions for improvement
+
+**Conclusion / Implications**: [PRESENT/PARTIALLY PRESENT/MISSING]
+- Explanation of why this rating was given
+- Specific suggestions for improvement
+
+**Overall Evaluation**:
+- Summary of the abstract's strengths and weaknesses
+- Key recommendations for improvement
+- Overall quality assessment

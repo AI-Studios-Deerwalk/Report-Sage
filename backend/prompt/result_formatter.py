@@ -1,6 +1,6 @@
 """
 Result Formatter Module
-Handles formatting of TU format analysis results and summaries
+Handles formatting of abstract analysis results and summaries
 """
 
 import logging
@@ -12,18 +12,24 @@ class ResultFormatter:
     """Formats analysis results into user-friendly summaries"""
     
     @staticmethod
-    def parse_analysis_result(analysis_text: str) -> dict:
+    def parse_abstract_analysis_result(analysis_text: str) -> dict:
         """
-        Parse Ollama analysis result into structured data
+        Parse Ollama abstract analysis result into structured data
         
         Args:
             analysis_text: Raw text output from Ollama
             
         Returns:
-            Dict containing structured suggestions, warnings, and errors
+            Dict containing structured analysis results
         """
         try:
-            result = {"suggestions": [], "warnings": [], "errors": []}
+            result = {
+                "motivation": {"status": "unknown", "feedback": ""},
+                "methods": {"status": "unknown", "feedback": ""},
+                "results": {"status": "unknown", "feedback": ""},
+                "conclusion": {"status": "unknown", "feedback": ""},
+                "overall_evaluation": ""
+            }
 
             if not analysis_text or not analysis_text.strip():
                 return result
@@ -31,184 +37,169 @@ class ResultFormatter:
             # Normalize newlines and split
             lines = [ln.strip() for ln in analysis_text.splitlines()]
 
-            # Patterns
-            header_re = re.compile(r".*?(SUGGESTIONS?|WARNINGS?|ERRORS?)\s*:?$", re.IGNORECASE)
-            bullet_re = re.compile(r"^(-|\*|•|\d+[.)])\s+(.*)$")
-            inline_tag_re = re.compile(r"^\[(ERROR|WARNING|SUGGESTION)\]\s*[:\-]?\s*(.*)$", re.IGNORECASE)
-            # Additional patterns for better parsing
-            numbered_item_re = re.compile(r"^(\d+[.)])\s+(.*)$")
-
             current_section = None
+            current_feedback = []
 
-            def push(target: str, text: str):
-                if not text:
-                    return
-                
-                # Filter out prompt instructions that might have been included
-                text_lower = text.lower()
-                instruction_keywords = [
-                    "only the three sections", "do not create", "do not add",
-                    "use only", "follow exactly", "response format",
-                    "instructions:", "critical rules", "format template"
-                ]
-                
-                # Skip if this looks like a prompt instruction
-                if any(keyword in text_lower for keyword in instruction_keywords):
-                    return
-                
-                result[target].append({
-                    "message": text.strip(),
-                    "page_number": None,
-                })
-
-            for raw in lines:
-                if not raw:
+            for line in lines:
+                line = line.strip()
+                if not line:
                     continue
 
-                # Inline tag like [ERROR]: something
-                m_inline = inline_tag_re.match(raw)
-                if m_inline:
-                    tag = m_inline.group(1).lower()
-                    text = m_inline.group(2).strip()
-                    mapping = {"error": "errors", "warning": "warnings", "suggestion": "suggestions"}
-                    push(mapping.get(tag, "warnings"), text)
+                # Check for section headers
+                if "Motivation / Problem Statement" in line:
+                    if current_section and current_feedback:
+                        result[current_section]["feedback"] = "\n".join(current_feedback).strip()
+                    current_section = "motivation"
+                    current_feedback = []
+                    # Extract status
+                    if "PRESENT" in line:
+                        result["motivation"]["status"] = "present"
+                    elif "PARTIALLY PRESENT" in line:
+                        result["motivation"]["status"] = "partially_present"
+                    elif "MISSING" in line:
+                        result["motivation"]["status"] = "missing"
                     continue
 
-                # Section header
-                m_hdr = header_re.match(raw)
-                if m_hdr:
-                    hdr = m_hdr.group(1).upper()  # Group 1 contains the actual section name
-                    # Handle any order of sections - be more flexible
-                    if hdr.startswith("SUGGEST"):
-                        current_section = "suggestions"
-                    elif hdr.startswith("WARN"):
-                        current_section = "warnings"
-                    elif hdr.startswith("ERROR"):
-                        current_section = "errors"
-                    else:
-                        current_section = None
+                elif "Methods / Procedure / Approach" in line:
+                    if current_section and current_feedback:
+                        result[current_section]["feedback"] = "\n".join(current_feedback).strip()
+                    current_section = "methods"
+                    current_feedback = []
+                    # Extract status
+                    if "PRESENT" in line:
+                        result["methods"]["status"] = "present"
+                    elif "PARTIALLY PRESENT" in line:
+                        result["methods"]["status"] = "partially_present"
+                    elif "MISSING" in line:
+                        result["methods"]["status"] = "missing"
                     continue
 
-                # Bullet under a current section
-                m_bullet = bullet_re.match(raw)
-                if m_bullet and current_section:
-                    push(current_section, m_bullet.group(2).strip())
+                elif "Results / Findings / Product" in line:
+                    if current_section and current_feedback:
+                        result[current_section]["feedback"] = "\n".join(current_feedback).strip()
+                    current_section = "results"
+                    current_feedback = []
+                    # Extract status
+                    if "PRESENT" in line:
+                        result["results"]["status"] = "present"
+                    elif "PARTIALLY PRESENT" in line:
+                        result["results"]["status"] = "partially_present"
+                    elif "MISSING" in line:
+                        result["results"]["status"] = "missing"
                     continue
 
-                # Numbered item under a current section
-                m_numbered = numbered_item_re.match(raw)
-                if m_numbered and current_section:
-                    push(current_section, m_numbered.group(2).strip())
+                elif "Conclusion / Implications" in line:
+                    if current_section and current_feedback:
+                        result[current_section]["feedback"] = "\n".join(current_feedback).strip()
+                    current_section = "conclusion"
+                    current_feedback = []
+                    # Extract status
+                    if "PRESENT" in line:
+                        result["conclusion"]["status"] = "present"
+                    elif "PARTIALLY PRESENT" in line:
+                        result["conclusion"]["status"] = "partially_present"
+                    elif "MISSING" in line:
+                        result["conclusion"]["status"] = "missing"
                     continue
 
-                # If there's no explicit bullet/number but we are in a section, 
-                # only treat as content if it looks like actual content (not a header)
-                # Also, ignore anything that comes after we've seen all three sections
-                if current_section and raw and not raw.endswith(':') and len(raw.strip()) > 10:
-                    # Check if we've already seen all three main sections
-                    sections_seen = sum(1 for section in ['suggestions', 'warnings', 'errors'] if result[section])
-                    if sections_seen < 3:
-                        push(current_section, raw)
+                elif "Overall Evaluation" in line:
+                    if current_section and current_feedback:
+                        result[current_section]["feedback"] = "\n".join(current_feedback).strip()
+                    current_section = "overall_evaluation"
+                    current_feedback = []
+                    continue
+
+                # Add line to current section feedback
+                if current_section and line and not line.startswith('-') and not line.startswith('*'):
+                    current_feedback.append(line)
+
+            # Handle the last section
+            if current_section and current_feedback:
+                if current_section == "overall_evaluation":
+                    result["overall_evaluation"] = "\n".join(current_feedback).strip()
+                else:
+                    result[current_section]["feedback"] = "\n".join(current_feedback).strip()
 
             return result
 
         except Exception as e:
-            logging.error(f"Error parsing analysis result: {str(e)}")
-            return {"suggestions": [], "warnings": [], "errors": []}
-    
+            logging.error(f"Error parsing abstract analysis result: {str(e)}")
+            return {
+                "motivation": {"status": "unknown", "feedback": "Error parsing analysis"},
+                "methods": {"status": "unknown", "feedback": "Error parsing analysis"},
+                "results": {"status": "unknown", "feedback": "Error parsing analysis"},
+                "conclusion": {"status": "unknown", "feedback": "Error parsing analysis"},
+                "overall_evaluation": "Error parsing analysis results"
+            }
+
     @staticmethod
-    def create_analysis_summary(successful_results, all_error_messages, categorized_errors, phase_summary):
+    def create_abstract_analysis_summary(analysis_result: dict) -> dict:
         """
-        Create formatted summary of TU format analysis results
+        Create a formatted summary of abstract analysis results
         
         Args:
-            successful_results: List of successful page analysis results
-            all_error_messages: List of all error messages found
-            categorized_errors: Dict of errors categorized by phase
-            phase_summary: Summary information by phase
+            analysis_result: Parsed analysis result from parse_abstract_analysis_result
             
         Returns:
-            Dict containing formatted summary and analysis data
+            Dict containing formatted summary
         """
         try:
-            # Create overall summary with the new format
-            if all_error_messages:
-                # Count errors by phase
-                structure_count = len(categorized_errors["structure"])
-                grammar_count = len(categorized_errors["grammar"])
-                enhancement_count = len(categorized_errors["enhancement"])
-                
-                overall_summary = f"""TU FORMAT ANALYSIS COMPLETE
-
-📊 SUMMARY:
-• Total Pages Analyzed: {len(successful_results)}
-• Total Issues Found: {len(all_error_messages)}
-
-🔍 PHASE BREAKDOWN:
-• Phase 1 (Structure): {structure_count} critical issues
-• Phase 2 (Grammar): {grammar_count} language issues  
-• Phase 3 (Enhancement): {enhancement_count} improvement suggestions
-
-💡 RECOMMENDATIONS:
-• Address Phase 1 issues first (critical structure problems)
-• Fix Phase 2 grammar and spelling errors
-• Consider Phase 3 suggestions for content improvement"""
-            else:
-                overall_summary = f"""TU FORMAT ANALYSIS COMPLETE
-
-📊 SUMMARY:
-• Total Pages Analyzed: {len(successful_results)}
-• Total Issues Found: 0
-• Compliance Rate: 100%
-
-✅ EXCELLENT! {prompt_manager.prompt_manager.get_no_violations_phrase()}
-
-Your document appears to follow TU format standards correctly."""
-            
-            return {
-                "overall_summary": overall_summary,
-                "total_pages_analyzed": len(successful_results),
-                "total_errors_found": len(all_error_messages),
-                "categorized_results": categorized_errors,
-                "phase_summary": phase_summary,
-                "results": successful_results
+            # Count statuses
+            status_counts = {
+                "present": 0,
+                "partially_present": 0,
+                "missing": 0,
+                "unknown": 0
             }
-        except Exception as e:
-            logging.exception("Analysis summary formatting failed")
-            return {"error": f"Summary formatting failed: {str(e)}"}
+            
+            for section in ["motivation", "methods", "results", "conclusion"]:
+                status = analysis_result.get(section, {}).get("status", "unknown")
+                status_counts[status] += 1
 
-    @staticmethod
-    def format_error_list(errors, max_display=10):
-        """Format a list of errors for display"""
-        if not errors:
-            return "No errors found."
-        
-        formatted = []
-        for i, error in enumerate(errors[:max_display]):
-            formatted.append(f"{i+1}. {error}")
-        
-        if len(errors) > max_display:
-            formatted.append(f"... and {len(errors) - max_display} more issues")
-        
-        return "\n".join(formatted)
-    
-    @staticmethod
-    def format_phase_summary(phase_summary):
-        """Format phase summary information"""
-        if not phase_summary:
-            return "No phase summary available."
-        
-        formatted = "📋 DETAILED PHASE ANALYSIS:\n\n"
-        for phase, details in phase_summary.items():
-            formatted += f"🔹 {phase.upper()}:\n"
-            if isinstance(details, dict):
-                for key, value in details.items():
-                    formatted += f"  • {key}: {value}\n"
+            # Calculate overall score
+            total_sections = 4
+            score = 0
+            if status_counts["present"] > 0:
+                score += status_counts["present"] * 100
+            if status_counts["partially_present"] > 0:
+                score += status_counts["partially_present"] * 50
+            score = score / total_sections
+
+            # Determine overall quality
+            if score >= 80:
+                quality = "Excellent"
+            elif score >= 60:
+                quality = "Good"
+            elif score >= 40:
+                quality = "Fair"
             else:
-                formatted += f"  • {details}\n"
-            formatted += "\n"
-        
-        return formatted
+                quality = "Needs Improvement"
+
+            return {
+                "summary": {
+                    "total_sections": total_sections,
+                    "present": status_counts["present"],
+                    "partially_present": status_counts["partially_present"],
+                    "missing": status_counts["missing"],
+                    "score": round(score, 1),
+                    "quality": quality
+                },
+                "detailed_analysis": analysis_result
+            }
+
+        except Exception as e:
+            logging.error(f"Error creating abstract analysis summary: {str(e)}")
+            return {
+                "summary": {
+                    "total_sections": 4,
+                    "present": 0,
+                    "partially_present": 0,
+                    "missing": 4,
+                    "score": 0,
+                    "quality": "Error"
+                },
+                "detailed_analysis": analysis_result
+            }
 
 
 # Global instance for easy access

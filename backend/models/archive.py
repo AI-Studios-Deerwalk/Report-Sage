@@ -10,12 +10,10 @@ class Archive(Base):
     user_id = Column(Integer, ForeignKey("users.uid"), nullable=False)
     file_name = Column(String(255), nullable=False)
     file_path = Column(String(500), nullable=True)
-    analysis_content = Column(Text, nullable=True)
     
-    # Store Ollama analysis results
-    suggestions = Column(JSON, nullable=True)  # Store suggestions as JSON array
-    warnings = Column(JSON, nullable=True)     # Store warnings as JSON array
-    errors = Column(JSON, nullable=True)       # Store errors as JSON array
+    # Store abstract analysis results
+    analysis_results = Column(JSON, nullable=True)  # Store analysis results as JSON array
+    summary_data = Column(JSON, nullable=True)      # Store summary data as JSON object
     
     # Metadata
     file_size = Column(Integer, nullable=True)

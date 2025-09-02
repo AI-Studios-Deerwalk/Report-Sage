@@ -15,11 +15,18 @@ interface AnalysisItem {
 }
 
 interface AnalysisResultData {
-  suggestions: AnalysisItem[]
-  warnings: AnalysisItem[]
-  errors: AnalysisItem[]
+  analysis_results: AnalysisItem[]
+  summary_data?: {
+    summary: {
+      total_sections: number
+      present: number
+      partially_present: number
+      missing: number
+      score: number
+      quality: string
+    }
+  }
   file_name: string
-  analysis_content?: string
   archive_id?: number
 }
 
@@ -63,10 +70,8 @@ export default function DashboardPage() {
       
       if (archive.processing_status === 'completed') {
         const results = {
-          suggestions: archive.suggestions || [],
-          warnings: archive.warnings || [],
-          errors: archive.errors || [],
-          analysis_content: archive.analysis_content || '',
+          analysis_results: archive.analysis_results || [],
+          summary_data: archive.summary_data || null,
           file_name: archive.file_name,
           archive_id: archive.id
         }

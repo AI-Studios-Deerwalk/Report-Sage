@@ -23,6 +23,7 @@ from crud.archive import archive as crud_archive
 from utils.pdf_reader import PDFReader
 from utils.ollama_client import OllamaClient
 from prompt.result_formatter import ResultFormatter
+from prompt import prompt_manager
 from models.archive import Archive
 
 router = APIRouter(prefix="", tags=["archives"])
@@ -52,72 +53,86 @@ async def process_document_analysis(archive_id: int, file_path: str):
             )
             return
         
-        # Analyze with Ollama
+        # Extract abstract from PDF content
+        abstract = prompt_manager.extract_abstract_from_pdf_content(content)
+        
+        if not abstract.strip():
+            crud_archive.update_processing_status(
+                db, archive_id=archive_id, status="failed", 
+                error_message="Could not extract abstract from PDF"
+            )
+            return
+        
+        # Analyze abstract with Ollama
         ollama_client = OllamaClient()
-        analysis_result = await ollama_client.analyze_document(content)
+        analysis_prompt = prompt_manager.get_abstract_analysis_prompt(abstract)
+        analysis_result = await ollama_client.analyze_document(analysis_prompt)
         
         # Parse analysis results
         formatter = ResultFormatter()
-        parsed_results = formatter.parse_analysis_result(analysis_result)
+        parsed_results = formatter.parse_abstract_analysis_result(analysis_result)
+        summary = formatter.create_abstract_analysis_summary(parsed_results)
         
         # Convert to AnalysisItem objects
-        suggestions = []
-        for item in parsed_results.get("suggestions", []):
-            if isinstance(item, dict):
-                suggestions.append(AnalysisItem(
-                    type="suggestion",
-                    message=item.get("message", ""),
-                    page_number=item.get("page_number")
-                ))
+        analysis_items = []
         
-        warnings = []
-        for item in parsed_results.get("warnings", []):
-            if isinstance(item, dict):
-                warnings.append(AnalysisItem(
-                    type="warning",
-                    message=item.get("message", ""),
-                    page_number=item.get("page_number"),
-                ))
+        # Add motivation analysis
+        motivation = parsed_results.get("motivation", {})
+        analysis_items.append(AnalysisItem(
+            type="motivation",
+            message=f"Status: {motivation.get('status', 'unknown').upper()}\n{motivation.get('feedback', 'No feedback available')}",
+            page_number=None
+        ))
         
-        errors = []
-        for item in parsed_results.get("errors", []):
-            if isinstance(item, dict):
-                errors.append(AnalysisItem(
-                    type="error",
-                    message=item.get("message", ""),
-                    page_number=item.get("page_number")
-                ))
+        # Add methods analysis
+        methods = parsed_results.get("methods", {})
+        analysis_items.append(AnalysisItem(
+            type="methods",
+            message=f"Status: {methods.get('status', 'unknown').upper()}\n{methods.get('feedback', 'No feedback available')}",
+            page_number=None
+        ))
         
-        # Update archive with results
-        updated_archive = crud_archive.update_analysis_results(
-            db,
-            archive_id=archive_id,
-            analysis_content=analysis_result,
-            suggestions=suggestions,
-            warnings=warnings,
-            errors=errors,
-            status="completed"
+        # Add results analysis
+        results = parsed_results.get("results", {})
+        analysis_items.append(AnalysisItem(
+            type="results",
+            message=f"Status: {results.get('status', 'unknown').upper()}\n{results.get('feedback', 'No feedback available')}",
+            page_number=None
+        ))
+        
+        # Add conclusion analysis
+        conclusion = parsed_results.get("conclusion", {})
+        analysis_items.append(AnalysisItem(
+            type="conclusion",
+            message=f"Status: {conclusion.get('status', 'unknown').upper()}\n{conclusion.get('feedback', 'No feedback available')}",
+            page_number=None
+        ))
+        
+        # Add overall evaluation
+        overall = parsed_results.get("overall_evaluation", "")
+        if overall:
+            analysis_items.append(AnalysisItem(
+                type="overall",
+                message=overall,
+                page_number=None
+            ))
+        
+        # Update archive with analysis results
+        crud_archive.update_analysis_results(
+            db, 
+            archive_id=archive_id, 
+            status="completed",
+            analysis_results=analysis_items,
+            summary_data=summary
         )
         
-        if updated_archive:
-            print(f"Analysis completed for archive {archive_id}. Found {len(suggestions)} suggestions, {len(warnings)} warnings, {len(errors)} errors.")
-        else:
-            print(f"Failed to update archive {archive_id} with analysis results.")
-        
     except Exception as e:
-        print(f"Analysis failed for archive {archive_id}: {str(e)}")
-        try:
-            crud_archive.update_processing_status(
-                db, archive_id=archive_id, status="failed", 
-                error_message=str(e)
-            )
-        except Exception:
-            pass
-    finally:
-        try:
-            db.close()
-        except Exception:
-            pass
+        import logging
+        logging.error(f"Error processing document analysis: {str(e)}")
+        crud_archive.update_processing_status(
+            db, archive_id=archive_id, status="failed", 
+            error_message=f"Analysis failed: {str(e)}"
+        )
 
 @router.post("/upload", response_model=ArchiveResponse)
 async def upload_document(

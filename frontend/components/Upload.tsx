@@ -321,12 +321,10 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
             // Complete the progress
             setProgress(prev => ({ ...prev, percentage: 100 }))
             
-            // Format results for backward compatibility
+            // Format results for abstract analysis
             const results = {
-              suggestions: archive.suggestions || [],
-              warnings: archive.warnings || [],
-              errors: archive.errors || [],
-              analysis_content: archive.analysis_content || '',
+              analysis_results: archive.analysis_results || [],
+              summary_data: archive.summary_data || null,
               file_name: archive.file_name,
               archive_id: archive.id
             }

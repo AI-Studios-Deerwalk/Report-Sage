@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, CheckCircle, XCircle, Lightbulb, Archive, Share2, Copy, Check } from "lucide-react"
+import { AlertTriangle, CheckCircle, XCircle, Lightbulb, Archive, Share2, Copy, Check, BookOpen, Target, TrendingUp, Award } from "lucide-react"
 import { useRouter } from "next/router"
 import { useToast } from "@/hooks/use-toast"
 
@@ -14,11 +14,18 @@ interface AnalysisItem {
 
 interface AnalysisResultsProps {
   results: {
-    suggestions: AnalysisItem[]
-    warnings: AnalysisItem[]
-    errors: AnalysisItem[]
+    analysis_results: AnalysisItem[]
+    summary_data?: {
+      summary: {
+        total_sections: number
+        present: number
+        partially_present: number
+        missing: number
+        score: number
+        quality: string
+      }
+    }
     file_name: string
-    analysis_content?: string
     archive_id?: number
   }
   onBack?: () => void
@@ -68,54 +75,70 @@ export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
       }
     }
   }
+
   const getIcon = (type: string) => {
     switch (type.toLowerCase()) {
-      case 'error':
-        return <XCircle className="h-5 w-5 text-red-500" />
-      case 'warning':
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />
-      case 'suggestion':
-        return <Lightbulb className="h-5 w-5 text-blue-500" />
+      case 'motivation':
+        return <Target className="h-5 w-5 text-blue-500" />
+      case 'methods':
+        return <BookOpen className="h-5 w-5 text-green-500" />
+      case 'results':
+        return <TrendingUp className="h-5 w-5 text-purple-500" />
+      case 'conclusion':
+        return <Award className="h-5 w-5 text-orange-500" />
+      case 'overall':
+        return <CheckCircle className="h-5 w-5 text-gray-500" />
       default:
         return <CheckCircle className="h-5 w-5 text-gray-500" />
     }
   }
 
-  const renderAnalysisItems = (items: AnalysisItem[], title: string, icon: React.ReactNode) => {
+  const getTypeTitle = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'motivation':
+        return 'Motivation / Problem Statement'
+      case 'methods':
+        return 'Methods / Procedure / Approach'
+      case 'results':
+        return 'Results / Findings / Product'
+      case 'conclusion':
+        return 'Conclusion / Implications'
+      case 'overall':
+        return 'Overall Evaluation'
+      default:
+        return type
+    }
+  }
+
+  const renderAnalysisItems = (items: AnalysisItem[]) => {
     if (items.length === 0) return null
 
     return (
-      <Card className="mb-6 bg-white">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            {icon}
-            {title} - {items.length}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3 ">
-            {items.map((item, index) => (
-                
-              <div key={index} className="p-3 rounded-lg border bg-white">
+      <div className="space-y-6">
+        {items.map((item, index) => (
+          <Card key={index} className="bg-white">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
+                {getIcon(item.type)}
+                {getTypeTitle(item.type)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="p-3 rounded-lg border bg-gray-50">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
-                    <p className="text-sm text-left text-gray-800">{item.message}</p>
-                    {item.page_number && (
-                      <div className="flex gap-2 mt-2">
-                        <Badge variant="outline" className="text-xs">
-                          Page {item.page_number}
-                        </Badge>
-                      </div>
-                    )}
+                    <p className="text-sm text-left text-gray-800 whitespace-pre-wrap">{item.message}</p>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     )
   }
+
+  const summary = results.summary_data?.summary
 
   return (
     <div className="w-full max-w-4xl mx-auto mt-8">
@@ -131,32 +154,45 @@ export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
           </Button>
         </div>
       )}
+      
       <Card className="mb-6 bg-gradient-to-r from-green-50 to-blue-50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CheckCircle className="h-6 w-6 text-green-600" />
-            Analysis Complete
+            Abstract Analysis Complete
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-white rounded-lg border">
-              <div className="text-2xl font-bold text-red-600">{results.errors.length}</div>
-              <div className="text-sm text-gray-600">Errors Found</div>
+          {summary && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="text-center p-4 bg-white rounded-lg border">
+                <div className="text-2xl font-bold text-green-600">{summary.present}</div>
+                <div className="text-sm text-gray-600">Present</div>
+              </div>
+              <div className="text-center p-4 bg-white rounded-lg border">
+                <div className="text-2xl font-bold text-yellow-600">{summary.partially_present}</div>
+                <div className="text-sm text-gray-600">Partially Present</div>
+              </div>
+              <div className="text-center p-4 bg-white rounded-lg border">
+                <div className="text-2xl font-bold text-red-600">{summary.missing}</div>
+                <div className="text-sm text-gray-600">Missing</div>
+              </div>
+              <div className="text-center p-4 bg-white rounded-lg border">
+                <div className="text-2xl font-bold text-blue-600">{summary.score}%</div>
+                <div className="text-sm text-gray-600">Overall Score</div>
+              </div>
             </div>
-            <div className="text-center p-4 bg-white rounded-lg border">
-              <div className="text-2xl font-bold text-yellow-600">{results.warnings.length}</div>
-              <div className="text-sm text-gray-600">Warnings</div>
-            </div>
-            <div className="text-center p-4 bg-white rounded-lg border">
-              <div className="text-2xl font-bold text-blue-600">{results.suggestions.length}</div>
-              <div className="text-sm text-gray-600">Suggestions</div>
-            </div>
-          </div>
-          <div className="mt-4 text-center">
+          )}
+          
+          <div className="text-center">
             <p className="text-sm text-gray-600">
               Analysis completed for: <strong>{results.file_name}</strong>
             </p>
+            {summary && (
+              <p className="text-sm text-gray-600 mt-1">
+                Quality Assessment: <strong className="text-blue-600">{summary.quality}</strong>
+              </p>
+            )}
             {results.archive_id && (
               <div className="mt-3 flex justify-center gap-2">
                 <Button
@@ -183,37 +219,19 @@ export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
         </CardContent>
       </Card>
 
-      {/* Errors Section */}
-      {renderAnalysisItems(
-        results.errors, 
-        "Errors", 
-        <XCircle className="h-5 w-5 text-red-500" />
-      )}
+      {/* Analysis Results */}
+      {renderAnalysisItems(results.analysis_results)}
 
-      {/* Warnings Section */}
-      {renderAnalysisItems(
-        results.warnings, 
-        "Warnings", 
-        <AlertTriangle className="h-5 w-5 text-yellow-500" />
-      )}
-
-      {/* Suggestions Section */}
-      {renderAnalysisItems(
-        results.suggestions, 
-        "Suggestions", 
-        <Lightbulb className="h-5 w-5 text-blue-500" />
-      )}
-
-      {/* No Issues Found */}
-      {results.errors.length === 0 && results.warnings.length === 0 && results.suggestions.length === 0 && (
-        <Card className="bg-green-50">
+      {/* No Analysis Results */}
+      {results.analysis_results.length === 0 && (
+        <Card className="bg-yellow-50">
           <CardContent className="text-center py-8">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-green-800 mb-2">
-              Excellent! No Issues Found
+            <AlertTriangle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+              No Analysis Results Available
             </h3>
-            <p className="text-sm text-green-600">
-              Your document appears to follow all formatting standards correctly.
+            <p className="text-sm text-yellow-600">
+              The abstract analysis could not be completed. Please try uploading the document again.
             </p>
           </CardContent>
         </Card>
