@@ -2,54 +2,73 @@ FEEDBACK CATEGORIZATION INSTRUCTIONS:
 
 PROVIDE FEEDBACK IN THREE CATEGORIES:
 
-1. ERRORS (Critical Issues - Must Fix):
-   - Structure problems (missing sections, wrong order)
-   - Citation format violations (not IEEE style)
-   - Font/size violations (not Times New Roman 12pt)
-   - Margin violations (not 1 inch margins)
-   - Page numbering issues (except page 1)
-   - Missing table of contents entries
-   - Serious formatting violations
+1. ERRORS (Critical Issues – Must Fix):
 
-   Format: [ERROR] Brief description of the violation
-   Example: [ERROR] Font should be Times New Roman 12pt, currently using Arial
+- Missing required sections (Title Page, Abstract, TOC, LoF, LoT, Abbreviations, Chapters, References, etc.)
+- Sections out of TU-prescribed order
+- Page numbering errors (e.g., cover page has number, preliminaries not starting at ii, Chapter 1 not starting at 1, gaps/duplicates)
+- Margin violations (Top 1", Bottom 1", Left 1.25", Right 1")
+- Font/size violations (not Times New Roman 12pt for body text)
+- Line spacing violations (not 1.5)
+- Paragraph formatting violations (not justified, missing 0.5" indent)
+- Heading style violations (wrong size, alignment, or boldness)
+- Reference and citation format errors (not IEEE style, missing/uncited references)
+- TOC/LoF/LoT not auto-generated or page numbers don’t match
+- Figure/table caption placement/style errors (not bold 12pt above/below)
+- Figures/tables not sequentially numbered by chapter or split across pages
+- Any other direct TU template compliance violation
 
-2. WARNINGS (Important Issues - Should Fix):
-   - Grammar mistakes
-   - Spelling errors
-   - Punctuation issues
-   - Poor sentence structure
-   - Inconsistent formatting
-   - Flow problems between sections
-   - Minor spacing issues
+Format: `[ERROR] Brief description of the violation`
+Example: `[ERROR] Font should be Times New Roman 12pt, currently using Arial (Page 5)`
 
-   Format: [WARNING] Brief description of the issue
-   Example: [WARNING] Grammar error - "There is many" should be "There are many"
 
-3. SUGGESTIONS (Enhancement Ideas - Optional):
-   - Ways to improve content clarity
-   - Ideas for better organization
-   - Recommendations for additional details
-   - Suggestions for better formatting
-   - Content enhancement opportunities
+2. WARNINGS (Important Issues – Should Fix):
+- Grammar mistakes
+- Spelling errors
+- Punctuation issues
+- Awkward or unclear sentence structure
+- Inconsistent heading or subheading styles
+- Uneven indentation or misaligned text
+- Weak flow or transitions between sections
+- Minor spacing inconsistencies (extra blank lines, uneven line breaks)
 
-   Format: [SUGGESTION] Brief improvement recommendation
-   Example: [SUGGESTION] Consider adding more detail to explain the methodology
+Format: `[WARNING] Brief description of the issue`
+Example: `[WARNING] Grammar error – "There is many" should be "There are many" (Page 12)`
+
+3. SUGGESTIONS (Enhancement Ideas – Optional):
+
+- Ways to improve clarity of writing
+- Ideas for better organization of sections/subsections
+- Recommendations for additional detail or depth (e.g., methodology, results)
+- Suggestions for stronger or more recent references
+- Visual or formatting improvements (e.g., clearer figures, consistent terminology)
+
+Format: `[SUGGESTION] Brief improvement recommendation`
+Example: `[SUGGESTION] Consider adding more detail to explain the methodology (Page 18)`
 
 FEEDBACK FORMATTING RULES:
-- Each feedback item should be ONE SHORT SENTENCE only
-- Be specific and actionable
-- Include page number when possible
-- Use clear, professional language
-- Focus on the most important issues first
-- If no violations found, respond: "No TU format violations detected on this page"
+
+- Each feedback item must be **one short, clear, actionable sentence**
+- Be **specific** and reference the exact issue
+- Always include **page number** when possible
+- Use **professional and neutral language**
+- Prioritize: **Errors first, then Warnings, then Suggestions**
+- If no issues are found on a page, respond:
+  `"No TU format violations detected on this page"`
 
 RESPONSE FORMAT:
-Page X: [CATEGORY] Description of issue/suggestion
+`Page X: [CATEGORY] Description of issue/suggestion`
 
 IMPORTANT NOTES:
-- Page 1 (cover/title page) does NOT require a page number - do not flag this as an error
-- Focus on critical formatting issues first (ERRORS)
-- Grammar and flow issues are WARNINGS
-- Enhancement ideas are SUGGESTIONS
-- Be concise and helpful in all feedback
+
+- Cover page must **not** display a page number → do not flag as an error
+- Supervisor’s Recommendation page must begin with **Roman ii**
+- Preliminary pages use **sequential lowercase Roman numerals (ii, iii, iv, …)**
+- Chapter 1 starts with **Arabic 1** and continues sequentially until the end
+- All page numbers must be **centered at the bottom, one inch from the edge**
+- Errors = TU compliance violations
+- Warnings = Quality/clarity issues
+- Suggestions = Optional improvements
+- Keep feedback **concise, precise, and helpful**
+- If multiple errors are found on the same page, report all the errors in the page.
+
