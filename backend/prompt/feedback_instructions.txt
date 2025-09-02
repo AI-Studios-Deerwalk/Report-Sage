@@ -41,13 +41,15 @@ Use these exact IDs when giving feedback:
 - SEC_014: Chapter 4 (System Design)
 - SEC_015: Chapter 5 (Implementation)
 - SEC_016: Chapter 6 (Conclusion)
+- SEC_017: References/Bibliography
+- SEC_018: Appendices
 
 ---
 
 
 # FEEDBACK RULES YOU MUST FOLLOW
 
-1. ALWAYS reference rule codes (R001-R083) when pointing out violations
+1. ALWAYS reference rule codes (R001-R137) when pointing out violations
 2. BE SPECIFIC about formatting - mention exact font sizes, alignment, capitalization
 3. GIVE ACTIONABLE instructions and suggestions - tell them exactly what to change
 4. PRIORITIZE issues - missing sections first, then fonts, then formatting details

@@ -340,28 +340,89 @@ const IndividualArchivePage: React.FC = () => {
       <div className="flex-1 flex flex-col min-h-screen">
         <div className="flex-1 p-6 overflow-y-auto">
           {/* Header */}
-          <div className="mb-6">
+          <div className="mb-10">
             <div className="flex items-center gap-3 mb-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => router.push('/archive')}
-                className="p-2"
+                className="p-2 hover:scale-110 transition-transform duration-100"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">{archive.file_name}</h1>
-                
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - File Details and Actions */}
-            <div className="lg:col-span-1 space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
+            {/* Left Column*/}
+            <div className="lg:col-span-2 space-y-6 h-full flex flex-col">
+            
+              {/* Summary Stats */}
+              {archive.processing_status === 'completed' && (
+                <Card className='flex-1'>
+                  <CardHeader>
+                    <CardTitle>Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div className="p-5 bg-red-50 rounded-lg flex-col items-center justify-center">
+                        <div className="text-2xl font-bold text-red-600">
+                          {archive.errors?.length || 0}
+                        </div>
+                        <div className="text-sm text-red-600">Errors</div>
+                      </div>
+                      <div className="p-5 bg-yellow-50 rounded-lg flex-col items-center justify-center">
+                        <div className="text-2xl font-bold text-yellow-600">
+                          {archive.warnings?.length || 0}
+                        </div>
+                        <div className="text-sm text-yellow-600">Warnings</div>
+                      </div>
+                      <div className="p-5 bg-blue-50 rounded-lg flex-col items-center justify-center">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {archive.suggestions?.length || 0}
+                        </div>
+                        <div className="text-sm text-blue-600">Suggestions</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {/* Actions Card commented out as the action box is not wanted this is only here for the code refrence*/}
+              {/* <Card>
+                <CardHeader>
+                  <CardTitle>Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 ">
+                  {(archive.processing_status === 'failed' || archive.processing_status === 'completed') && (
+                    <Button
+                      variant="outline"
+                      className="w-full hover:scale-105 transition-transform duration-100 group"
+                      onClick={handleReanalyze}
+                      disabled={reanalyzing}
+                      
+                    >
+                      {reanalyzing ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4 mr-2 group-hover:animate-spin" />
+                      )}
+                      Reanalyze Document
+                    </Button>
+                  )}
+                </CardContent>
+              </Card> */}
+            </div>
+
+
+            {/* Right Column*/}
+            <div className="lg:col-span-1 space-y-6 h-full flex flex-col">
+            {/* hello */}
               {/* File Information Card */}
-              <Card>
+              <Card className='flex-1'>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <File className="h-5 w-5" />
@@ -390,69 +451,11 @@ const IndividualArchivePage: React.FC = () => {
                   
                   
                 </CardContent>
-              </Card>
-
+              </Card> 
               
-
-              {/* Actions Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {(archive.processing_status === 'failed' || archive.processing_status === 'completed') && (
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={handleReanalyze}
-                      disabled={reanalyzing}
-                    >
-                      {reanalyzing ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                      )}
-                      Reanalyze Document
-                    </Button>
-                  )}
-                  
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        className="w-full text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Archive
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Archive</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{archive.file_name}"? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleDeleteArchive}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Right Column - Analysis Results */}
-            <div className="lg:col-span-2 space-y-6">
               {/* Status Messages */}
               {archive.processing_status === 'failed' && archive.error_message && (
-                <Card className="border-red-200 bg-red-50">
+                <Card className="fixed top-4 right-4 shadow-md border-red-200 bg-red-50">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-2 text-red-800 mb-2">
                       <XCircle className="h-5 w-5" />
@@ -461,10 +464,10 @@ const IndividualArchivePage: React.FC = () => {
                     <p className="text-sm text-red-700">{archive.error_message}</p>
                   </CardContent>
                 </Card>
-              )}
+              )} 
 
-              {archive.processing_status === 'processing' && (
-                <Card className="border-blue-200 bg-blue-50">
+              {archive.processing_status === 'processing' && ( 
+                <Card className="fixed top-4 right-4 shadow-md border-blue-200 bg-blue-50">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-2 text-blue-800 mb-2">
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -478,7 +481,7 @@ const IndividualArchivePage: React.FC = () => {
               )}
 
               {archive.processing_status === 'pending' && (
-                <Card className="border-yellow-200 bg-yellow-50">
+                <Card className="fixed top-4 right-4 shadow-md border-yellow-200 bg-yellow-50">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-2 text-yellow-800 mb-2">
                       <Clock className="h-5 w-5" />
@@ -490,23 +493,60 @@ const IndividualArchivePage: React.FC = () => {
                   </CardContent>
                 </Card>
               )}
+            </div>
+          </div>
 
-              {/* Analysis Results */}
-              {archive.processing_status === 'completed' && (
-                <>
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-gray-900">Analysis Results</h2>
-                    <Button
+          {/*Bottom row*/}
+            <div>
+                {/* Analysis Results */}
+                {archive.processing_status === 'completed' && (
+                  <>
+                    <div className="flex justify-between p-1 mt-10">
+                      <h2 className="text-2xl font-bold text-gray-900">Analysis Results</h2>
+                      <div className='flex'>
+
+                      {/*Delete Button*/}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            className="w-full text-red-600 hover:text-red-700 hover:scale-105 transition-transform duration-100"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Archive
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className='bg-white'>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Archive</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{archive.file_name}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={handleDeleteArchive}
+                              className="bg-red-600 hover:bg-red-700 text-white"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                    {/*Raw Analysis is commented out*/}
+                    {/* <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setShowRawAnalysis(!showRawAnalysis)}
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       {showRawAnalysis ? 'Hide' : 'Show'} Raw Analysis
-                    </Button>
+                    </Button> */}
                   </div>
 
-                  {showRawAnalysis && archive.analysis_content && (
+                  {/* {showRawAnalysis && archive.analysis_content && (
                     <Card>
                       <CardHeader>
                         <CardTitle>Raw Analysis Content</CardTitle>
@@ -517,7 +557,7 @@ const IndividualArchivePage: React.FC = () => {
                         </pre>
                       </CardContent>
                     </Card>
-                  )}
+                  )} */}
 
                   <div className="space-y-6">
                     {renderAnalysisItems(
@@ -546,39 +586,8 @@ const IndividualArchivePage: React.FC = () => {
                   </div>
                 </>
               )}
-
-              {/* Summary Stats */}
-              {archive.processing_status === 'completed' && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Summary</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div className="p-3 bg-red-50 rounded-lg">
-                        <div className="text-2xl font-bold text-red-600">
-                          {archive.errors?.length || 0}
-                        </div>
-                        <div className="text-sm text-red-600">Errors</div>
-                      </div>
-                      <div className="p-3 bg-yellow-50 rounded-lg">
-                        <div className="text-2xl font-bold text-yellow-600">
-                          {archive.warnings?.length || 0}
-                        </div>
-                        <div className="text-sm text-yellow-600">Warnings</div>
-                      </div>
-                      <div className="p-3 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {archive.suggestions?.length || 0}
-                        </div>
-                        <div className="text-sm text-blue-600">Suggestions</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </div>
-          </div>
+
         </div>
       </div>
     </div>

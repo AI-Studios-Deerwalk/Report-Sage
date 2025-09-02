@@ -17,17 +17,17 @@ THEN Check these things:
 - Is there a "Submitted to" section with department name? (Rule R005)  
 - Does it mention "Bachelor's Degree in CSIT"? (Rule R006)  
 - Is the college name in bold 16pt? (Rule R007)  
-- Are student details (name, roll, date) properly stacked which is vertically? (Rule R008)  
+- Confirm that student details (name, roll, date) properly stacked which is vertically? (Rule R008)
 - Is supervisor info in 14pt bold? (Rule R009)  
 - Is the left margin bigger than others? (Rule R010)  
-- Does "Submitted to" include "Department of Computer Science and Information Technology"? (Rule R011)  
-- Are "Submitted to" and "Submitted by" blocks centered? (Rule R012)  
-- Does it say "In partial fulfillment of the requirements for the Bachelor's Degree in CSIT"? (Rule R013)  
-- Is supervisor's designation and institute included (DWIT/IOST)? (Rule R014)  
-- Are all elements properly centered? (Rule R015)  
-- Is there NO page number displayed on title page? (Rule R016)  
-- Are margins Top 1", Bottom 1", Left 1.25", Right 1"? (Rule R017)  
-- Are there no graphics other than TU logo, no watermarks? (Rule R019)  
+- Ensure that "Submitted to" include "Department of Computer Science and Information Technology"? (Rule R011)
+- Confirm that "Submitted to" and "Submitted by" blocks centered? (Rule R012)
+- Ensure that it say "In partial fulfillment of the requirements for the Bachelor's Degree in CSIT"? (Rule R013)
+- Verify that supervisor's designation and institute included (DWIT/IOST)? (Rule R014)
+- Confirm that all elements properly centered? (Rule R015)
+- Verify that there NO page number displayed on title page? (Rule R016)
+- Confirm that margins Top 1", Bottom 1", Left 1.25", Right 1"? (Rule R017)
+- Confirm that there no graphics other than TU logo, no watermarks? (Rule R019)
 
 THEN tell me: What's wrong or missing? Give this section ID: SEC_001  
 
@@ -37,16 +37,16 @@ THEN tell me: What's wrong or missing? Give this section ID: SEC_001
 Look for: A page with supervisor's signature and recommendation  
 
 THEN Check these things:  
-- Is heading "SUPERVISOR'S RECOMMENDATION" bold, 16pt, centered? (Rule R020)  
-- Is there a formal recommendation paragraph present? (Rule R021)  
-- Is student's name in ALL CAPS (not bold) within text? (Rule R022)  
-- Is project title in ALL CAPS and BOLD within text? (Rule R023)  
-- Is supervisor's name present under the text? (Rule R024)  
-- Is supervisor's designation present? (Rule R025)  
-- Is college/institute (DWIT/IOST) correctly stated? (Rule R026)  
-- Is signature line/space included? (Rule R027)  
-- Is page numbered with Roman numerals (ii) at bottom center? (Rule R028)  
-- Do margins, font family, font size, and spacing conform to standards? (Rule R029)  
+- Check whether "SUPERVISOR'S RECOMMENDATION" bold, 16pt, centered? (Rule R020)
+- Verify that there a formal recommendation paragraph present? (Rule R021)
+- Verify that student's name in ALL CAPS (not bold) within text? (Rule R022)
+- Verify that project title in ALL CAPS and BOLD within text? (Rule R023)
+- Verify that supervisor's name present under the text? (Rule R024)
+- Verify that supervisor's designation present? (Rule R025)
+- Verify that college/institute (DWIT/IOST) correctly stated? (Rule R026)
+- Verify that signature line/space included? (Rule R027)
+- Verify that page numbered with Roman numerals (ii) at bottom center? (Rule R028)
+- Review: Do margins, font family, font size, and spacing conform to standards? (Rule R029)
 
 THEN Tell me: What's wrong or missing? Give this section ID: SEC_002  
 
@@ -56,13 +56,13 @@ THEN Tell me: What's wrong or missing? Give this section ID: SEC_002
 Look for: A page where student declares the work is original  
 
 Check these things:  
-- Is heading "STUDENT'S DECLARATION" bold, centered? (Rule R030)  
-- Does declaration state originality and exclusive authorship? (Rule R031)  
-- Is student name provided below declaration? (Rule R032)  
-- Is date provided below declaration? (Rule R033)  
-- Is signature line/space present? (Rule R034)  
-- Is page in Roman numbering, centered at bottom? (Rule R035)  
-- Do margins, font, size, spacing conform? (Rule R036)  
+- Check whether "STUDENT'S DECLARATION" bold, centered? (Rule R030)
+- Ensure that declaration state originality and exclusive authorship? (Rule R031)
+- Verify that student name provided below declaration? (Rule R032)
+- Verify that date provided below declaration? (Rule R033)
+- Verify that signature line/space present? (Rule R034)
+- Verify that page in Roman numbering, centered at bottom? (Rule R035)
+- Review: Do margins, font, size, spacing conform? (Rule R036)
 
 THEN Tell me: What's wrong or missing? Give this section ID: SEC_003  
 
@@ -72,15 +72,15 @@ THEN Tell me: What's wrong or missing? Give this section ID: SEC_003
 Look for: Official approval/certificate page  
 
 Check these things:  
-- Is heading "LETTER OF APPROVAL" bold, centered? (Rule R037)  
-- Is certifying statement text present? (Rule R038)  
-- Does supervisor's block include name and designation? (Rule R039)  
-- Does Campus Chief's block include correct name and designation? (Rule R040)  
-- Is External Examiner block with designation/affiliation present? (Rule R041)  
-- Is Project Coordinator block with designation present? (Rule R042)  
-- Are signature lines/spaces included for all signatories? (Rule R043)  
-- Is page in Roman numbering, centered bottom? (Rule R044)  
-- Do margins, font, size, spacing conform? (Rule R045)  
+- Check whether "LETTER OF APPROVAL" bold, centered? (Rule R037)
+- Verify that certifying statement text present? (Rule R038)
+- Ensure that supervisor's block include name and designation? (Rule R039)
+- Ensure that Campus Chief's block include correct name and designation? (Rule R040)
+- Verify that External Examiner block with designation/affiliation present? (Rule R041)
+- Verify that Project Coordinator block with designation present? (Rule R042)
+- Confirm that signature lines/spaces included for all signatories? (Rule R043)
+- Verify that page in Roman numbering, centered bottom? (Rule R044)
+- Review: Do margins, font, size, spacing conform? (Rule R045)
 
 THEN Tell me: What's wrong or missing? Give this section ID: SEC_004  
 
@@ -90,13 +90,13 @@ THEN Tell me: What's wrong or missing? Give this section ID: SEC_004
 Look for: Page where student thanks people who helped  
 
 Check these things:  
-- Is heading "ACKNOWLEDGEMENT" bold, centered? (Rule R046)  
-- Is there formal academic tone thanking contributors (supervisor, institute)? (Rule R047)  
-- Is student name at end? (Rule R048)  
-- Is roll number at end? (Rule R049)  
-- Is date at end? (Rule R050)  
-- Is page in Roman numbering, centered bottom? (Rule R051)  
-- Do margins, font, size, spacing conform? (Rule R052)  
+- Check whether "ACKNOWLEDGEMENT" bold, centered? (Rule R046)
+- Verify that there formal academic tone thanking contributors (supervisor, institute)? (Rule R047)
+- Verify that student name at end? (Rule R048)
+- Verify that roll number at end? (Rule R049)
+- Verify that date at end? (Rule R050)
+- Verify that page in Roman numbering, centered bottom? (Rule R051)
+- Review: Do margins, font, size, spacing conform? (Rule R052)
 
 THEN Tell me: What's wrong or missing? Give this section ID: SEC_005  
 
@@ -106,14 +106,14 @@ THEN Tell me: What's wrong or missing? Give this section ID: SEC_005
 Look for: Page with project summary and keywords  
 
 Check these things:  
-- Is heading "ABSTRACT" bold, centered? (Rule R053)  
-- Does it include Motivation/Problem statement? (Rule R054)  
-- Does it include Methods/Approach? (Rule R055)  
-- Does it include Results/Findings/Product? (Rule R056)  
-- Does it include Conclusion/Implications? (Rule R057)  
-- Are keywords present, 4-8 terms, separated by semicolons? (Rule R058)  
-- Is page in Roman numbering, centered bottom? (Rule R059)  
-- Do margins, font, size, spacing conform? (Rule R060)  
+- Check whether "ABSTRACT" bold, centered? (Rule R053)
+- Ensure that it include Motivation/Problem statement? (Rule R054)
+- Ensure that it include Methods/Approach? (Rule R055)
+- Ensure that it include Results/Findings/Product? (Rule R056)
+- Ensure that it include Conclusion/Implications? (Rule R057)
+- Confirm that keywords present, 4-8 terms, separated by semicolons? (Rule R058)
+- Verify that page in Roman numbering, centered bottom? (Rule R059)
+- Review: Do margins, font, size, spacing conform? (Rule R060)
 
 THEN Tell me: What's wrong or missing? Give this section ID: SEC_006  
 
@@ -123,13 +123,13 @@ THEN Tell me: What's wrong or missing? Give this section ID: SEC_006
 Look for: Page listing all chapters and page numbers  
 
 Check these things:  
-- Is heading "TABLE OF CONTENTS" bold, centered? (Rule R061)  
-- Is TOC auto-generated using Word (not manual typing)? (Rule R062)  
-- Does it show correct hierarchical indentation for chapters, sections, subsections? (Rule R063)  
-- Are there dot leaders between headings and page numbers? (Rule R064)  
-- Do page numbers in TOC match actual page numbers in document? (Rule R065)  
-- Is page in Roman numbering, centered bottom? (Rule R066)  
-- Do margins, font, size, spacing conform? (Rule R067)  
+- Check whether "TABLE OF CONTENTS" bold, centered? (Rule R061)
+- Verify that TOC auto-generated using Word (not manual typing)? (Rule R062)
+- Ensure that it show correct hierarchical indentation for chapters, sections, subsections? (Rule R063)
+- Confirm that there dot leaders between headings and page numbers? (Rule R064)
+- Review: Do page numbers in TOC match actual page numbers in document? (Rule R065)
+- Verify that page in Roman numbering, centered bottom? (Rule R066)
+- Review: Do margins, font, size, spacing conform? (Rule R067)
 
 THEN Tell me: What's wrong or missing? Give this section ID: SEC_007  
 
@@ -139,24 +139,24 @@ THEN Tell me: What's wrong or missing? Give this section ID: SEC_007
 Look for: Three separate listing pages  
 
 For List of Figures:  
-- Is heading "LIST OF FIGURES" bold, centered? (Rule R068)  
-- Is it automatically generated via Word Captions → Table of Figures? (Rule R069)  
-- Do entries contain sequential figure numbers (Figure 1.1, 1.2, ...) with captions? (Rule R070)  
-- Do page numbers align with actual figure pages? (Rule R071)  
-- Is page in Roman numbering, centered bottom? (Rule R072)  
+- Check whether "LIST OF FIGURES" bold, centered? (Rule R068)
+- Verify that it automatically generated via Word Captions → Table of Figures? (Rule R069)
+- Review: Do entries contain sequential figure numbers (Figure 1.1, 1.2, ...) with captions? (Rule R070)
+- Review: Do page numbers align with actual figure pages? (Rule R071)
+- Verify that page in Roman numbering, centered bottom? (Rule R072)
 
 For List of Tables:  
-- Is heading "LIST OF TABLES" bold, centered? (Rule R073)  
-- Is it automatically generated via Word Captions → Table of Figures (tables)? (Rule R074)  
-- Do entries contain sequential table numbers (Table 2.1, 2.2, ...) with captions? (Rule R075)  
-- Do page numbers align with actual table pages? (Rule R076)  
-- Is page in Roman numbering, centered bottom? (Rule R077)  
+- Check whether "LIST OF TABLES" bold, centered? (Rule R073)
+- Verify that it automatically generated via Word Captions → Table of Figures (tables)? (Rule R074)
+- Review: Do entries contain sequential table numbers (Table 2.1, 2.2, ...) with captions? (Rule R075)
+- Review: Do page numbers align with actual table pages? (Rule R076)
+- Verify that page in Roman numbering, centered bottom? (Rule R077)
 
 For List of Abbreviations:  
-- Is heading "LIST OF ABBREVIATIONS" bold, centered? (Rule R078)  
-- Are entries alphabetically ordered? (Rule R079)  
-- Does each abbreviation have a clear expansion ? (Rule R080)  
-- Is page in Roman numbering, centered bottom? (Rule R081)  
+- Check whether "LIST OF ABBREVIATIONS" bold, centered? (Rule R078)
+- Confirm that entries alphabetically ordered? (Rule R079)
+- Ensure that each abbreviation have a clear expansion ? (Rule R080)
+- Verify that page in Roman numbering, centered bottom? (Rule R081)
 
 THEN Tell me: What's wrong in each list? Give section IDs: SEC_008, SEC_009, SEC_010  
 
@@ -166,17 +166,17 @@ THEN Tell me: What's wrong in each list? Give section IDs: SEC_008, SEC_009, SEC
 Look for: First main chapter of the report  
 
 THEN Check these things:  
-- Is heading "CHAPTER 1: INTRODUCTION" 16pt, bold, centered? (Rule R082)  
-- Is section 1.1 Introduction present giving overview and links to conclusion? (Rule R083)  
-- Is section 1.2 Problem Statement present stating problem, method claim, purpose/objective? (Rule R084)  
-- Is section 1.3 Objectives present beginning with "To..." and specific, aligned to problem? (Rule R085)  
-- Is section 1.4 Scope and Limitation present clearly narrowing study? (Rule R086)  
-- Is section 1.5 Development Methodology present identifying chosen methodology? (Rule R087)  
-- Is section 1.6 Report Organization present outlining chapter flow? (Rule R088)  
-- Does page numbering start at "1" (Arabic numbers)? (Rule R040)  
-- Does chapter start on new page? (Rule R041)  
-- Are figure captions NOT bold? (Rule R042)  
-- Is font Times New Roman, body text 12pt? (Rule R043)  
+- Check whether "CHAPTER 1: INTRODUCTION" 16pt, bold, centered? (Rule R082)
+- Verify that section 1.1 Introduction present giving overview and links to conclusion? (Rule R083)
+- Verify that section 1.2 Problem Statement present stating problem, method claim, purpose/objective? (Rule R084)
+- Verify that section 1.3 Objectives present beginning with "To..." and specific, aligned to problem? (Rule R085)
+- Verify that section 1.4 Scope and Limitation present clearly narrowing study? (Rule R086)
+- Verify that section 1.5 Development Methodology present identifying chosen methodology? (Rule R087)
+- Verify that section 1.6 Report Organization present outlining chapter flow? (Rule R088)
+- Ensure that page numbering start at "1" (Arabic numbers)? (Rule R040)
+- Ensure that chapter start on new page? (Rule R041)
+- Confirm that figure captions NOT bold? (Rule R042)
+- Verify that font Times New Roman, body text 12pt? (Rule R043)
 
 Tell me: What's wrong or missing? Give this section ID: SEC_011  
 
@@ -186,17 +186,17 @@ Tell me: What's wrong or missing? Give this section ID: SEC_011
 Look for: Literature review and background chapter  
 
 THEN Check these things:  
-- Is heading "CHAPTER 2: BACKGROUND STUDY AND LITERATURE REVIEW" 16pt, centered, bold? (Rule R089)  
-- Does it start on new page? (Rule R046)  
-- Is section 2.1 Background Study present covering theories, concepts, terms, relevant only? (Rule R090)  
-- Is section 2.2 Literature Review present synthesizing, comparing, critiquing (not mere summaries)? (Rule R091)  
-- Is section 2.3 Current System present with comparable systems described? (Rule R092)  
-- Is section 2.4 Problems with Current System present justified with sources or rationale? (Rule R093)  
-- Are section numbers like 2.1, 2.2, 2.3, 2.4? (Rule R048)  
-- Are section titles bold, left aligned, 14pt? (Rule R049)  
-- Is body text 12pt with bullet points? (Rule R050)  
-- Is there one line spacing after each section? (Rule R051)  
-- Does page numbering continue (usually ends around page 3)? (Rule R052)  
+- Check whether "CHAPTER 2: BACKGROUND STUDY AND LITERATURE REVIEW" 16pt, centered, bold? (Rule R089)
+- Ensure that it start on new page? (Rule R046)
+- Verify that section 2.1 Background Study present covering theories, concepts, terms, relevant only? (Rule R090)
+- Verify that section 2.2 Literature Review present synthesizing, comparing, critiquing (not mere summaries)? (Rule R091)
+- Verify that section 2.3 Current System present with comparable systems described? (Rule R092)
+- Verify that section 2.4 Problems with Current System present justified with sources or rationale? (Rule R093)
+- Confirm that section numbers like 2.1, 2.2, 2.3, 2.4? (Rule R048)
+- Confirm that section titles bold, left aligned, 14pt? (Rule R049)
+- Verify that body text 12pt with bullet points? (Rule R050)
+- Verify that there one line spacing after each section? (Rule R051)
+- Ensure that page numbering continue (usually ends around page 3)? (Rule R052)
 
 THEN Tell me: What's wrong or missing? Give this section ID: SEC_012  
 
@@ -206,18 +206,18 @@ THEN Tell me: What's wrong or missing? Give this section ID: SEC_012
 Look for: Requirements and analysis chapter  
 
 THEN Check these things:  
-- Does it start on new page? (Rule R053)  
-- Is heading "CHAPTER 3: SYSTEM ANALYSIS" bold, centered, 16pt? (Rule R094)  
-- Is section 3.1 Requirement Analysis present with process of elicitation and analysis described? (Rule R095)  
-- Is section 3.1.1 Functional Requirements present with "shall" phrasing and use-case diagram/desc included? (Rule R096)  
-- Is section 3.1.2 Non-Functional Requirements present with "must" phrasing covering performance/usability/security? (Rule R097)  
-- Is section 3.2 Feasibility Analysis present covering Technical, Operational, Economic, Schedule? (Rule R098)  
-- Is section 3.3 Analysis Diagrams present per approach? (Rule R099)  
-- For Structured: Are ER diagrams and DFDs present, labeled, readable? (Rule R100)  
-- For Object-Oriented: Are Class/Object, State/Sequence, Activity diagrams present, labeled, readable? (Rule R101)  
-- Is numbering like 3.1.1, 3.1.2? (Rule R056)  
-- Is body text 12pt, Times New Roman? (Rule R057)  
-- Are topic headings bold, 14pt, left aligned? (Rule R058)  
+- Ensure that it start on new page? (Rule R053)
+- Check whether "CHAPTER 3: SYSTEM ANALYSIS" bold, centered, 16pt? (Rule R094)
+- Verify that section 3.1 Requirement Analysis present with process of elicitation and analysis described? (Rule R095)
+- Verify that section 3.1.1 Functional Requirements present with "shall" phrasing and use-case diagram/desc included? (Rule R096)
+- Verify that section 3.1.2 Non-Functional Requirements present with "must" phrasing covering performance/usability/security? (Rule R097)
+- Verify that section 3.2 Feasibility Analysis present covering Technical, Operational, Economic, Schedule? (Rule R098)
+- Verify that section 3.3 Analysis Diagrams present per approach? (Rule R099)
+- Confirm thatFor Structured:  ER diagrams and DFDs present, labeled, readable? (Rule R100)
+- Confirm thatFor Object-Oriented:  Class/Object, State/Sequence, Activity diagrams present, labeled, readable? (Rule R101)
+- Verify that numbering like 3.1.1, 3.1.2? (Rule R056)
+- Verify that body text 12pt, Times New Roman? (Rule R057)
+- Confirm that topic headings bold, 14pt, left aligned? (Rule R058)
 
 THEN Tell me: What's wrong or missing? Give this section ID: SEC_013  
 
@@ -227,18 +227,18 @@ THEN Tell me: What's wrong or missing? Give this section ID: SEC_013
 Look for: Design and algorithm chapter  
 
 Check these things:  
-- Does it start on new page? (Rule R059)  
-- Is heading "CHAPTER 4: SYSTEM DESIGN" bold, centered, 16pt? (Rule R060)  
-- Is section 4.1 Design present with approach consistent with analysis? (Rule R102)  
-- For Structured: Is database design (ER to relations), normalization steps shown? (Rule R103)  
-- For Structured: Are forms/report design described? (Rule R104)  
-- For Structured: Are interface/dialog design described? (Rule R105)  
-- For OO: Are refined Class, Object, State, Sequence, Activity diagrams present? (Rule R106)  
-- For OO: Are Component and Deployment diagrams present where applicable? (Rule R107)  
-- Is section 4.2 Algorithm Details present with core algorithms clearly specified? (Rule R108)  
-- Is body text 12pt, Times New Roman? (Rule R062)  
-- Is there one line spacing between topics? (Rule R063)  
-- Are topic headings bold, 14pt, left aligned? (Rule R064)  
+- Ensure that it start on new page? (Rule R059)
+- Check whether "CHAPTER 4: SYSTEM DESIGN" bold, centered, 16pt? (Rule R060)
+- Verify that section 4.1 Design present with approach consistent with analysis? (Rule R102)
+- Verify thatFor Structured:  database design (ER to relations), normalization steps shown? (Rule R103)
+- Confirm thatFor Structured:  forms/report design described? (Rule R104)
+- Confirm thatFor Structured:  interface/dialog design described? (Rule R105)
+- Confirm thatFor OO:  refined Class, Object, State, Sequence, Activity diagrams present? (Rule R106)
+- Confirm thatFor OO:  Component and Deployment diagrams present where applicable? (Rule R107)
+- Verify that section 4.2 Algorithm Details present with core algorithms clearly specified? (Rule R108)
+- Verify that body text 12pt, Times New Roman? (Rule R062)
+- Verify that there one line spacing between topics? (Rule R063)
+- Confirm that topic headings bold, 14pt, left aligned? (Rule R064)
 
 Tell me: What's wrong or missing? Give this section ID: SEC_014  
 
@@ -248,18 +248,18 @@ Tell me: What's wrong or missing? Give this section ID: SEC_014
 Look for: Implementation and testing chapter  
 
 Check these things:  
-- Does it start on new page? (Rule R065)  
-- Is heading "CHAPTER 5: IMPLEMENTATION AND TESTING" bold, centered, 16pt? (Rule R066)  
-- Is section 5.1 Implementation present with critical code areas discussed without dumping large code? (Rule R109)  
-- Is section 5.1.1 Tools Used present with CASE tools, languages, DB platforms listed? (Rule R110)  
-- Is section 5.1.2 Implementation Details of Modules present with classes/functions/methods described? (Rule R111)  
-- Is section 5.2 Testing present with approach and coverage explained? (Rule R112)  
-- Is section 5.2.1 Unit Testing test cases tabulated? (Rule R113)  
-- Is section 5.2.2 System Testing test cases tabulated? (Rule R114)  
-- Is section 5.3 Result Analysis present with tests summarized, strengths/weaknesses discussed, comparisons if appropriate? (Rule R115)  
-- Is body text 12pt, Times New Roman, no bold/italics in body? (Rule R068)  
-- Are topic headings 14pt, bold, left aligned? (Rule R069)  
-- Does it discuss critical code areas? (Rule R070)  
+- Ensure that it start on new page? (Rule R065)
+- Check whether "CHAPTER 5: IMPLEMENTATION AND TESTING" bold, centered, 16pt? (Rule R066)
+- Verify that section 5.1 Implementation present with critical code areas discussed without dumping large code? (Rule R109)
+- Verify that section 5.1.1 Tools Used present with CASE tools, languages, DB platforms listed? (Rule R110)
+- Verify that section 5.1.2 Implementation Details of Modules present with classes/functions/methods described? (Rule R111)
+- Verify that section 5.2 Testing present with approach and coverage explained? (Rule R112)
+- Verify that section 5.2.1 Unit Testing test cases tabulated? (Rule R113)
+- Verify that section 5.2.2 System Testing test cases tabulated? (Rule R114)
+- Verify that section 5.3 Result Analysis present with tests summarized, strengths/weaknesses discussed, comparisons if appropriate? (Rule R115)
+- Verify that body text 12pt, Times New Roman, no bold/italics in body? (Rule R068)
+- Confirm that topic headings 14pt, bold, left aligned? (Rule R069)
+- Ensure that it discuss critical code areas? (Rule R070)
 
 Tell me: What's wrong or missing? Give this section ID: SEC_015  
 
@@ -269,14 +269,14 @@ Tell me: What's wrong or missing? Give this section ID: SEC_015
 Look for: Final conclusion and recommendations chapter  
 
 Check these things:  
-- Does it start on new page? (Rule R071)  
-- Is heading "CHAPTER 6: CONCLUSION AND FUTURE RECOMMENDATION" bold, centered, 16pt? (Rule R072)  
-- Is section 6.1 Conclusion present restating thesis, synthesizing key points, final impression? (Rule R116)  
-- Is section 6.2 Future Recommendation present with limitations acknowledged and realistic improvements? (Rule R117)  
-- Is numbering 6.1, 6.2 format? (Rule R073)  
-- Does Future Recommendation address limitations and solutions? (Rule R074)  
-- Are topic headings bold, 14pt, left aligned? (Rule R075)  
-- Is body text 12pt, Times New Roman? (Rule R076)  
+- Ensure that it start on new page? (Rule R071)
+- Check whether "CHAPTER 6: CONCLUSION AND FUTURE RECOMMENDATION" bold, centered, 16pt? (Rule R072)
+- Verify that section 6.1 Conclusion present restating thesis, synthesizing key points, final impression? (Rule R116)
+- Verify that section 6.2 Future Recommendation present with limitations acknowledged and realistic improvements? (Rule R117)
+- Verify that numbering 6.1, 6.2 format? (Rule R073)
+- Ensure that Future Recommendation address limitations and solutions? (Rule R074)
+- Confirm that topic headings bold, 14pt, left aligned? (Rule R075)
+- Verify that body text 12pt, Times New Roman? (Rule R076)
 
 THEN Tell me: What's wrong or missing? Give this section ID: SEC_016  
 
@@ -286,12 +286,12 @@ THEN Tell me: What's wrong or missing? Give this section ID: SEC_016
 Look for: References/Bibliography page  
 
 Check these things:  
-- Is heading "REFERENCES" bold, centered? (Rule R118)  
-- Do in-text citations use numbered brackets [n]? (Rule R119)  
-- Is reference list ordered by citation appearance (sequential), not alphabetic? (Rule R120)  
-- Is each reference complete and correctly formatted in IEEE style for its type? (Rule R121)  
-- Do all cited items appear in list with no missing entries? (Rule R122)  
-- Are there no uncited entries in reference list unless in optional Bibliography section? (Rule R123)  
+- Check whether "REFERENCES" bold, centered? (Rule R118)
+- Review: Do in-text citations use numbered brackets [n]? (Rule R119)
+- Verify that reference list ordered by citation appearance (sequential), not alphabetic? (Rule R120)
+- Verify that each reference complete and correctly formatted in IEEE style for its type? (Rule R121)
+- Review: Do all cited items appear in list with no missing entries? (Rule R122)
+- Confirm that there no uncited entries in reference list unless in optional Bibliography section? (Rule R123)
 
 THEN Tell me: What's wrong or missing? Give this section ID: SEC_017  
 
@@ -301,9 +301,9 @@ THEN Tell me: What's wrong or missing? Give this section ID: SEC_017
 Look for: Supplementary material section  
 
 Check these things:  
-- Is heading "APPENDIX" bold, centered? (Rule R124)  
-- Does it contain supplementary material only? (Rule R125)  
-- Is each appendix labeled and referenced where appropriate? (Rule R126)  
+- Check whether "APPENDIX" bold, centered? (Rule R124)
+- Ensure that it contain supplementary material only? (Rule R125)
+- Verify that each appendix labeled and referenced where appropriate? (Rule R126)
 
 THEN Tell me: What's wrong or missing? Give this section ID: SEC_018  
 
@@ -313,22 +313,21 @@ THEN Tell me: What's wrong or missing? Give this section ID: SEC_018
 THEN Look at: The whole document for general formatting
 
 Check these things:
-- Paper size A4? (Rule R127)
-- Margins Top 1", Bottom 1", Left 1.25", Right 1"?(Rule R128)
-- Times New Roman font used everywhere? (Rule R129)
-- Every chapter starts on new page? (Rule R130)
-- Line Spacing is 1.5 and alignment consistent throughout? (Rule R131)
-- Roman numerals (ii, iii, iv) for preliminary pages? (Rule R132)
-- Arabic numerals (1, 2, 3) starting from Chapter 1? (Rule R133)
-- Figure captions not being bold  12pt anywhere? (Rule R134)
-- Proper numbering system throughout? (Rule R135)
-- No watermarks/backgrounds? (Rule R136)
-- No inconsistent fonts,font sizes or line spacing. (Rule R137)
+- Review: Paper size A4? (Rule R127)
+- Review: Margins Top 1", Bottom 1", Left 1.25", Right 1"?(Rule R128)
+- Review: Times New Roman font used everywhere? (Rule R129)
+- Review: Every chapter starts on new page? (Rule R130)
+- Review: Line Spacing is 1.5 and alignment consistent throughout? (Rule R131)
+- Review: Roman numerals (ii, iii, iv) for preliminary pages? (Rule R132)
+- Review: Arabic numerals (1, 2, 3) starting from Chapter 1? (Rule R133)
+- Review: Figure captions not being bold  12pt anywhere? (Rule R134)
+- Review: Proper numbering system throughout? (Rule R135)
+- Review: No watermarks/backgrounds? (Rule R136)
+- Review: No inconsistent fonts ,font sizes or line spacing. (Rule R137)
 
 THEN Tell me: What general problems do you see across the whole document?
 
 ---
 
 # FINAL STEP: Check if every step listed has been followed or not. Treat those steps like a checklist.
-
 
