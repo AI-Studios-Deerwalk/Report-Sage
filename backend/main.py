@@ -122,6 +122,10 @@ async def log_requests(request, call_next):
 # Include API routes (includes auth and user routes)
 app.include_router(api_router)
 
+# Include document rules routes
+from routes.document_rules import router as document_rules_router
+app.include_router(document_rules_router)
+
 # Mount static files for uploaded images
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
@@ -245,7 +249,7 @@ async def analyze_abstract(file: UploadFile = File(...)):
         summary = formatter.create_abstract_analysis_summary(parsed_results)
         
         return {
-            "success": True,
+                        "success": True,
             "abstract": abstract,
             "analysis_results": parsed_results,
             "summary": summary

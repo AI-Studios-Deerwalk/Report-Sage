@@ -50,6 +50,17 @@ export default function AdminLayout({ children, currentPage }: AdminLayoutProps)
           setActiveSection('overview')
         }
         break
+      case "document-config":
+        // Check if admin has permission to access config
+        if (hasAdminPermission('config')) {
+          router.push('/admin/document-config')
+        } else {
+          // Redirect non-super admins to dashboard
+          router.push('/admin/dashboard')
+          // Reset active section to overview
+          setActiveSection('overview')
+        }
+        break
       default:
         break
     }
