@@ -63,12 +63,15 @@ async def process_document_analysis(archive_id: int, file_path: str):
             )
             return
         
+        # Extract acknowledgement from PDF content
+        acknowledgement = prompt_manager.extract_acknowledgement_from_pdf_content(content)
+        
         # Analyze abstract with Ollama
         ollama_client = OllamaClient()
         analysis_prompt = prompt_manager.get_abstract_analysis_prompt(abstract)
         analysis_result = await ollama_client.analyze_document(analysis_prompt)
         
-        # Parse analysis results
+        # Parse abstract analysis results
         formatter = ResultFormatter()
         parsed_results = formatter.parse_abstract_analysis_result(analysis_result)
         summary = formatter.create_abstract_analysis_summary(parsed_results)
@@ -107,6 +110,48 @@ async def process_document_analysis(archive_id: int, file_path: str):
             message=f"Status: {conclusion.get('status', 'unknown').upper()}\n{conclusion.get('feedback', 'No feedback available')}",
             page_number=None
         ))
+        
+        # Process acknowledgement if found
+        if acknowledgement.strip():
+            # Analyze acknowledgement with Ollama
+            acknowledgement_prompt = prompt_manager.get_acknowledgement_analysis_prompt(acknowledgement)
+            acknowledgement_result = await ollama_client.analyze_document(acknowledgement_prompt)
+            
+            # Parse acknowledgement analysis results
+            acknowledgement_parsed = formatter.parse_acknowledgement_analysis_result(acknowledgement_result)
+            acknowledgement_summary = formatter.create_acknowledgement_analysis_summary(acknowledgement_parsed)
+            
+            # Add acknowledgement analysis items
+            student_info = acknowledgement_parsed.get("student_info", {})
+            analysis_items.append(AnalysisItem(
+                type="student_info",
+                message=f"Status: {student_info.get('status', 'unknown').upper()}\n{student_info.get('feedback', 'No feedback available')}",
+                page_number=None
+            ))
+            
+            gratitude_expression = acknowledgement_parsed.get("gratitude_expression", {})
+            analysis_items.append(AnalysisItem(
+                type="gratitude_expression",
+                message=f"Status: {gratitude_expression.get('status', 'unknown').upper()}\n{gratitude_expression.get('feedback', 'No feedback available')}",
+                page_number=None
+            ))
+            
+            mentioned_parties = acknowledgement_parsed.get("mentioned_parties", {})
+            analysis_items.append(AnalysisItem(
+                type="mentioned_parties",
+                message=f"Status: {mentioned_parties.get('status', 'unknown').upper()}\n{mentioned_parties.get('feedback', 'No feedback available')}",
+                page_number=None
+            ))
+            
+            contribution_description = acknowledgement_parsed.get("contribution_description", {})
+            analysis_items.append(AnalysisItem(
+                type="contribution_description",
+                message=f"Status: {contribution_description.get('status', 'unknown').upper()}\n{contribution_description.get('feedback', 'No feedback available')}",
+                page_number=None
+            ))
+            
+            # Merge summaries
+            summary["acknowledgement_summary"] = acknowledgement_summary
         
         
         # Update archive with analysis results

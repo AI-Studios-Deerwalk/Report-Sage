@@ -265,7 +265,7 @@ export const archiveAPI = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      timeout: 30000, // 30 second timeout for file uploads
+      timeout: 120000, // 2 minute timeout for file uploads with analysis
     });
   },
 
@@ -277,6 +277,31 @@ export const archiveAPI = {
 
   reanalyzeArchive: (archiveId: number) => 
     apiClient.post(`/api/v1/archive/${archiveId}/reanalyze`),
+};
+
+// Analysis API endpoints
+export const analysisAPI = {
+  analyzeAbstract: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.post('/analyze-abstract', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 60000, // 60 second timeout for analysis
+    });
+  },
+
+  analyzeAcknowledgement: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.post('/analyze-acknowledgement', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 60000, // 60 second timeout for analysis
+    });
+  },
 };
 
 // FAQ API endpoints

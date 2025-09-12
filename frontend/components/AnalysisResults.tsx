@@ -35,6 +35,7 @@ export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isAbstractOpen, setIsAbstractOpen] = useState(false)
+  const [isAcknowledgementOpen, setIsAcknowledgementOpen] = useState(false)
 
   const handleViewArchives = () => {
     router.push('/archive')
@@ -51,8 +52,16 @@ export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
         return <TrendingUp className="h-5 w-5 text-purple-500" />
       case 'conclusion':
         return <Award className="h-5 w-5 text-orange-500" />
+      case 'student_info':
+        return <CheckCircle className="h-5 w-5 text-cyan-500" />
+      case 'gratitude_expression':
+        return <Award className="h-5 w-5 text-pink-500" />
+      case 'mentioned_parties':
+        return <BookOpen className="h-5 w-5 text-teal-500" />
+      case 'contribution_description':
+        return <TrendingUp className="h-5 w-5 text-amber-500" />
       case 'overall':
-        return <CheckCircle className="h-5 w-5 text-gray-500" />
+        return <Archive className="h-5 w-5 text-indigo-500" />
       default:
         return <CheckCircle className="h-5 w-5 text-gray-500" />
     }
@@ -68,11 +77,32 @@ export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
         return 'Results / Findings / Product'
       case 'conclusion':
         return 'Conclusion / Implications'
+      case 'student_info':
+        return 'Student Information'
+      case 'gratitude_expression':
+        return 'Gratitude Expression'
+      case 'mentioned_parties':
+        return 'Mentioned Parties'
+      case 'contribution_description':
+        return 'Contribution Description'
       case 'overall':
         return 'Overall Evaluation'
       default:
         return type
     }
+  }
+
+  // Separate analysis items into abstract and acknowledgement sections
+  const getAbstractItems = (items: AnalysisItem[]) => {
+    return items.filter(item => 
+      ['motivation', 'methods', 'results', 'conclusion'].includes(item.type.toLowerCase())
+    )
+  }
+
+  const getAcknowledgementItems = (items: AnalysisItem[]) => {
+    return items.filter(item => 
+      ['student_info', 'gratitude_expression', 'mentioned_parties', 'contribution_description'].includes(item.type.toLowerCase())
+    )
   }
 
   const renderAnalysisItems = (items: AnalysisItem[]) => {
@@ -118,40 +148,17 @@ export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CheckCircle className="h-6 w-6 text-green-600" />
-            Abstract Analysis Complete
+            Analysis Complete
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {summary && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-              <div className="text-center p-4 bg-white rounded-lg border">
-                <div className="text-2xl font-bold text-green-600">{summary.present}</div>
-                <div className="text-sm text-gray-600">Present</div>
-              </div>
-              <div className="text-center p-4 bg-white rounded-lg border">
-                <div className="text-2xl font-bold text-yellow-600">{summary.partially_present}</div>
-                <div className="text-sm text-gray-600">Partially Present</div>
-              </div>
-              <div className="text-center p-4 bg-white rounded-lg border">
-                <div className="text-2xl font-bold text-red-600">{summary.missing}</div>
-                <div className="text-sm text-gray-600">Missing</div>
-              </div>
-              <div className="text-center p-4 bg-white rounded-lg border">
-                <div className="text-2xl font-bold text-blue-600">{summary.score}%</div>
-                <div className="text-sm text-gray-600">Overall Score</div>
-              </div>
-            </div>
-          )}
-          
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Analysis completed for: <strong>{results.file_name}</strong>
             </p>
-            {summary && (
-              <p className="text-sm text-gray-600 mt-1">
-                Quality Assessment: <strong className="text-blue-600">{summary.quality}</strong>
-              </p>
-            )}
+            <p className="text-sm text-gray-600 mt-1">
+              Both Abstract and Acknowledgement sections have been analyzed
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -168,7 +175,7 @@ export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-blue-500" />
-              Abstract
+              Abstract Analysis
             </span>
             {isAbstractOpen ? (
               <ChevronUp className="h-5 w-5 text-gray-500" />
@@ -180,19 +187,64 @@ export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
         
         {isAbstractOpen && (
           <CardContent>
-            {/* Analysis Results */}
-            {renderAnalysisItems(results.analysis_results)}
+            {/* Abstract Analysis Results */}
+            {renderAnalysisItems(getAbstractItems(results.analysis_results))}
 
-            {/* No Analysis Results */}
-            {results.analysis_results.length === 0 && (
+            {/* No Abstract Analysis Results */}
+            {getAbstractItems(results.analysis_results).length === 0 && (
               <Card className="bg-yellow-50">
                 <CardContent className="text-center py-8">
                   <AlertTriangle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-                    No Analysis Results Available
+                    No Abstract Analysis Results Available
                   </h3>
                   <p className="text-sm text-yellow-600">
                     The abstract analysis could not be completed. Please try uploading the document again.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Acknowledgement Analysis Section */}
+      <Card className="mb-6">
+        <CardHeader 
+          className="cursor-pointer hover:bg-gray-50 transition-colors select-none"
+          onClick={(e) => {
+            e.preventDefault()
+            setIsAcknowledgementOpen(!isAcknowledgementOpen)
+          }}
+        >
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-purple-500" />
+              Acknowledgement Analysis
+            </span>
+            {isAcknowledgementOpen ? (
+              <ChevronUp className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            )}
+          </CardTitle>
+        </CardHeader>
+        
+        {isAcknowledgementOpen && (
+          <CardContent>
+            {/* Acknowledgement Analysis Results */}
+            {renderAnalysisItems(getAcknowledgementItems(results.analysis_results))}
+
+            {/* No Acknowledgement Analysis Results */}
+            {getAcknowledgementItems(results.analysis_results).length === 0 && (
+              <Card className="bg-yellow-50">
+                <CardContent className="text-center py-8">
+                  <AlertTriangle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                    No Acknowledgement Analysis Results Available
+                  </h3>
+                  <p className="text-sm text-yellow-600">
+                    The acknowledgement analysis could not be completed. Please try uploading the document again.
                   </p>
                 </CardContent>
               </Card>

@@ -259,6 +259,51 @@ async def analyze_abstract(file: UploadFile = File(...)):
         logging.exception("Abstract analysis failed")
         return {"error": f"Abstract analysis failed: {str(e)}"}
 
+@app.post("/analyze-acknowledgement")
+async def analyze_acknowledgement(file: UploadFile = File(...)):
+    """Analyze acknowledgement section of uploaded PDF"""
+    try:
+        # Save uploaded file temporarily
+        file_path = f"temp_{file.filename}"
+        
+        with open(file_path, "wb") as f:
+            f.write(await file.read())
+        logging.info(f"Received file '{file.filename}' for acknowledgement analysis")
+
+        # Extract text from PDF
+        pdf_reader = PDFReader()
+        content = pdf_reader.extract_text(file_path)
+        
+        if not content.strip():
+            return {"error": "Could not extract text from PDF"}
+        
+        # Extract acknowledgement from PDF content
+        acknowledgement = prompt_manager.extract_acknowledgement_from_pdf_content(content)
+        
+        if not acknowledgement.strip():
+            return {"error": "Could not extract acknowledgement from PDF"}
+        
+        # Analyze acknowledgement with Ollama
+        ollama_client = OllamaClient()
+        analysis_prompt = prompt_manager.get_acknowledgement_analysis_prompt(acknowledgement)
+        analysis_result = await ollama_client.analyze_document(analysis_prompt)
+        
+        # Parse analysis results
+        formatter = ResultFormatter()
+        parsed_results = formatter.parse_acknowledgement_analysis_result(analysis_result)
+        summary = formatter.create_acknowledgement_analysis_summary(parsed_results)
+        
+        return {
+            "success": True,
+            "acknowledgement": acknowledgement,
+            "analysis_results": parsed_results,
+            "summary": summary
+        }
+        
+    except Exception as e:
+        logging.exception("Acknowledgement analysis failed")
+        return {"error": f"Acknowledgement analysis failed: {str(e)}"}
+
 # Abstract analysis endpoint removed - now handled through archive upload system
 
 if __name__ == "__main__":
