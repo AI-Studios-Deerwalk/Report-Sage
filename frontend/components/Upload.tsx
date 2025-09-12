@@ -136,6 +136,90 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
     })
   }
 
+  const handleCheckForCompletedAnalysis = async () => {
+    try {
+      console.log('Manually checking for completed analysis...')
+      setLoading(true)
+      setError(null)
+      
+      // Get recent archives to check for completed analysis
+      const { archiveAPI } = await import('@/lib/api')
+      const response = await archiveAPI.getArchives({ limit: 10 }) // Get last 10 archives
+      const archives = response.data.archives || response.data
+      
+      console.log('Found archives:', archives)
+      
+      // Look for the most recent completed analysis
+      // First try to find analysis for the currently uploaded file
+      let recentCompleted = null
+      if (uploadedFiles.length > 0) {
+        const currentFileName = uploadedFiles[0].file.name
+        recentCompleted = archives.find((archive: any) => 
+          archive.processing_status === 'completed' && 
+          archive.file_name === currentFileName &&
+          archive.created_at && 
+          new Date(archive.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000) // Within last 24 hours
+        )
+      }
+      
+      // If no match for current file, look for any recent completed analysis
+      if (!recentCompleted) {
+        recentCompleted = archives.find((archive: any) => 
+          archive.processing_status === 'completed' && 
+          archive.created_at && 
+          new Date(archive.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000) // Within last 24 hours
+        )
+      }
+      
+      if (recentCompleted) {
+        console.log('Found completed analysis:', recentCompleted)
+        
+        // Format results for abstract analysis
+        const results = {
+          analysis_results: recentCompleted.analysis_results || [],
+          summary_data: recentCompleted.summary_data || null,
+          file_name: recentCompleted.file_name,
+          archive_id: recentCompleted.id
+        }
+        
+        if (setResults) {
+          setResults(results)
+        }
+        if (onAnalysisComplete) {
+          onAnalysisComplete(true)
+        }
+        setAnalysisCompleted(true)
+        
+        // Show success toast
+        toast({
+          title: "Analysis Found!",
+          description: `Found completed analysis for "${recentCompleted.file_name}". Results are now available.`,
+          variant: "default",
+        })
+        
+        return
+      } else {
+        // No completed analysis found
+        setError("No completed analysis found. The analysis might still be in progress or may have failed.")
+        toast({
+          title: "No Analysis Found",
+          description: "No completed analysis found in the last 24 hours.",
+          variant: "destructive",
+        })
+      }
+    } catch (error: any) {
+      console.error('Error checking for completed analysis:', error)
+      setError("Failed to check for completed analysis. Please try again later.")
+      toast({
+        title: "Check Failed",
+        description: "Unable to check for completed analysis. Please ensure the backend is running.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleVerifyEmail = async () => {
     if (!user) return
 
@@ -227,6 +311,9 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
     }, 1000)
     setProgressInterval(interval)
     
+    // Declare archiveId outside try block so it's accessible in catch
+    let archiveId: number | null = null;
+    
     try {
       // First, check if backend is ready
       try {
@@ -243,41 +330,14 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
       // For now, analyze the first file (can be extended for batch processing)
       const firstFile = uploadedFiles[0].file
       
-      // Upload document to archive with retry logic
-      let uploadResponse;
-      let uploadAttempts = 0;
-      const maxUploadAttempts = 3;
-      
-      while (uploadAttempts < maxUploadAttempts) {
-        try {
-          // Check if cancelled
-          if (controller.signal.aborted) {
-            throw new Error('Upload cancelled by user');
-          }
-          
-          uploadResponse = await archiveAPI.uploadDocument(firstFile)
-          break; // Success, exit retry loop
-        } catch (uploadError: any) {
-          // Check if cancelled
-          if (controller.signal.aborted) {
-            throw new Error('Upload cancelled by user');
-          }
-          
-          uploadAttempts++;
-          console.warn(`Upload attempt ${uploadAttempts} failed:`, uploadError);
-          
-          if (uploadAttempts >= maxUploadAttempts) {
-            throw uploadError; // Final attempt failed
-          }
-          
-          // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, 1000 * uploadAttempts));
-        }
+      // Upload document to archive (single attempt only)
+      // Check if cancelled
+      if (controller.signal.aborted) {
+        throw new Error('Upload cancelled by user');
       }
       
-      if (!uploadResponse) {
-        throw new Error('Upload failed after multiple attempts');
-      }
+      const uploadResponse = await archiveAPI.uploadDocument(firstFile)
+      archiveId = uploadResponse.data.id; // Set archiveId here
       
       // Show upload success toast
       toast({
@@ -286,15 +346,15 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
         variant: "default",
       })
       
-      // Wait for analysis to complete by polling the archive
-      const archiveId = uploadResponse.data.id
+      // Wait for analysis to complete by polling the archive (no timeout)
       let analysisComplete = false
       let attempts = 0
-      const maxAttempts = 120 // Wait up to 120 seconds (2 minutes)
-      let consecutiveErrors = 0
-      const maxConsecutiveErrors = 5
+      let consecutiveNetworkErrors = 0
+      const maxConsecutiveNetworkErrors = 10 // Allow up to 10 consecutive network errors
       
-      while (!analysisComplete && attempts < maxAttempts) {
+      console.log('Starting polling for archive ID:', archiveId)
+      
+      while (!analysisComplete) {
         // Check if cancelled
         if (controller.signal.aborted) {
           throw new Error('Analysis cancelled by user');
@@ -303,19 +363,20 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
         await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second
         attempts++
         
-        console.log(`Polling attempt ${attempts}/${maxAttempts} for archive ${archiveId}`)
+        console.log(`Polling attempt ${attempts} for archive ${archiveId}`)
         
         try {
           // Use a longer timeout for polling requests
+          if (!archiveId) {
+            throw new Error('Archive ID not available');
+          }
           const archiveResponse = await archiveAPI.getArchive(archiveId)
           const archive = archiveResponse.data
           
-          // Reset consecutive errors on successful request
-          consecutiveErrors = 0
-          
-          console.log(`Archive ${archiveId} status: ${archive.processing_status}`)
+          console.log(`Archive ${archiveId} status: ${archive.processing_status}`, archive)
           
           if (archive.processing_status === 'completed') {
+            console.log('Analysis completed successfully, setting results...')
             analysisComplete = true
             
             // Complete the progress
@@ -329,23 +390,34 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
               archive_id: archive.id
             }
             
-            if (setResults) {
-              setResults(results)
-            }
-            setAnalysisCompleted(true)
-            if (onAnalysisComplete) {
-              onAnalysisComplete(true)
+            console.log('Formatted results:', results)
+            
+            try {
+              if (setResults) {
+                console.log('Calling setResults with:', results)
+                setResults(results)
+              }
+              if (onAnalysisComplete) {
+                console.log('Calling onAnalysisComplete with true')
+                onAnalysisComplete(true)
+              }
+              setAnalysisCompleted(true)
+              
+              // Show success toast
+              toast({
+                title: "Analysis Complete",
+                description: `Successfully analyzed "${archive.file_name}". Results are now available.`,
+                variant: "default",
+              })
+
+              // Stay on dashboard to show results instead of navigating away
+              // router.push('/archive') - commented out to stay on dashboard
+              return // Exit the function successfully
+            } catch (callbackError) {
+              console.error('Error in success callbacks:', callbackError)
+              // Don't throw here, just log the error
             }
             
-            // Show success toast
-            toast({
-              title: "Analysis Complete",
-              description: `Successfully analyzed "${archive.file_name}". Results are now available.`,
-              variant: "default",
-            })
-
-            // Stay on dashboard to show results instead of navigating away
-            // router.push('/archive') - commented out to stay on dashboard
             break
           } else if (archive.processing_status === 'failed') {
             throw new Error(archive.error_message || 'Analysis failed')
@@ -359,31 +431,41 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
             }))
           }
         } catch (pollError: any) {
-          consecutiveErrors++;
-          console.warn(`Polling error ${consecutiveErrors}/${maxConsecutiveErrors}:`, pollError);
+          console.warn(`Polling error:`, pollError);
           
           if (pollError.response?.status === 404) {
             // Archive not found yet, continue polling
-            consecutiveErrors = 0; // Reset on expected 404
             continue
           }
           
-          // Handle network errors during polling more gracefully
+          // Handle network errors during polling - continue polling instead of failing
           if (pollError.request && !pollError.response) {
-            console.warn('Network error during polling, retrying...', pollError);
-            if (consecutiveErrors >= maxConsecutiveErrors) {
-              throw new Error('Too many consecutive network errors during polling');
+            consecutiveNetworkErrors++;
+            console.warn(`Network error during polling (${consecutiveNetworkErrors}/${maxConsecutiveNetworkErrors}), continuing to poll...`, pollError);
+            
+            // If we have too many consecutive network errors, throw an error
+            if (consecutiveNetworkErrors >= maxConsecutiveNetworkErrors) {
+              throw new Error('Too many consecutive network errors. Please check your connection and try again.');
             }
+            
+            // Wait a bit longer before retrying on network errors
+            await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
             continue;
+          } else {
+            // Reset network error counter on successful requests
+            consecutiveNetworkErrors = 0;
           }
           
-          // Only throw for actual server errors (4xx, 5xx) or too many consecutive errors
+          // Only throw for actual server errors (4xx, 5xx) that are not temporary
           if (pollError.response && pollError.response.status >= 400) {
+            // For 5xx errors, continue polling as they might be temporary
+            if (pollError.response.status >= 500) {
+              console.warn('Server error during polling, continuing to poll...', pollError);
+              await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds for 5xx errors
+              continue;
+            }
+            // For 4xx errors (except 404), throw the error
             throw pollError;
-          }
-          
-          if (consecutiveErrors >= maxConsecutiveErrors) {
-            throw new Error('Too many consecutive errors during polling');
           }
           
           // For other errors, continue polling
@@ -392,17 +474,61 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
         }
       }
       
-      if (!analysisComplete) {
-        throw new Error('Analysis timed out. Please check your archive later.')
-      }
+      console.log('Analysis completed successfully after', attempts, 'attempts')
       
     } catch (err: any) {
       console.error("Upload error:", err)
+      console.error("Error details:", {
+        message: err.message,
+        response: err.response,
+        request: err.request,
+        stack: err.stack
+      })
       
       // Check if this is a user cancellation
       if (err.message && (err.message.includes('cancelled by user') || err.message.includes('Upload cancelled by user') || err.message.includes('Analysis cancelled by user'))) {
         // Don't show error for user cancellation - it's handled by cancelAnalysis function
         return
+      }
+      
+      // Try to check if analysis completed despite the error
+      if (archiveId) {
+        try {
+          console.log('Attempting to check if analysis completed despite error...')
+          const fallbackResponse = await archiveAPI.getArchive(archiveId)
+          const fallbackArchive = fallbackResponse.data
+          
+          if (fallbackArchive.processing_status === 'completed') {
+            console.log('Analysis was completed! Loading results despite polling error...')
+            
+            // Format results for abstract analysis
+            const results = {
+              analysis_results: fallbackArchive.analysis_results || [],
+              summary_data: fallbackArchive.summary_data || null,
+              file_name: fallbackArchive.file_name,
+              archive_id: fallbackArchive.id
+            }
+            
+            if (setResults) {
+              setResults(results)
+            }
+            if (onAnalysisComplete) {
+              onAnalysisComplete(true)
+            }
+            setAnalysisCompleted(true)
+            
+            // Show success toast
+            toast({
+              title: "Analysis Complete",
+              description: `Successfully analyzed "${fallbackArchive.file_name}". Results are now available.`,
+              variant: "default",
+            })
+            
+            return // Exit successfully
+          }
+        } catch (fallbackError) {
+          console.log('Fallback check also failed:', fallbackError)
+        }
       }
       
       let errorMessage = ''
@@ -777,7 +903,29 @@ export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) 
         {error && (
           <Alert variant="destructive" className="border-red-200 bg-red-50 mt-4">
             <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">{error}</AlertDescription>
+            <AlertDescription className="text-red-800">
+              {error}
+              {error.includes('Connection error') && (
+                <div className="mt-2">
+                  <Button
+                    onClick={handleCheckForCompletedAnalysis}
+                    variant="outline"
+                    size="sm"
+                    disabled={loading}
+                    className="text-red-600 border-red-300 hover:bg-red-50 disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Checking...
+                      </>
+                    ) : (
+                      'Check for Completed Analysis'
+                    )}
+                  </Button>
+                </div>
+              )}
+            </AlertDescription>
           </Alert>
         )}
       </div>

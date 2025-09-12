@@ -254,7 +254,9 @@ export const archiveAPI = {
   }) => apiClient.get('/api/v1/archive/', { params }),
 
   getArchive: (archiveId: number) => 
-    apiClient.get(`/api/v1/archive/${archiveId}`),
+    apiClient.get(`/api/v1/archive/${archiveId}`, {
+      timeout: 15000, // 15 second timeout for polling requests
+    }),
 
   uploadDocument: (file: File) => {
     const formData = new FormData();

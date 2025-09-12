@@ -43,6 +43,16 @@ export default function DashboardPage() {
   const [analysisCompleted, setAnalysisCompleted] = useState(false)
   const [showUpload, setShowUpload] = useState(true)
   
+  // Debug logging for state changes
+  useEffect(() => {
+    console.log('Dashboard state changed:', {
+      analysisResults: !!analysisResults,
+      analysisCompleted,
+      showUpload,
+      resultsCount: analysisResults?.analysis_results?.length || 0
+    })
+  }, [analysisResults, analysisCompleted, showUpload])
+  
   const hour = new Date().getHours()
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening"
 
@@ -59,8 +69,73 @@ export default function DashboardPage() {
       setShowUpload(true)
       setAnalysisResults(null)
       setAnalysisCompleted(false)
+      
+      // Check if there are any recently completed analyses that might not have been displayed
+      checkForRecentCompletedAnalysis()
     }
   }, [router.query])
+  
+  const checkForRecentCompletedAnalysis = async () => {
+    try {
+      console.log('Checking for recent completed analysis...')
+      const { archiveAPI } = await import('@/lib/api')
+      const response = await archiveAPI.getArchives({ limit: 5 }) // Get last 5 archives
+      const archives = response.data.archives || response.data
+      
+      // Look for the most recent completed analysis
+      const recentCompleted = archives.find((archive: any) => 
+        archive.processing_status === 'completed' && 
+        archive.created_at && 
+        new Date(archive.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000) // Within last 24 hours
+      )
+      
+      if (recentCompleted && !analysisResults) {
+        console.log('Found recent completed analysis, loading results...', recentCompleted)
+        const results = {
+          analysis_results: recentCompleted.analysis_results || [],
+          summary_data: recentCompleted.summary_data || null,
+          file_name: recentCompleted.file_name,
+          archive_id: recentCompleted.id
+        }
+        
+        setAnalysisResults(results)
+        setAnalysisCompleted(true)
+        setShowUpload(false)
+        
+        // Show success toast
+        const { toast } = await import('@/hooks/use-toast')
+        toast({
+          title: "Analysis Found!",
+          description: `Found completed analysis for "${recentCompleted.file_name}".`,
+          variant: "default",
+        })
+      } else if (recentCompleted && analysisResults) {
+        // Already showing results
+        const { toast } = await import('@/hooks/use-toast')
+        toast({
+          title: "Already Showing Results",
+          description: "Analysis results are already being displayed.",
+          variant: "default",
+        })
+      } else {
+        // No completed analysis found
+        const { toast } = await import('@/hooks/use-toast')
+        toast({
+          title: "No Recent Analysis",
+          description: "No completed analysis found in the last 24 hours.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.log('Error checking for recent analysis:', error)
+      const { toast } = await import('@/hooks/use-toast')
+      toast({
+        title: "Check Failed",
+        description: "Unable to check for recent analysis. Please try again later.",
+        variant: "destructive",
+      })
+    }
+  }
 
   const loadResultsFromArchive = async (archiveId: string) => {
     try {
@@ -88,11 +163,13 @@ export default function DashboardPage() {
   }
 
   const handleAnalysisComplete = (completed: boolean) => {
+    console.log('Dashboard: handleAnalysisComplete called with:', completed)
     setAnalysisCompleted(completed)
     setShowUpload(false)
   }
 
   const handleSetResults = (results: AnalysisResultData) => {
+    console.log('Dashboard: handleSetResults called with:', results)
     setAnalysisResults(results)
     setShowUpload(false)
   }
@@ -125,13 +202,19 @@ export default function DashboardPage() {
             <div className="space-y-6">
               <AnalysisResults results={analysisResults} />
               
-              {/* Button to start new analysis */}
-              <div className="flex justify-center mt-8">
+              {/* Buttons to start new analysis or check for completed analysis */}
+              <div className="flex justify-center gap-4 mt-8">
                 <button
                   onClick={handleNewAnalysis}
                   className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium"
                 >
                   Analyze Another Document
+                </button>
+                <button
+                  onClick={checkForRecentCompletedAnalysis}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium"
+                >
+                  Check for Recent Analysis
                 </button>
               </div>
             </div>
