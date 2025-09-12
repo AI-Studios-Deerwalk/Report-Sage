@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, CheckCircle, XCircle, Lightbulb, Archive, Share2, Copy, Check, BookOpen, Target, TrendingUp, Award } from "lucide-react"
+import { AlertTriangle, CheckCircle, XCircle, Lightbulb, Archive, BookOpen, Target, TrendingUp, Award, ChevronDown, ChevronUp } from "lucide-react"
 import { useRouter } from "next/router"
 import { useToast } from "@/hooks/use-toast"
 
@@ -34,47 +34,12 @@ interface AnalysisResultsProps {
 export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
   const router = useRouter()
   const { toast } = useToast()
-  const [copied, setCopied] = useState(false)
+  const [isAbstractOpen, setIsAbstractOpen] = useState(false)
 
   const handleViewArchives = () => {
     router.push('/archive')
   }
 
-  const handleShareResults = async () => {
-    if (results.archive_id) {
-      const shareUrl = `${window.location.origin}/dashboard?archive_id=${results.archive_id}`
-      
-      try {
-        await navigator.clipboard.writeText(shareUrl)
-        setCopied(true)
-        toast({
-          title: "Link Copied!",
-          description: "Analysis results link has been copied to your clipboard.",
-          variant: "default",
-        })
-        
-        // Reset copied state after 2 seconds
-        setTimeout(() => setCopied(false), 2000)
-      } catch (error) {
-        // Fallback for browsers that don't support clipboard API
-        const textArea = document.createElement('textarea')
-        textArea.value = shareUrl
-        document.body.appendChild(textArea)
-        textArea.select()
-        document.execCommand('copy')
-        document.body.removeChild(textArea)
-        
-        setCopied(true)
-        toast({
-          title: "Link Copied!",
-          description: "Analysis results link has been copied to your clipboard.",
-          variant: "default",
-        })
-        
-        setTimeout(() => setCopied(false), 2000)
-      }
-    }
-  }
 
   const getIcon = (type: string) => {
     switch (type.toLowerCase()) {
@@ -116,23 +81,17 @@ export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
     return (
       <div className="space-y-6">
         {items.map((item, index) => (
-          <Card key={index} className="bg-white">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                {getIcon(item.type)}
+          <div key={index} className="bg-white p-4 rounded-lg border">
+            <div className="flex items-center gap-2 mb-3">
+              {getIcon(item.type)}
+              <h3 className="text-lg font-semibold text-gray-900">
                 {getTypeTitle(item.type)}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="p-3 rounded-lg border bg-gray-50">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <p className="text-sm text-left text-gray-800 whitespace-pre-wrap">{item.message}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </h3>
+            </div>
+            <div className="p-3 rounded-lg border bg-gray-50">
+              <p className="text-sm text-left text-gray-800 whitespace-pre-wrap">{item.message}</p>
+            </div>
+          </div>
         ))}
       </div>
     )
@@ -193,49 +152,54 @@ export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
                 Quality Assessment: <strong className="text-blue-600">{summary.quality}</strong>
               </p>
             )}
-            {results.archive_id && (
-              <div className="mt-3 flex justify-center gap-2">
-                <Button
-                  onClick={handleShareResults}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="h-4 w-4" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Share2 className="h-4 w-4" />
-                      Share Results
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Analysis Results */}
-      {renderAnalysisItems(results.analysis_results)}
+      {/* Abstract Analysis Section */}
+      <Card className="mb-6">
+        <CardHeader 
+          className="cursor-pointer hover:bg-gray-50 transition-colors select-none"
+          onClick={(e) => {
+            e.preventDefault()
+            setIsAbstractOpen(!isAbstractOpen)
+          }}
+        >
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-blue-500" />
+              Abstract
+            </span>
+            {isAbstractOpen ? (
+              <ChevronUp className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            )}
+          </CardTitle>
+        </CardHeader>
+        
+        {isAbstractOpen && (
+          <CardContent>
+            {/* Analysis Results */}
+            {renderAnalysisItems(results.analysis_results)}
 
-      {/* No Analysis Results */}
-      {results.analysis_results.length === 0 && (
-        <Card className="bg-yellow-50">
-          <CardContent className="text-center py-8">
-            <AlertTriangle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-              No Analysis Results Available
-            </h3>
-            <p className="text-sm text-yellow-600">
-              The abstract analysis could not be completed. Please try uploading the document again.
-            </p>
+            {/* No Analysis Results */}
+            {results.analysis_results.length === 0 && (
+              <Card className="bg-yellow-50">
+                <CardContent className="text-center py-8">
+                  <AlertTriangle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                    No Analysis Results Available
+                  </h3>
+                  <p className="text-sm text-yellow-600">
+                    The abstract analysis could not be completed. Please try uploading the document again.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </CardContent>
-        </Card>
-      )}
+        )}
+      </Card>
     </div>
   )
 }
