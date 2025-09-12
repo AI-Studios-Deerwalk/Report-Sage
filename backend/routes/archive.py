@@ -108,14 +108,6 @@ async def process_document_analysis(archive_id: int, file_path: str):
             page_number=None
         ))
         
-        # Add overall evaluation
-        overall = parsed_results.get("overall_evaluation", "")
-        if overall:
-            analysis_items.append(AnalysisItem(
-                type="overall",
-                message=overall,
-                page_number=None
-            ))
         
         # Update archive with analysis results
         crud_archive.update_analysis_results(
