@@ -18,6 +18,7 @@ from seed.user_seeder import user_seeder
 from seed.faq_seeder import faq_seeder
 from seed.issue_seeder import issue_seeder
 from seed.config_seeder import seed_config
+from seed.document_rules_seeder import document_rules_seeder
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,11 @@ async def run_all_seeders():
     issue_seeder.print_issue_info()
     issue_result = await issue_seeder.run()
     print(f"Issue seeding {'completed' if issue_result else 'failed'}\n")
+
+    print("\n🌱 Running Document Rules Seeder...")
+    document_rules_seeder.print_document_rules_info()
+    document_rules_result = await document_rules_seeder.run()
+    print(f"Document rules seeding {'completed' if document_rules_result else 'failed'}\n")
 
     print("✅ All seeders finished!")
 
