@@ -43,7 +43,6 @@ export default function DashboardPage() {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      console.log("User not authenticated, redirecting to login");
       router.push("/login");
     }
   }, [isAuthenticated, isLoading, router]);
@@ -98,9 +97,6 @@ export default function DashboardPage() {
   const handleSetResults = (results: AnalysisResultData) => {
     // The Upload component now handles its own navigation
     // This function is kept for backward compatibility but shouldn't be called
-    console.log(
-      "handleSetResults called but navigation is handled by Upload component"
-    );
   };
 
   const handleNewAnalysis = () => {

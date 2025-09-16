@@ -47,7 +47,6 @@ export function FileUpload({ setResults }: FileUploadProps) {
         const uploadData = JSON.parse(recentUploadData);
         setRecentUpload(uploadData);
       } catch (error) {
-        console.error("Error parsing recent upload:", error);
         localStorage.removeItem("recent_upload");
       }
     }
@@ -100,29 +99,11 @@ export function FileUpload({ setResults }: FileUploadProps) {
         // Upload the first file (we'll handle multiple files later if needed)
         const fileToUpload = validFiles[0];
 
-        console.log("Starting upload for file:", fileToUpload.name);
-        console.log("File size:", fileToUpload.size);
-        console.log("File type:", fileToUpload.type);
-
-        // Check if user is authenticated
-        console.log("User authenticated:", isAuthenticated);
-        console.log("User data:", user);
-        console.log(
-          "Auth token exists:",
-          !!localStorage.getItem("access_token")
-        );
-
         if (!isAuthenticated) {
           throw new Error(
             "You must be logged in to upload files. Please login first."
           );
         }
-
-        console.log("About to call archiveAPI.uploadDocument...");
-        console.log(
-          "API Base URL:",
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
-        );
 
         let response;
         try {
@@ -135,46 +116,22 @@ export function FileUpload({ setResults }: FileUploadProps) {
             )
           );
 
-          console.log("Starting upload with timeout...");
           response = await Promise.race([uploadPromise, timeoutPromise]);
-          console.log("Upload response received:", response);
-          console.log("Upload API call completed successfully");
         } catch (apiError: any) {
-          console.error("Upload API call failed:", apiError);
-          console.error("Error type:", typeof apiError);
-          console.error("Error message:", apiError?.message || "Unknown error");
-          console.error("Error stack:", apiError?.stack || "No stack trace");
           throw apiError;
         }
 
         const archive = (response as any).data;
-        console.log("Archive data extracted:", archive);
-        console.log("Response status:", (response as any).status);
-        console.log("Response headers:", (response as any).headers);
 
         if (!archive) {
-          console.error("No archive data in response");
-          console.error("Full response:", response);
           throw new Error("No archive data received from server");
         }
 
         if (!archive.id) {
-          console.error("Invalid response - missing archive ID");
-          console.error("Archive object:", archive);
-          console.error("Archive keys:", Object.keys(archive));
           throw new Error("Invalid response from server: missing archive ID");
         }
 
-        console.log("Upload successful! Archive ID:", archive.id);
-        console.log("About to proceed with redirect logic...");
-
-        // Add alert to confirm we reach this point
-        alert(
-          `Upload successful! Archive ID: ${archive.id}. About to redirect to analysis page.`
-        );
-
         setUploadedArchiveId(archive.id);
-        console.log("Archive ID set:", archive.id);
 
         // Save upload data to localStorage for persistence
         const uploadData = {
@@ -205,55 +162,35 @@ export function FileUpload({ setResults }: FileUploadProps) {
           url: url,
         });
 
-        console.log("Redirecting to:", url);
-        console.log("Archive ID:", archive.id);
-        console.log("File name:", archive.file_name || fileToUpload.name);
-
         // Try multiple redirect methods
         try {
           // Method 1: Direct assignment
-          console.log("Attempting Method 1: window.location.href");
           window.location.href = url;
-          console.log("Method 1: window.location.href set successfully");
         } catch (error) {
-          console.error("Method 1 failed:", error);
+          // Method 1 failed, try Method 2
         }
 
         // Method 2: Using router (if available)
         try {
           if (router && router.push) {
-            console.log("Attempting Method 2: router.push");
             router.push(url);
-            console.log("Method 2: router.push called successfully");
-          } else {
-            console.log("Method 2: router.push not available");
           }
         } catch (error) {
-          console.error("Method 2 failed:", error);
+          // Method 2 failed, try Method 3
         }
 
         // Method 3: Force redirect after a short delay
-        console.log("Setting up Method 3: delayed redirect");
         setTimeout(() => {
-          console.log("Method 3: Force redirect after delay");
           try {
             window.location.replace(url);
-            console.log("Method 3: window.location.replace called");
           } catch (error) {
-            console.error("Method 3 failed:", error);
+            // All methods failed
           }
         }, 100);
       } catch (error: any) {
-        console.error("Upload error:", error);
-        console.error("Error response:", error.response);
-        console.error("Error message:", error.message);
-        console.error("Error stack:", error.stack);
-
         let errorMessage = "Upload failed. Please try again.";
 
         if (error.response) {
-          console.error("Response status:", error.response.status);
-          console.error("Response data:", error.response.data);
           errorMessage =
             error.response.data?.detail ||
             error.response.data?.message ||
@@ -368,125 +305,6 @@ export function FileUpload({ setResults }: FileUploadProps) {
             </div>
           </CardContent>
         </Card>
-
-        {/* Test buttons */}
-        <div className="mt-6 text-center space-x-2">
-          <Button
-            onClick={() => {
-              const testUrl =
-                "/sequential-analysis?archive_id=1&file_name=test.pdf";
-              console.log("Test redirect to:", testUrl);
-              console.log("Current location:", window.location.href);
-              window.location.href = testUrl;
-              console.log("Redirect command executed");
-            }}
-            variant="outline"
-          >
-            Test Redirect
-          </Button>
-          <Button
-            onClick={() => {
-              console.log("Testing simple redirect to dashboard");
-              window.location.href = "/dashboard";
-            }}
-            variant="outline"
-          >
-            Test Dashboard
-          </Button>
-          <Button
-            onClick={() => {
-              console.log("Testing immediate redirect to sequential analysis");
-              const testUrl =
-                "/sequential-analysis?archive_id=999&file_name=test.pdf";
-              console.log("Redirecting to:", testUrl);
-              window.location.href = testUrl;
-            }}
-            variant="outline"
-          >
-            Test Sequential
-          </Button>
-          <Button
-            onClick={async () => {
-              try {
-                console.log("Testing API connection...");
-                const { authAPI } = await import("@/lib/api");
-                const response = await authAPI.getCurrentUser();
-                console.log("API test successful:", response.data);
-                toast({
-                  title: "API Test Successful",
-                  description: "Backend is reachable and authentication works",
-                });
-              } catch (error) {
-                console.error("API test failed:", error);
-                toast({
-                  title: "API Test Failed",
-                  description:
-                    "Backend is not reachable or authentication failed",
-                  variant: "destructive",
-                });
-              }
-            }}
-            variant="outline"
-          >
-            Test API
-          </Button>
-          <Button
-            onClick={async () => {
-              try {
-                console.log("Testing upload endpoint directly...");
-                const { archiveAPI } = await import("@/lib/api");
-                // Create a small test file
-                const testFile = new File(["test content"], "test.pdf", {
-                  type: "application/pdf",
-                });
-                console.log("Created test file:", testFile);
-                const response = await archiveAPI.uploadDocument(testFile);
-                console.log("Upload test successful:", response.data);
-                toast({
-                  title: "Upload Test Successful",
-                  description: "Upload endpoint is working",
-                });
-              } catch (error) {
-                console.error("Upload test failed:", error);
-                toast({
-                  title: "Upload Test Failed",
-                  description: "Upload endpoint is not working",
-                  variant: "destructive",
-                });
-              }
-            }}
-            variant="outline"
-          >
-            Test Upload
-          </Button>
-        </div>
-
-        {/* Fallback button if redirect doesn't work */}
-        {uploadSuccess && (
-          <div className="mt-6 text-center">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <span className="text-green-800 font-medium">
-                  Upload Successful!
-                </span>
-              </div>
-              <p className="text-green-700 text-sm mb-3">
-                File "{uploadSuccess.fileName}" uploaded successfully. If you
-                weren't redirected automatically, click below to view analysis.
-              </p>
-              <Button
-                onClick={() => {
-                  console.log("Manual redirect to:", uploadSuccess.url);
-                  window.location.href = uploadSuccess.url;
-                }}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                View Analysis Results
-              </Button>
-            </div>
-          </div>
-        )}
 
         <div className="mt-8 text-center">
           <div className="flex items-center justify-center space-x-6 text-sm text-gray-600">
