@@ -98,6 +98,66 @@ class CRUDArchive(CRUDBase[Archive, ArchiveCreate, ArchiveUpdate]):
         db.refresh(archive)
         return archive
 
+    def update_abstract_analysis(
+        self,
+        db: Session,
+        *,
+        archive_id: int,
+        abstract_results: Optional[List[AnalysisItem]] = None,
+        abstract_summary: Optional[Dict[str, Any]] = None,
+        status: str = "completed",
+        error_message: Optional[str] = None,
+    ) -> Optional[Archive]:
+        archive = db.query(Archive).filter(Archive.id == archive_id).first()
+        if not archive:
+            return None
+        
+        archive.abstract_status = status
+        if error_message:
+            archive.abstract_error = error_message
+        else:
+            archive.abstract_error = None
+            
+        if abstract_results is not None:
+            archive.abstract_results = self._normalize_items(abstract_results) or []
+        
+        if abstract_summary is not None:
+            archive.abstract_summary = abstract_summary
+        
+        db.commit()
+        db.refresh(archive)
+        return archive
+
+    def update_acknowledgement_analysis(
+        self,
+        db: Session,
+        *,
+        archive_id: int,
+        acknowledgement_results: Optional[List[AnalysisItem]] = None,
+        acknowledgement_summary: Optional[Dict[str, Any]] = None,
+        status: str = "completed",
+        error_message: Optional[str] = None,
+    ) -> Optional[Archive]:
+        archive = db.query(Archive).filter(Archive.id == archive_id).first()
+        if not archive:
+            return None
+        
+        archive.acknowledgement_status = status
+        if error_message:
+            archive.acknowledgement_error = error_message
+        else:
+            archive.acknowledgement_error = None
+            
+        if acknowledgement_results is not None:
+            archive.acknowledgement_results = self._normalize_items(acknowledgement_results) or []
+        
+        if acknowledgement_summary is not None:
+            archive.acknowledgement_summary = acknowledgement_summary
+        
+        db.commit()
+        db.refresh(archive)
+        return archive
+
     def count_by_user(self, db: Session, *, user_id: int) -> int:
         return db.query(Archive).filter(Archive.user_id == user_id).count()
 

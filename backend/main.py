@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from utils.pdf_reader import extract_text_with_pages, PDFReader
 from utils.ollama_client import ask_ollama_fast, OllamaClient
 from prompt import prompt_manager, result_formatter
+from prompt.result_formatter import ResultFormatter
 from database import init_database, check_database_health
 from routes import api_router
 
@@ -241,7 +242,7 @@ async def analyze_abstract(file: UploadFile = File(...)):
         # Analyze abstract with Ollama
         ollama_client = OllamaClient()
         analysis_prompt = prompt_manager.get_abstract_analysis_prompt(abstract)
-        analysis_result = await ollama_client.analyze_document(analysis_prompt)
+        analysis_result = ollama_client.analyze_document(analysis_prompt)
         
         # Parse analysis results
         formatter = ResultFormatter()
@@ -286,7 +287,7 @@ async def analyze_acknowledgement(file: UploadFile = File(...)):
         # Analyze acknowledgement with Ollama
         ollama_client = OllamaClient()
         analysis_prompt = prompt_manager.get_acknowledgement_analysis_prompt(acknowledgement)
-        analysis_result = await ollama_client.analyze_document(analysis_prompt)
+        analysis_result = ollama_client.analyze_document(analysis_prompt)
         
         # Parse analysis results
         formatter = ResultFormatter()

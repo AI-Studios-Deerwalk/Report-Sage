@@ -1,934 +1,510 @@
-"use client"
+"use client";
 
-import React, { useState, useCallback, useEffect } from "react"
-import { useDropzone } from "react-dropzone"
-import { Upload, FileText, X, AlertCircle, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useRouter } from "next/router"
-import { archiveAPI } from "@/lib/api"
-import { useAuth } from "@/contexts/AuthContext"
-import { useToast } from "@/hooks/use-toast"
-import { OTPPurpose } from "@/lib/api"
+import React, { useState, useCallback } from "react";
+import { useDropzone } from "react-dropzone";
+import { useRouter } from "next/router";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import {
+  Upload,
+  FileText,
+  X,
+  CheckCircle,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UploadedFile {
-  file: File
-  id: string
-}
-
-interface ProgressState {
-  current: number
-  total: number
-  percentage: number
+  id: string;
+  file: File;
 }
 
 interface FileUploadProps {
-  setResults?: (results: any) => void
-  onAnalysisComplete?: (completed: boolean) => void
+  setResults?: (results: any) => void;
 }
 
-export function FileUpload({ setResults, onAnalysisComplete }: FileUploadProps) {
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
-  const [loading, setLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
-  const [progress, setProgress] = useState<ProgressState>({ current: 0, total: 0, percentage: 0 })
-  const [analysisCompleted, setAnalysisCompleted] = useState<boolean>(false)
-  const [showVerificationWarning, setShowVerificationWarning] = useState<boolean>(false)
-  const [isSendingVerification, setIsSendingVerification] = useState<boolean>(false)
-  const [abortController, setAbortController] = useState<AbortController | null>(null)
-  const [progressInterval, setProgressInterval] = useState<NodeJS.Timeout | undefined>(undefined)
-  const router = useRouter()
-  const { user, resendOTP } = useAuth()
-  const { toast } = useToast()
+export function FileUpload({ setResults }: FileUploadProps) {
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [uploadedArchiveId, setUploadedArchiveId] = useState<number | null>(
+    null
+  );
+  const [recentUpload, setRecentUpload] = useState<any>(null);
+  const [uploadSuccess, setUploadSuccess] = useState<any>(null);
+  const { toast } = useToast();
 
-  // Cleanup effect for component unmount
-  useEffect(() => {
-    return () => {
-      // Cleanup on unmount
-      if (abortController) {
-        abortController.abort()
+  // Check for recent upload on component mount
+  React.useEffect(() => {
+    const recentUploadData = localStorage.getItem("recent_upload");
+    if (recentUploadData) {
+      try {
+        const uploadData = JSON.parse(recentUploadData);
+        setRecentUpload(uploadData);
+      } catch (error) {
+        console.error("Error parsing recent upload:", error);
+        localStorage.removeItem("recent_upload");
       }
-      if (progressInterval) {
-        clearInterval(progressInterval)
+    }
+  }, []);
+
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      setError(null);
+
+      // Check authentication first
+      if (!isAuthenticated) {
+        setError("You must be logged in to upload files. Please login first.");
+        toast({
+          title: "Authentication Required",
+          description: "Please login to upload files.",
+          variant: "destructive",
+        });
+        return;
       }
-    }
-  }, [abortController, progressInterval])
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    // Check if user is verified
-    if (user && !user.is_email_verified) {
-      setShowVerificationWarning(true)
-      toast({
-        title: "Email Verification Required",
-        description: "Please verify your email address to proceed with file uploads.",
-        variant: "destructive",
-      })
-      return
-    }
+      // Validate file types
+      const validFiles = acceptedFiles.filter((file) => {
+        if (file.type !== "application/pdf") {
+          setError("Only PDF files are allowed.");
+          return false;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          // 10MB limit
+          setError("File size must be less than 10MB.");
+          return false;
+        }
+        return true;
+      });
 
-    // Filter for PDF files only
-    const pdfFiles = acceptedFiles.filter(file => file.type === 'application/pdf')
-    
-    if (pdfFiles.length === 0 && acceptedFiles.length > 0) {
-      setError("Please select PDF files only. Only PDF documents are supported for analysis.")
-      return
-    }
+      if (validFiles.length === 0) {
+        return;
+      }
 
-    // Check file size limit (10MB per file)
-    const maxSize = 10 * 1024 * 1024 // 10MB
-    const oversizedFiles = pdfFiles.filter(file => file.size > maxSize)
-    
-    if (oversizedFiles.length > 0) {
-      setError(`File size limit exceeded. Maximum file size is 10MB. Please compress or split your files.`)
-      return
-    }
+      // Add files to state immediately for display
+      const newFiles: UploadedFile[] = validFiles.map((file) => ({
+        id: Math.random().toString(36).substr(2, 9),
+        file,
+      }));
+      setUploadedFiles(newFiles);
 
-    const newFiles = pdfFiles.map((file) => ({
-      file,
-      id: crypto.randomUUID(),
-    }))
-    setUploadedFiles((prev) => [...prev, ...newFiles])
-    setError(null)
-    setShowVerificationWarning(false) // Hide warning when files are successfully added
-    
-    toast({
-      title: "Files Added",
-      description: `Successfully added ${pdfFiles.length} PDF file${pdfFiles.length > 1 ? 's' : ''} for analysis.`,
-    })
-  }, [user, toast])
+      try {
+        // Import API client
+        const { archiveAPI } = await import("@/lib/api");
+
+        // Upload the first file (we'll handle multiple files later if needed)
+        const fileToUpload = validFiles[0];
+
+        console.log("Starting upload for file:", fileToUpload.name);
+        console.log("File size:", fileToUpload.size);
+        console.log("File type:", fileToUpload.type);
+
+        // Check if user is authenticated
+        console.log("User authenticated:", isAuthenticated);
+        console.log("User data:", user);
+        console.log(
+          "Auth token exists:",
+          !!localStorage.getItem("access_token")
+        );
+
+        if (!isAuthenticated) {
+          throw new Error(
+            "You must be logged in to upload files. Please login first."
+          );
+        }
+
+        console.log("About to call archiveAPI.uploadDocument...");
+        console.log(
+          "API Base URL:",
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+        );
+
+        let response;
+        try {
+          // Add a timeout wrapper
+          const uploadPromise = archiveAPI.uploadDocument(fileToUpload);
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error("Upload timeout after 30 seconds")),
+              30000
+            )
+          );
+
+          console.log("Starting upload with timeout...");
+          response = await Promise.race([uploadPromise, timeoutPromise]);
+          console.log("Upload response received:", response);
+          console.log("Upload API call completed successfully");
+        } catch (apiError: any) {
+          console.error("Upload API call failed:", apiError);
+          console.error("Error type:", typeof apiError);
+          console.error("Error message:", apiError?.message || "Unknown error");
+          console.error("Error stack:", apiError?.stack || "No stack trace");
+          throw apiError;
+        }
+
+        const archive = (response as any).data;
+        console.log("Archive data extracted:", archive);
+        console.log("Response status:", (response as any).status);
+        console.log("Response headers:", (response as any).headers);
+
+        if (!archive) {
+          console.error("No archive data in response");
+          console.error("Full response:", response);
+          throw new Error("No archive data received from server");
+        }
+
+        if (!archive.id) {
+          console.error("Invalid response - missing archive ID");
+          console.error("Archive object:", archive);
+          console.error("Archive keys:", Object.keys(archive));
+          throw new Error("Invalid response from server: missing archive ID");
+        }
+
+        console.log("Upload successful! Archive ID:", archive.id);
+        console.log("About to proceed with redirect logic...");
+
+        // Add alert to confirm we reach this point
+        alert(
+          `Upload successful! Archive ID: ${archive.id}. About to redirect to analysis page.`
+        );
+
+        setUploadedArchiveId(archive.id);
+        console.log("Archive ID set:", archive.id);
+
+        // Save upload data to localStorage for persistence
+        const uploadData = {
+          archive_id: archive.id,
+          file_name: archive.file_name || fileToUpload.name,
+          analysis_results: [],
+          summary_data: null,
+          uploaded_at: new Date().toISOString(),
+        };
+        localStorage.setItem("recent_upload", JSON.stringify(uploadData));
+
+        // Show success toast
+        toast({
+          title: "Upload successful!",
+          description: `File "${fileToUpload.name}" uploaded successfully. Starting analysis...`,
+        });
+
+        // Set upload success data for fallback
+        const url = `/sequential-analysis?archive_id=${
+          archive.id
+        }&file_name=${encodeURIComponent(
+          archive.file_name || fileToUpload.name
+        )}`;
+
+        setUploadSuccess({
+          archiveId: archive.id,
+          fileName: archive.file_name || fileToUpload.name,
+          url: url,
+        });
+
+        console.log("Redirecting to:", url);
+        console.log("Archive ID:", archive.id);
+        console.log("File name:", archive.file_name || fileToUpload.name);
+
+        // Try multiple redirect methods
+        try {
+          // Method 1: Direct assignment
+          console.log("Attempting Method 1: window.location.href");
+          window.location.href = url;
+          console.log("Method 1: window.location.href set successfully");
+        } catch (error) {
+          console.error("Method 1 failed:", error);
+        }
+
+        // Method 2: Using router (if available)
+        try {
+          if (router && router.push) {
+            console.log("Attempting Method 2: router.push");
+            router.push(url);
+            console.log("Method 2: router.push called successfully");
+          } else {
+            console.log("Method 2: router.push not available");
+          }
+        } catch (error) {
+          console.error("Method 2 failed:", error);
+        }
+
+        // Method 3: Force redirect after a short delay
+        console.log("Setting up Method 3: delayed redirect");
+        setTimeout(() => {
+          console.log("Method 3: Force redirect after delay");
+          try {
+            window.location.replace(url);
+            console.log("Method 3: window.location.replace called");
+          } catch (error) {
+            console.error("Method 3 failed:", error);
+          }
+        }, 100);
+      } catch (error: any) {
+        console.error("Upload error:", error);
+        console.error("Error response:", error.response);
+        console.error("Error message:", error.message);
+        console.error("Error stack:", error.stack);
+
+        let errorMessage = "Upload failed. Please try again.";
+
+        if (error.response) {
+          console.error("Response status:", error.response.status);
+          console.error("Response data:", error.response.data);
+          errorMessage =
+            error.response.data?.detail ||
+            error.response.data?.message ||
+            errorMessage;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        setError(errorMessage);
+        toast({
+          title: "Upload failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    },
+    [toast, isAuthenticated]
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    multiple: true,
     accept: {
-      'application/pdf': ['.pdf']
-    }
-  })
+      "application/pdf": [".pdf"],
+    },
+    multiple: true,
+    maxFiles: 5,
+  });
 
-  const removeFile = (id: string) => {
-    setUploadedFiles((prev) => prev.filter((f) => f.id !== id))
-  }
-
-  const cancelAnalysis = () => {
-    // Abort any ongoing requests
-    if (abortController) {
-      abortController.abort()
-      setAbortController(null)
-    }
-    
-    // Clear progress interval
-    if (progressInterval) {
-      clearInterval(progressInterval)
-      setProgressInterval(undefined)
-    }
-    
-    // Reset states without showing error
-    setLoading(false)
-    setProgress({ current: 0, total: 0, percentage: 0 })
-    setError(null)
-    
-    toast({
-      title: "Analysis Cancelled",
-      description: "The analysis process has been cancelled. You can start a new analysis.",
-      variant: "default",
-    })
-  }
-
-  const handleCheckForCompletedAnalysis = async () => {
-    try {
-      console.log('Manually checking for completed analysis...')
-      setLoading(true)
-      setError(null)
-      
-      // Get recent archives to check for completed analysis
-      const { archiveAPI } = await import('@/lib/api')
-      const response = await archiveAPI.getArchives({ limit: 10 }) // Get last 10 archives
-      const archives = response.data.archives || response.data
-      
-      console.log('Found archives:', archives)
-      
-      // Look for the most recent completed analysis
-      // First try to find analysis for the currently uploaded file
-      let recentCompleted = null
-      if (uploadedFiles.length > 0) {
-        const currentFileName = uploadedFiles[0].file.name
-        recentCompleted = archives.find((archive: any) => 
-          archive.processing_status === 'completed' && 
-          archive.file_name === currentFileName &&
-          archive.created_at && 
-          new Date(archive.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000) // Within last 24 hours
-        )
-      }
-      
-      // If no match for current file, look for any recent completed analysis
-      if (!recentCompleted) {
-        recentCompleted = archives.find((archive: any) => 
-          archive.processing_status === 'completed' && 
-          archive.created_at && 
-          new Date(archive.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000) // Within last 24 hours
-        )
-      }
-      
-      if (recentCompleted) {
-        console.log('Found completed analysis:', recentCompleted)
-        
-        // Format results for abstract analysis
-        const results = {
-          analysis_results: recentCompleted.analysis_results || [],
-          summary_data: recentCompleted.summary_data || null,
-          file_name: recentCompleted.file_name,
-          archive_id: recentCompleted.id
-        }
-        
-        if (setResults) {
-          setResults(results)
-        }
-        if (onAnalysisComplete) {
-          onAnalysisComplete(true)
-        }
-        setAnalysisCompleted(true)
-        
-        // Show success toast
-        toast({
-          title: "Analysis Found!",
-          description: `Found completed analysis for "${recentCompleted.file_name}". Results are now available.`,
-          variant: "default",
-        })
-        
-        return
-      } else {
-        // No completed analysis found
-        setError("No completed analysis found. The analysis might still be in progress or may have failed.")
-        toast({
-          title: "No Analysis Found",
-          description: "No completed analysis found in the last 24 hours.",
-          variant: "destructive",
-        })
-      }
-    } catch (error: any) {
-      console.error('Error checking for completed analysis:', error)
-      setError("Failed to check for completed analysis. Please try again later.")
-      toast({
-        title: "Check Failed",
-        description: "Unable to check for completed analysis. Please ensure the backend is running.",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleVerifyEmail = async () => {
-    if (!user) return
-
-    setIsSendingVerification(true)
-    try {
-      // Send OTP email
-      await resendOTP(parseInt(user.uid), OTPPurpose.VERIFICATION)
-      
-      // Store verification data in localStorage for the OTP page
-      localStorage.setItem('pendingVerificationUserId', user.uid)
-      localStorage.setItem('pendingVerificationEmail', user.email)
-      
-      // Show success toast
-      toast({
-        title: "Verification email sent",
-        description: "A verification email with OTP has been sent to your inbox.",
-      })
-      
-      // Redirect to OTP verification page
-      router.push(`/verify-otp?userId=${user.uid}&email=${encodeURIComponent(user.email)}`)
-    } catch (error: any) {
-      toast({
-        title: "Failed to send verification email",
-        description: error.message || "Please try again later.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSendingVerification(false)
-    }
-  }
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes"
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
-  }
-
-  const getProgressMessage = (percentage: number): string => {
-    if (percentage < 20) return "Uploading PDF file to archive..."
-    if (percentage < 40) return "Extracting text from document..."
-    if (percentage < 60) return "Analyzing with Ollama AI..."
-    if (percentage < 80) return "Generating suggestions and warnings..."
-    if (percentage < 100) return "Saving analysis results to archive..."
-    return "Analysis complete! Results ready to view."
-  }
-
-  const analyzeFiles = async () => {
-    // Check if user is verified
-    if (user && !user.is_email_verified) {
-      setShowVerificationWarning(true)
-      toast({
-        title: "Email Verification Required",
-        description: "Please verify your email address to proceed with file analysis.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (uploadedFiles.length === 0) {
-      setError("Please select at least one PDF file to analyze.")
-      return
-    }
-
-    // Additional validation
-    if (uploadedFiles.length > 5) {
-      setError("Maximum 5 files can be analyzed at once. Please remove some files and try again.")
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-    setProgress({ current: 0, total: 10, percentage: 0 })
-    
-    // Create abort controller for cancellation
-    const controller = new AbortController()
-    setAbortController(controller)
-    
-    // Start progress simulation
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        const newPercentage = Math.min(prev.percentage + Math.random() * 15, 85)
-        return {
-          ...prev,
-          percentage: newPercentage
-        }
-      })
-    }, 1000)
-    setProgressInterval(interval)
-    
-    // Declare archiveId outside try block so it's accessible in catch
-    let archiveId: number | null = null;
-    
-    try {
-      // First, check if backend is ready
-      try {
-        const healthCheck = await fetch('http://localhost:8000/health');
-        const healthData = await healthCheck.json();
-        
-        if (healthData.status !== 'healthy') {
-          console.warn('Backend not fully ready, but proceeding with upload...');
-        }
-      } catch (healthError) {
-        console.warn('Health check failed, but proceeding with upload...');
-      }
-      
-      // For now, analyze the first file (can be extended for batch processing)
-      const firstFile = uploadedFiles[0].file
-      
-      // Upload document to archive (single attempt only)
-      // Check if cancelled
-      if (controller.signal.aborted) {
-        throw new Error('Upload cancelled by user');
-      }
-      
-      const uploadResponse = await archiveAPI.uploadDocument(firstFile)
-      archiveId = uploadResponse.data.id; // Set archiveId here
-      
-      // Show upload success toast
-      toast({
-        title: "Analysis Started",
-        description: "Your PDF has been uploaded successfully. AI analysis is now in progress.",
-        variant: "default",
-      })
-      
-      // Wait for analysis to complete by polling the archive (no timeout)
-      let analysisComplete = false
-      let attempts = 0
-      let consecutiveNetworkErrors = 0
-      const maxConsecutiveNetworkErrors = 10 // Allow up to 10 consecutive network errors
-      
-      console.log('Starting polling for archive ID:', archiveId)
-      
-      while (!analysisComplete) {
-        // Check if cancelled
-        if (controller.signal.aborted) {
-          throw new Error('Analysis cancelled by user');
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second
-        attempts++
-        
-        console.log(`Polling attempt ${attempts} for archive ${archiveId}`)
-        
-        try {
-          // Use a longer timeout for polling requests
-          if (!archiveId) {
-            throw new Error('Archive ID not available');
-          }
-          const archiveResponse = await archiveAPI.getArchive(archiveId)
-          const archive = archiveResponse.data
-          
-          console.log(`Archive ${archiveId} status: ${archive.processing_status}`, archive)
-          
-          if (archive.processing_status === 'completed') {
-            console.log('Analysis completed successfully, setting results...')
-            analysisComplete = true
-            
-            // Complete the progress
-            setProgress(prev => ({ ...prev, percentage: 100 }))
-            
-            // Format results for abstract analysis
-            const results = {
-              analysis_results: archive.analysis_results || [],
-              summary_data: archive.summary_data || null,
-              file_name: archive.file_name,
-              archive_id: archive.id
-            }
-            
-            console.log('Formatted results:', results)
-            
-            try {
-              if (setResults) {
-                console.log('Calling setResults with:', results)
-                setResults(results)
-              }
-              if (onAnalysisComplete) {
-                console.log('Calling onAnalysisComplete with true')
-                onAnalysisComplete(true)
-              }
-              setAnalysisCompleted(true)
-              
-              // Show success toast
-              toast({
-                title: "Analysis Complete",
-                description: `Successfully analyzed "${archive.file_name}". Results are now available.`,
-                variant: "default",
-              })
-
-              // Stay on dashboard to show results instead of navigating away
-              // router.push('/archive') - commented out to stay on dashboard
-              return // Exit the function successfully
-            } catch (callbackError) {
-              console.error('Error in success callbacks:', callbackError)
-              // Don't throw here, just log the error
-            }
-            
-            break
-          } else if (archive.processing_status === 'failed') {
-            throw new Error(archive.error_message || 'Analysis failed')
-          }
-          
-          // Update progress based on status
-          if (archive.processing_status === 'processing') {
-            setProgress(prev => ({
-              ...prev,
-              percentage: Math.min(prev.percentage + 2, 80)
-            }))
-          }
-        } catch (pollError: any) {
-          console.warn(`Polling error:`, pollError);
-          
-          if (pollError.response?.status === 404) {
-            // Archive not found yet, continue polling
-            continue
-          }
-          
-          // Handle network errors during polling - continue polling instead of failing
-          if (pollError.request && !pollError.response) {
-            consecutiveNetworkErrors++;
-            console.warn(`Network error during polling (${consecutiveNetworkErrors}/${maxConsecutiveNetworkErrors}), continuing to poll...`, pollError);
-            
-            // If we have too many consecutive network errors, throw an error
-            if (consecutiveNetworkErrors >= maxConsecutiveNetworkErrors) {
-              throw new Error('Too many consecutive network errors. Please check your connection and try again.');
-            }
-            
-            // Wait a bit longer before retrying on network errors
-            await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
-            continue;
-          } else {
-            // Reset network error counter on successful requests
-            consecutiveNetworkErrors = 0;
-          }
-          
-          // Only throw for actual server errors (4xx, 5xx) that are not temporary
-          if (pollError.response && pollError.response.status >= 400) {
-            // For 5xx errors, continue polling as they might be temporary
-            if (pollError.response.status >= 500) {
-              console.warn('Server error during polling, continuing to poll...', pollError);
-              await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds for 5xx errors
-              continue;
-            }
-            // For 4xx errors (except 404), throw the error
-            throw pollError;
-          }
-          
-          // For other errors, continue polling
-          console.warn('Unexpected error during polling, continuing...', pollError);
-          continue;
-        }
-      }
-      
-      console.log('Analysis completed successfully after', attempts, 'attempts')
-      
-    } catch (err: any) {
-      console.error("Upload error:", err)
-      console.error("Error details:", {
-        message: err.message,
-        response: err.response,
-        request: err.request,
-        stack: err.stack
-      })
-      
-      // Check if this is a user cancellation
-      if (err.message && (err.message.includes('cancelled by user') || err.message.includes('Upload cancelled by user') || err.message.includes('Analysis cancelled by user'))) {
-        // Don't show error for user cancellation - it's handled by cancelAnalysis function
-        return
-      }
-      
-      // Try to check if analysis completed despite the error
-      if (archiveId) {
-        try {
-          console.log('Attempting to check if analysis completed despite error...')
-          const fallbackResponse = await archiveAPI.getArchive(archiveId)
-          const fallbackArchive = fallbackResponse.data
-          
-          if (fallbackArchive.processing_status === 'completed') {
-            console.log('Analysis was completed! Loading results despite polling error...')
-            
-            // Format results for abstract analysis
-            const results = {
-              analysis_results: fallbackArchive.analysis_results || [],
-              summary_data: fallbackArchive.summary_data || null,
-              file_name: fallbackArchive.file_name,
-              archive_id: fallbackArchive.id
-            }
-            
-            if (setResults) {
-              setResults(results)
-            }
-            if (onAnalysisComplete) {
-              onAnalysisComplete(true)
-            }
-            setAnalysisCompleted(true)
-            
-            // Show success toast
-            toast({
-              title: "Analysis Complete",
-              description: `Successfully analyzed "${fallbackArchive.file_name}". Results are now available.`,
-              variant: "default",
-            })
-            
-            return // Exit successfully
-          }
-        } catch (fallbackError) {
-          console.log('Fallback check also failed:', fallbackError)
-        }
-      }
-      
-      let errorMessage = ''
-      
-      if (err.response) {
-        errorMessage = `Server error: ${err.response.status} - ${err.response.data?.detail || 'Unknown error'}`
-        setError(errorMessage)
-      } else if (err.request && !err.response) {
-        // This is a network error (no response received)
-        errorMessage = "Connection error: Unable to reach the analysis server. Please ensure the backend service is running and try again."
-        setError(errorMessage)
-      } else if (err.message && err.message.includes('timed out')) {
-        errorMessage = "Analysis timed out. The process took longer than expected. Please check your archive later or try with a smaller file."
-        setError(errorMessage)
-      } else {
-        errorMessage = `Analysis failed: ${err.message || 'An unexpected error occurred. Please try again.'}`
-        setError(errorMessage)
-      }
-      
-      // Show error toast only for actual errors, not cancellations
-      toast({
-        title: "Upload Failed",
-        description: errorMessage,
-        variant: "destructive",
-      })
-    } finally {
-      // Clear progress interval
-      if (progressInterval) {
-        clearInterval(progressInterval)
-        setProgressInterval(undefined)
-      }
-      
-      // Clear abort controller
-      setAbortController(null)
-      
-      setLoading(false)
-      // Reset progress after a short delay
-      setTimeout(() => {
-        setProgress({ current: 0, total: 0, percentage: 0 })
-      }, 2000)
-    }
-  }
-
-  // If analysis is completed, don't render the upload interface
-  if (analysisCompleted) {
-    return null
-  }
+  // Don't render SequentialAnalysisResults here - let the dashboard handle it
+  // The dashboard will show SequentialAnalysisResults when showUpload is false
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 flex items-center justify-center p-4 w-full">
       {/* Animated floating geometric shapes */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Large floating hexagons */}
-        <div
-          className="absolute top-10 left-10 w-32 h-32 border-2 border-emerald-200/30 rotate-12 animate-spin"
-          style={{
-            clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-            animationDuration: "20s",
-            animationDirection: "reverse",
-          }}
-        ></div>
+        <div className="absolute top-20 left-10 w-20 h-20 bg-emerald-200 rounded-full opacity-20 animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-16 h-16 bg-teal-200 rounded-full opacity-30 animate-bounce"></div>
+        <div className="absolute bottom-32 left-1/4 w-12 h-12 bg-green-200 rounded-full opacity-25 animate-pulse"></div>
+        <div className="absolute bottom-20 right-1/3 w-24 h-24 bg-emerald-100 rounded-full opacity-20 animate-bounce"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-teal-100 rounded-full opacity-15 animate-pulse"></div>
+      </div>
 
-        <div
-          className="absolute top-1/4 right-16 w-24 h-24 border-2 border-teal-300/40 -rotate-45 animate-pulse"
-          style={{
-            clipPath: "polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)",
-            animationDuration: "3s",
-          }}
-        ></div>
-
-        {/* Floating orbs with inner glow */}
-        <div
-          className="absolute top-1/3 left-1/4 w-16 h-16 rounded-full bg-gradient-to-r from-emerald-300/20 to-teal-300/20 animate-bounce"
-          style={{ animationDuration: "4s", animationDelay: "0s" }}
-        >
-          <div className="w-full h-full rounded-full bg-gradient-to-r from-emerald-400/30 to-teal-400/30 animate-pulse"></div>
+      <div className="relative z-10 w-full max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+            Upload Your Research Papers
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Get instant AI-powered analysis of your research papers. Upload PDF
+            files and receive detailed insights on abstract and acknowledgement
+            sections.
+          </p>
         </div>
 
-        <div
-          className="absolute bottom-1/4 right-1/3 w-12 h-12 rounded-full bg-gradient-to-r from-green-300/25 to-emerald-300/25 animate-bounce"
-          style={{ animationDuration: "3.5s", animationDelay: "1s" }}
-        >
-          <div className="w-full h-full rounded-full bg-gradient-to-r from-green-400/35 to-emerald-400/35 animate-pulse"></div>
-        </div>
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-2xl">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-2xl font-semibold text-gray-800 flex items-center justify-center gap-2">
+              <Upload className="h-8 w-8 text-emerald-600" />
+              Drag & Drop Your Files
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-8">
+            {error && (
+              <Alert className="mb-6 border-red-200 bg-red-50">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-800">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
 
-        {/* Morphing blob shapes */}
-        <div className="absolute top-16 right-1/4 w-40 h-40 opacity-20">
-          <div
-            className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-400 rounded-full animate-pulse"
-            style={{
-              borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%",
-              animation: "morph 8s ease-in-out infinite",
-            }}
-          ></div>
-        </div>
-
-        <div className="absolute bottom-20 left-1/5 w-32 h-32 opacity-15">
-          <div
-            className="w-full h-full bg-gradient-to-tr from-teal-400 to-green-400 rounded-full animate-pulse"
-            style={{
-              borderRadius: "30% 70% 70% 30% / 30% 30% 70% 70%",
-              animation: "morph 6s ease-in-out infinite reverse",
-            }}
-          ></div>
-        </div>
-
-        {/* Particle system - floating dots */}
-        {Array.from({ length: 15 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 bg-emerald-400/30 rounded-full animate-ping"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 2}s`,
-            }}
-          />
-        ))}
-
-        {/* Cosmic rays/lines */}
-        <div className="absolute top-0 left-1/4 w-px h-32 bg-gradient-to-b from-transparent via-emerald-300/50 to-transparent transform rotate-12 animate-pulse"></div>
-        <div
-          className="absolute top-1/3 right-1/5 w-px h-24 bg-gradient-to-b from-transparent via-teal-300/40 to-transparent transform -rotate-45 animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute bottom-1/4 left-1/3 w-px h-20 bg-gradient-to-b from-transparent via-green-300/45 to-transparent transform rotate-75 animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-
-        {/* Constellation pattern */}
-        <div className="absolute top-1/5 left-1/2 w-1 h-1 bg-emerald-400/60 rounded-full animate-twinkle"></div>
-        <div
-          className="absolute top-1/4 left-1/2 w-1 h-1 bg-teal-400/60 rounded-full animate-twinkle"
-          style={{ animationDelay: "0.5s" }}
-        ></div>
-        <div
-          className="absolute top-1/3 left-1/2 w-1 h-1 bg-green-400/60 rounded-full animate-twinkle"
-          style={{ animationDelay: "1s" }}
-        ></div>
-
-        {/* Connecting lines for constellation */}
-        <svg className="absolute top-1/5 left-1/2 w-8 h-16 opacity-30">
-          <line
-            x1="2"
-            y1="0"
-            x2="2"
-            y2="16"
-            stroke="url(#emeraldGradient)"
-            strokeWidth="0.5"
-            className="animate-pulse"
-          />
-          <line
-            x1="2"
-            y1="16"
-            x2="2"
-            y2="32"
-            stroke="url(#emeraldGradient)"
-            strokeWidth="0.5"
-            className="animate-pulse"
-            style={{ animationDelay: "0.5s" }}
-          />
-          <defs>
-            <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="rgb(52 211 153 / 0.6)" />
-              <stop offset="100%" stopColor="rgb(20 184 166 / 0.6)" />
-            </linearGradient>
-          </defs>
-        </svg>
-
-        {/* Spiral galaxy effect */}
-        <div className="absolute top-1/2 left-1/6 w-20 h-20 opacity-10">
-          <div
-            className="w-full h-full border-2 border-emerald-400 rounded-full animate-spin"
-            style={{ animationDuration: "15s" }}
-          >
             <div
-              className="w-3/4 h-3/4 border border-teal-400 rounded-full m-2 animate-spin"
-              style={{ animationDuration: "10s", animationDirection: "reverse" }}
+              {...getRootProps()}
+              className={`
+                border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all duration-300
+                ${
+                  isDragActive
+                    ? "border-emerald-500 bg-emerald-50 scale-105"
+                    : "border-gray-300 hover:border-emerald-400 hover:bg-emerald-50"
+                }
+              `}
             >
-              <div
-                className="w-1/2 h-1/2 border border-green-400 rounded-full m-3 animate-spin"
-                style={{ animationDuration: "5s" }}
-              ></div>
+              <input {...getInputProps()} />
+
+              <div className="flex flex-col items-center space-y-4">
+                <div className="p-4 bg-emerald-100 rounded-full">
+                  <Upload className="h-12 w-12 text-emerald-600" />
+                </div>
+
+                <div>
+                  <p className="text-xl font-medium text-gray-700 mb-2">
+                    {isDragActive
+                      ? "Drop your files here"
+                      : "Drag & drop your PDF files here"}
+                  </p>
+                  <p className="text-gray-500 mb-4">or click to browse files</p>
+                  <Badge
+                    variant="outline"
+                    className="text-emerald-600 border-emerald-200"
+                  >
+                    PDF files only • Max 10MB each • Up to 5 files
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 text-center">
+              <p className="text-sm text-gray-500">
+                Supported formats: PDF • Maximum file size: 10MB • Maximum
+                files: 5
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Test buttons */}
+        <div className="mt-6 text-center space-x-2">
+          <Button
+            onClick={() => {
+              const testUrl =
+                "/sequential-analysis?archive_id=1&file_name=test.pdf";
+              console.log("Test redirect to:", testUrl);
+              console.log("Current location:", window.location.href);
+              window.location.href = testUrl;
+              console.log("Redirect command executed");
+            }}
+            variant="outline"
+          >
+            Test Redirect
+          </Button>
+          <Button
+            onClick={() => {
+              console.log("Testing simple redirect to dashboard");
+              window.location.href = "/dashboard";
+            }}
+            variant="outline"
+          >
+            Test Dashboard
+          </Button>
+          <Button
+            onClick={() => {
+              console.log("Testing immediate redirect to sequential analysis");
+              const testUrl =
+                "/sequential-analysis?archive_id=999&file_name=test.pdf";
+              console.log("Redirecting to:", testUrl);
+              window.location.href = testUrl;
+            }}
+            variant="outline"
+          >
+            Test Sequential
+          </Button>
+          <Button
+            onClick={async () => {
+              try {
+                console.log("Testing API connection...");
+                const { authAPI } = await import("@/lib/api");
+                const response = await authAPI.getCurrentUser();
+                console.log("API test successful:", response.data);
+                toast({
+                  title: "API Test Successful",
+                  description: "Backend is reachable and authentication works",
+                });
+              } catch (error) {
+                console.error("API test failed:", error);
+                toast({
+                  title: "API Test Failed",
+                  description:
+                    "Backend is not reachable or authentication failed",
+                  variant: "destructive",
+                });
+              }
+            }}
+            variant="outline"
+          >
+            Test API
+          </Button>
+          <Button
+            onClick={async () => {
+              try {
+                console.log("Testing upload endpoint directly...");
+                const { archiveAPI } = await import("@/lib/api");
+                // Create a small test file
+                const testFile = new File(["test content"], "test.pdf", {
+                  type: "application/pdf",
+                });
+                console.log("Created test file:", testFile);
+                const response = await archiveAPI.uploadDocument(testFile);
+                console.log("Upload test successful:", response.data);
+                toast({
+                  title: "Upload Test Successful",
+                  description: "Upload endpoint is working",
+                });
+              } catch (error) {
+                console.error("Upload test failed:", error);
+                toast({
+                  title: "Upload Test Failed",
+                  description: "Upload endpoint is not working",
+                  variant: "destructive",
+                });
+              }
+            }}
+            variant="outline"
+          >
+            Test Upload
+          </Button>
+        </div>
+
+        {/* Fallback button if redirect doesn't work */}
+        {uploadSuccess && (
+          <div className="mt-6 text-center">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <span className="text-green-800 font-medium">
+                  Upload Successful!
+                </span>
+              </div>
+              <p className="text-green-700 text-sm mb-3">
+                File "{uploadSuccess.fileName}" uploaded successfully. If you
+                weren't redirected automatically, click below to view analysis.
+              </p>
+              <Button
+                onClick={() => {
+                  console.log("Manual redirect to:", uploadSuccess.url);
+                  window.location.href = uploadSuccess.url;
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                View Analysis Results
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-8 text-center">
+          <div className="flex items-center justify-center space-x-6 text-sm text-gray-600">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-4 w-4 text-emerald-600" />
+              <span>Secure Upload</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-4 w-4 text-emerald-600" />
+              <span>AI Analysis</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-4 w-4 text-emerald-600" />
+              <span>Instant Results</span>
             </div>
           </div>
         </div>
-
-        {/* Energy waves */}
-        <div className="absolute bottom-1/3 right-1/4 w-24 h-24 opacity-20">
-          <div
-            className="w-full h-full border-2 border-emerald-300 rounded-full animate-ping"
-            style={{ animationDuration: "4s" }}
-          ></div>
-          <div
-            className="absolute inset-2 border border-teal-300 rounded-full animate-ping"
-            style={{ animationDuration: "4s", animationDelay: "1s" }}
-          ></div>
-          <div
-            className="absolute inset-4 border border-green-300 rounded-full animate-ping"
-            style={{ animationDuration: "4s", animationDelay: "2s" }}
-          ></div>
-        </div>
-      </div>
-
-      {/* Custom CSS animations */}
-      <style jsx>{`
-        @keyframes morph {
-          0%, 100% {
-            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-          }
-          50% {
-            border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
-          }
-        }
-        
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.5); }
-        }
-        
-        .animate-twinkle {
-          animation: twinkle 2s ease-in-out infinite;
-        }
-      `}</style>
-
-      <div className="w-full max-w-4xl z-10">
-        {/* Upload Area + Uploaded Files inside the same card */}
-        <Card className="w-full bg-white/95 backdrop-blur-sm shadow-lg shadow-emerald-800/10 rounded-2xl transition-colors relative">
-          {/* Drop zone (hidden after at least one file is uploaded) */}
-          {uploadedFiles.length === 0 && (
-            <div {...getRootProps()} className={`p-12 text-center cursor-pointer transition-all duration-200 ${isDragActive ? "bg-green-50 border-green-400 rounded-2xl" : "hover:bg-gray-50 rounded-2xl"}`}>
-              <input {...getInputProps()} />
-              <div className="flex flex-col items-center gap-4">
-                <div className="p-4 bg-green-100 rounded-2xl">
-                  {loading ? (
-                    <Loader2 className="h-8 w-8 text-green-600 animate-spin" />
-                  ) : (
-                    <Upload className="h-8 w-8 text-green-600" />
-                  )}
-                </div>
-                <div>
-                  <p className="text-lg font-medium text-foreground mb-1">
-                    {loading ? "Analyzing PDF..." : "Upload a file or drag and drop"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {loading 
-                      ? getProgressMessage(progress.percentage)
-                      : isDragActive 
-                        ? "Drop files here..." 
-                        : "PDF files only (max 10MB each)"
-                    }
-                  </p>
-                </div>
-                {!loading && (
-                  <Button variant="outline" className="mt-2 bg-transparent hover:bg-green-50">
-                    Choose Files
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Uploaded Files (inside the card, below the drop zone) */}
-          {uploadedFiles.length > 0 && (
-            <div className="p-12 bg-white min-h-[320px] rounded-xl">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-medium text-foreground">Uploaded Files</h3>
-                <span className="text-sm text-muted-foreground">
-                  {uploadedFiles.length} file{uploadedFiles.length > 1 ? 's' : ''} selected
-                </span>
-              </div>
-              <div className="space-y-3">
-                {uploadedFiles.map((uploadedFile) => (
-                  <Card key={uploadedFile.id} className="p-4 border-gray-200 hover:border-gray-300 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-green-600" />
-                        <div>
-                          <p className="font-medium text-foreground">{uploadedFile.file.name}</p>
-                          <p className="text-sm text-muted-foreground">{formatFileSize(uploadedFile.file.size)}</p>
-                        </div>
-                      </div>
-                      {!loading && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFile(uploadedFile.id)}
-                          className="text-muted-foreground hover:text-destructive transition-colors"
-                          title="Remove file"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-              <div className="flex flex-col items-center pt-6">
-                {!loading && (
-                  <Button 
-                    onClick={analyzeFiles}
-                    size="lg"
-                    className="bg-gray-800 hover:bg-gray-900 text-white text-lg px-10 min-w-[180px] rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-                  >
-                    <Upload className="mr-2 h-5 w-5" />
-                    Analyze Files
-                  </Button>
-                )}
-                {loading && (
-                  <div className="flex gap-4">
-                    <Button 
-                      disabled
-                      size="lg"
-                      className="bg-gray-800 text-white text-lg px-10 min-w-[180px] rounded-lg shadow-md transition-all duration-200"
-                    >
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Analyzing...
-                    </Button>
-                    <Button 
-                      onClick={cancelAnalysis}
-                      variant="outline"
-                      size="lg"
-                      className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 text-lg px-10 min-w-[180px] rounded-lg transition-all duration-200"
-                    >
-                      <X className="mr-2 h-5 w-5" />
-                      Cancel
-                    </Button>
-                  </div>
-                )}
-              </div>
-              
-              {loading && (
-                <div className="w-full max-w-lg mt-8 mx-auto">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-sm font-medium text-gray-700">Analyzing...</span>
-                    <span className="text-sm font-semibold text-blue-600">{Math.round(progress.percentage)}%</span>
-                  </div>
-                  <div className="relative">
-                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500 ease-out"
-                        style={{ width: `${progress.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </Card>
-
-        {/* Email Verification Warning - Only show when user attempts to upload without verification */}
-        {showVerificationWarning && user && !user.is_email_verified && (
-          <Alert className="border-amber-200 bg-amber-50 shadow-sm mt-4">
-            <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
-            <AlertDescription className="text-amber-800">
-              <span className="font-semibold">Email verification required.</span> Please verify your email address to proceed with file uploads.{" "}
-              <button 
-                onClick={handleVerifyEmail}
-                className="text-blue-600 underline hover:text-blue-700 font-medium cursor-pointer"
-                disabled={isSendingVerification}
-              >
-                {isSendingVerification ? "Sending..." : "Verify Email"}
-              </button>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <Alert variant="destructive" className="border-red-200 bg-red-50 mt-4">
-            <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">
-              {error}
-              {error.includes('Connection error') && (
-                <div className="mt-2">
-                  <Button
-                    onClick={handleCheckForCompletedAnalysis}
-                    variant="outline"
-                    size="sm"
-                    disabled={loading}
-                    className="text-red-600 border-red-300 hover:bg-red-50 disabled:opacity-50"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Checking...
-                      </>
-                    ) : (
-                      'Check for Completed Analysis'
-                    )}
-                  </Button>
-                </div>
-              )}
-            </AlertDescription>
-          </Alert>
-        )}
       </div>
     </div>
-  )
+  );
 }
