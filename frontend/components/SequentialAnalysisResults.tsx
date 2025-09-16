@@ -491,7 +491,7 @@ export function SequentialAnalysisResults({
   return (
     <div className="w-full max-w-4xl mx-auto mt-8">
       {onBack && (
-        <div className="mb-4 flex gap-2">
+        <div className="mb-4">
           <Button
             onClick={onBack}
             variant="outline"
@@ -499,40 +499,6 @@ export function SequentialAnalysisResults({
             className="flex items-center gap-2"
           >
             ← Back to Upload
-          </Button>
-          <Button
-            onClick={() => {
-              // Clear localStorage and reload page to start fresh
-              localStorage.removeItem("recent_upload");
-              window.location.href = "/dashboard";
-            }}
-            variant="default"
-            size="sm"
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            📄 New Upload
-          </Button>
-          <Button
-            onClick={() => {
-              // Just go to dashboard without clearing recent upload
-              window.location.href = "/dashboard";
-            }}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            🏠 Dashboard
-          </Button>
-          <Button
-            onClick={() => {
-              refetchAbstract();
-              refetchAcknowledgement();
-            }}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            🔄 Refresh Data
           </Button>
         </div>
       )}
@@ -548,10 +514,18 @@ export function SequentialAnalysisResults({
         }`}
       >
         <CardHeader
-          className="cursor-pointer hover:bg-gray-50 transition-colors select-none"
+          className={`transition-colors select-none ${
+            abstractStatus === "completed"
+              ? "cursor-pointer hover:bg-gray-50"
+              : "cursor-not-allowed opacity-60"
+          }`}
           onClick={(e) => {
             e.preventDefault();
-            // Allow manual toggle regardless of status
+            // Only allow opening if abstract is completed
+            if (abstractStatus !== "completed") {
+              return;
+            }
+            // Allow manual toggle only when completed
             setIsAbstractOpen(!isAbstractOpen);
           }}
         >
@@ -627,10 +601,18 @@ export function SequentialAnalysisResults({
         }`}
       >
         <CardHeader
-          className="cursor-pointer hover:bg-gray-50 transition-colors select-none"
+          className={`transition-colors select-none ${
+            acknowledgementStatus === "completed"
+              ? "cursor-pointer hover:bg-gray-50"
+              : "cursor-not-allowed opacity-60"
+          }`}
           onClick={(e) => {
             e.preventDefault();
-            // Allow manual toggle regardless of status
+            // Only allow opening if acknowledgement is completed
+            if (acknowledgementStatus !== "completed") {
+              return;
+            }
+            // Allow manual toggle only when completed
             setIsAcknowledgementOpen(!isAcknowledgementOpen);
           }}
         >
