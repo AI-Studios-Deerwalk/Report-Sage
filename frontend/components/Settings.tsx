@@ -30,6 +30,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { ToastProvider, ToastViewport } from "@radix-ui/react-toast";
+import { Toaster } from "./ui/toaster";
 
 interface SettingsProps {
   className?: string;
@@ -74,6 +76,10 @@ export default function Settings({ className }: SettingsProps) {
   // Profile picture states
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  //error handling for profile image
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
 
   // Sync notification state with user data
   useEffect(() => {
@@ -328,12 +334,15 @@ export default function Settings({ className }: SettingsProps) {
         "image/gif",
       ];
       if (!allowedTypes.includes(file.type)) {
+         const message = "Invalid file type. Only JPEG, PNG, and GIF images are allowed.";
+         setErrorMessage(message);
         toast({
           title: "Error",
           description:
             "Invalid file type. Only JPEG, PNG, and GIF images are allowed.",
           variant: "destructive",
         });
+        setTimeout(() => setErrorMessage(null), 5000);
         return;
       }
 
@@ -359,6 +368,9 @@ export default function Settings({ className }: SettingsProps) {
         });
       } catch (error: any) {
         console.error("Profile picture upload error:", error);
+        const message = error.response?.data?.detail || "Failed to upload profile picture.";
+        setErrorMessage(message);
+        setTimeout(() => setErrorMessage(null), 5000);
         toast({
           title: "Error",
           description:
@@ -487,6 +499,8 @@ export default function Settings({ className }: SettingsProps) {
   };
 
   return (
+ 
+       
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 flex items-center justify-center p-4 pb-16">
       {/* Animated floating geometric shapes - same as FAQ page */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -602,6 +616,8 @@ export default function Settings({ className }: SettingsProps) {
       `}</style>
 
       {/* Main Settings container */}
+       
+       
       <div className="w-full max-w-4xl z-10">
         {/* Header */}
         <div className="text-center mb-8">
@@ -1108,6 +1124,8 @@ export default function Settings({ className }: SettingsProps) {
           </div>
         </div>
       </div>
+         <Toaster/>
     </div>
+    
   );
 }

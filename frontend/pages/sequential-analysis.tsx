@@ -22,6 +22,7 @@ export default function SequentialAnalysisPage() {
         <SequentialAnalysisResults
           archiveId={archiveId}
           fileName={fileName}
+          
           onBack={handleBack}
         />
       </main>

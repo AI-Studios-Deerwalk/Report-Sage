@@ -503,14 +503,18 @@ export function SequentialAnalysisResults({
             <ChevronLeft className="fixed group-hover:relative" />
 
             {/* Text appears on hover */}
-            <span className="whitespace-nowrap relative -top-px leading-none opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out group-hover:translate-x-1">
+            <span className="whitespace-nowrap relative -top-px leading-none opacity-0 group-hover:opacity-100 transition-all duration-150 ease-in-out ">
               Back to upload
             </span>
           </Button>
         </div>
       )}
-
-      <h1 className="text-xl font-bold my-6">{fileName}</h1>
+      <div className="my-6">
+        <h1 className="text-xl font-bold ">{fileName}</h1>
+        <p>View Report</p>
+      </div>
+      
+      
 
       {/* Abstract Analysis Section */}
       <Card
