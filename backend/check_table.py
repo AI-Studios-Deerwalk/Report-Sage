@@ -5,7 +5,7 @@ from database.connection import db_manager
 async def check_table():
     db_manager.initialize()
     async with db_manager.get_async_session() as session:
-        result = await session.execute(text("SELECT table_name FROM information_schema.tables WHERE table_name = 'document_rules'"))
+        result = await session.execute(text("SELECT table_name FROM information_schema.tables WHERE table_name = 'users'"))
         row = result.fetchone()
         print('Table exists:', row is not None)
         if row:

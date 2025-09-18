@@ -5,6 +5,4 @@ Provides PostgreSQL connection and database utilities
 
 from database.connection import DatabaseManager, get_db_session, init_database, check_database_health
 from database.config import DatabaseConfig
-from models.document_rules import DocumentRule
-
-__all__ = ['DatabaseManager', 'get_db_session', 'DatabaseConfig', 'init_database', 'check_database_health', 'DocumentRule']
+__all__ = ['DatabaseManager', 'get_db_session', 'DatabaseConfig', 'init_database', 'check_database_health']
