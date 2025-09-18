@@ -29,6 +29,7 @@ class User(Base):
     fname = Column(String(128), nullable=False)  # First name
     lname = Column(String(128), nullable=False)  # Last name
     phone_number = Column(String(20), nullable=True)  # Phone number
+    profile_url = Column(String(500), nullable=True)  # Profile picture URL
     
     # Academic info removed
     
@@ -57,6 +58,7 @@ class User(Base):
             "fname": self.fname,
             "lname": self.lname,
             "phone_number": self.phone_number,
+            "profile_url": self.profile_url,
             "is_email_verified": self.is_email_verified,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
@@ -71,6 +73,7 @@ class User(Base):
             "fname": self.fname,
             "lname": self.lname,
             "phone_number": self.phone_number,
+            "profile_url": self.profile_url,
             "is_email_verified": self.is_email_verified,
             "created_at": self.created_at.isoformat()
         }

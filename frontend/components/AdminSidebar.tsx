@@ -11,7 +11,8 @@ import {
   Settings,
   HelpCircle,
   ListOrdered,
-  AlertTriangle
+  AlertTriangle,
+  FileText
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -111,6 +112,12 @@ export default function AdminSidebar({
       id: "tools",
       label: "Config",
       icon: <Settings className="h-5 w-5" />,
+      requiresSuperAdmin: true
+    },
+    {
+      id: "document-config",
+      label: "Document Config",
+      icon: <FileText className="h-5 w-5" />,
       requiresSuperAdmin: true
     }
   ]

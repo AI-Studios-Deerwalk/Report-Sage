@@ -13,6 +13,7 @@ class UserBase(BaseModel):
     fname: str = Field(..., min_length=1, max_length=128, description="User's first name")
     lname: str = Field(..., min_length=1, max_length=128, description="User's last name")
     phone_number: Optional[str] = Field(None, max_length=20, description="User's phone number")
+    profile_url: Optional[str] = Field(None, max_length=500, description="User's profile picture URL")
 
 
 class UserCreate(UserBase):
@@ -38,6 +39,7 @@ class UserUpdate(BaseModel):
     fname: Optional[str] = Field(None, min_length=1, max_length=128)
     lname: Optional[str] = Field(None, min_length=1, max_length=128)
     phone_number: Optional[str] = Field(None, max_length=20)
+    profile_url: Optional[str] = Field(None, max_length=500)
     is_active: Optional[bool] = None
 
 

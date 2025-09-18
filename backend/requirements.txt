@@ -15,8 +15,11 @@ email-validator==2.1.0
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 sqlalchemy==2.0.23
+<<<<<<< HEAD
+=======
 asyncpg==0.29.0
-alembic==1.13.1
+alembic
+>>>>>>> c793ca9e05f4ccfc61dcffefc6b7e56b5e0819c2
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6

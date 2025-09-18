@@ -11,5 +11,6 @@ from models.admin import Admin
 from models.faq import FAQ
 from models.issue import Issue
 from models.config import Config
+from models.document_rules import DocumentRule
 
-__all__ = ["User", "UserOTP", "Archive", "Admin", "FAQ", "Issue", "Config"]
+__all__ = ["User", "UserOTP", "Archive", "Admin", "FAQ", "Issue", "Config", "DocumentRule"]

@@ -1,258 +1,256 @@
-"""
-Prompt Manager Module
-Handles loading and formatting AI prompt templates
-"""
-
-import os
-import logging
-
+import re
+from typing import List, Dict, Any
 
 class PromptManager:
-    """Manages AI prompt templates and formatting"""
+    """Manages prompts and text extraction for document analysis"""
     
     def __init__(self):
-        self.prompt_dir = os.path.dirname(os.path.abspath(__file__))
-        # Load base prompts once
-        self.tu_rules = self.load_template("tu_formatting_rules")
-        self.feedback_instructions = self.load_template("feedback_instructions")
-        # Extract key formatting rules for analysis
-        self.analysis_rules = self._extract_analysis_rules()
+        self.structure_keywords = [
+            "structure", "format", "layout", "organization", "sections",
+            "heading", "subheading", "outline", "framework", "arrangement",
+            "order", "sequence", "hierarchy", "flow", "coherence"
+        ]
+        
+        self.grammar_keywords = [
+            "grammar", "syntax", "punctuation", "spelling", "tense",
+            "agreement", "conjugation", "sentence", "clause", "phrase",
+            "verb", "noun", "adjective", "adverb", "preposition",
+            "conjunction", "article", "pronoun", "capitalization"
+        ]
     
-    def load_template(self, template_name):
-        """Load a prompt template from file"""
-        try:
-            template_path = os.path.join(self.prompt_dir, f"{template_name}.txt")
-            with open(template_path, 'r', encoding='utf-8') as f:
-                return f.read()
-        except Exception as e:
-            logging.error(f"Failed to load template {template_name}: {str(e)}")
-            return None
+    def get_structure_keywords(self) -> List[str]:
+        """Get keywords for structure-related errors"""
+        return self.structure_keywords
     
-    def _extract_analysis_rules(self):
-        """Extract key formatting rules from TU rules for AI analysis"""
-        if not self.tu_rules:
-            return "- No formatting rules loaded"
+    def get_grammar_keywords(self) -> List[str]:
+        """Get keywords for grammar-related errors"""
+        return self.grammar_keywords
+    
+    def extract_abstract_from_pdf_content(self, content: str) -> str:
+        """Extract abstract section from PDF content with improved patterns"""
+        # Clean the content first
+        content = re.sub(r'\s+', ' ', content)  # Normalize whitespace
+        content = re.sub(r'\n+', ' ', content)  # Replace newlines with spaces
         
-        # Parse rules directly from tu_formatting_rules.txt content
-        rules = []
-        lines = self.tu_rules.split('\n')
-        
-        # Track if we're in a formatting standards section
-        in_formatting_section = False
-        
-        for line in lines:
-            line = line.strip()
+        # Look for common abstract patterns with more comprehensive matching
+        abstract_patterns = [
+            # Standard abstract patterns
+            r'(?i)abstract\s*:?\s*(.*?)(?=\s*(?:introduction|1\.|chapter|section|keywords|key\s+words|acknowledgment|references))',
+            r'(?i)abstract\s*:?\s*(.*?)(?=\s*\d+\.)',
+            r'(?i)abstract\s*:?\s*(.*?)(?=\s*[A-Z][a-z]+\s*:)',
+            r'(?i)abstract\s*:?\s*(.*?)(?=\s*Keywords)',
+            r'(?i)abstract\s*:?\s*(.*?)(?=\s*Key\s+Words)',
             
-            # Check for formatting standards sections
-            if 'FORMATTING STANDARDS' in line or 'Page Setup' in line or 'Typography' in line or \
-               'Page Numbering' in line or 'Heading Hierarchy' in line or 'Tables and Figures' in line or \
-               'Table of Contents' in line or 'CITATION AND REFERENCING' in line or 'IEEE Citation' in line:
-                in_formatting_section = True
-                continue
+            # Alternative patterns
+            r'(?i)summary\s*:?\s*(.*?)(?=\s*(?:introduction|1\.|chapter|section|keywords|key\s+words))',
+            r'(?i)executive\s+summary\s*:?\s*(.*?)(?=\s*(?:introduction|1\.|chapter|section))',
+            
+            # Pattern for abstracts that start immediately after "Abstract"
+            r'(?i)abstract\s*:?\s*([^.]+\.[^.]+\.[^.]+\.[^.]+\.[^.]+\..*)',
+        ]
+        
+        for pattern in abstract_patterns:
+            match = re.search(pattern, content, re.DOTALL | re.MULTILINE)
+            if match:
+                abstract = match.group(1).strip()
+                # Clean up the abstract
+                abstract = re.sub(r'\s+', ' ', abstract)  # Normalize whitespace
+                abstract = re.sub(r'\n+', ' ', abstract)  # Replace newlines with spaces
+                # Remove common artifacts
+                abstract = re.sub(r'^\s*[^\w\s]*\s*', '', abstract)  # Remove leading non-word chars
+                abstract = re.sub(r'\s*[^\w\s]*\s*$', '', abstract)  # Remove trailing non-word chars
                 
-            # Stop at quality standards or other non-formatting sections  
-            if 'CONTENT QUALITY' in line or 'QUALITY ASSURANCE' in line or 'SUBMISSION' in line:
-                in_formatting_section = False
-                continue
+                if len(abstract) > 100:  # Ensure it's substantial (increased threshold)
+                    return abstract
+        
+        # If no pattern matches, try to find text between common markers
+        fallback_patterns = [
+            r'(?i)(?:abstract|summary)\s*:?\s*(.*?)(?=\s*(?:introduction|1\.|chapter|section))',
+            r'(?i)(?:abstract|summary)\s*:?\s*(.*?)(?=\s*\d+\.)',
+            r'(?i)(?:abstract|summary)\s*:?\s*(.*?)(?=\s*[A-Z][a-z]+\s*:)',
+        ]
+        
+        for pattern in fallback_patterns:
+            match = re.search(pattern, content, re.DOTALL | re.MULTILINE)
+            if match:
+                abstract = match.group(1).strip()
+                abstract = re.sub(r'\s+', ' ', abstract)
+                abstract = re.sub(r'\n+', ' ', abstract)
+                abstract = re.sub(r'^\s*[^\w\s]*\s*', '', abstract)
+                abstract = re.sub(r'\s*[^\w\s]*\s*$', '', abstract)
+                if len(abstract) > 100:
+                    return abstract
+        
+        # If still no match, try to find the first substantial paragraph
+        paragraphs = re.split(r'\.\s+', content)
+        for i, para in enumerate(paragraphs):
+            para = para.strip()
+            if len(para) > 150 and i < 3:  # Look at first 3 paragraphs
+                # Check if it looks like an abstract (contains common abstract words)
+                abstract_indicators = ['project', 'study', 'research', 'method', 'result', 'conclusion', 'objective', 'aim', 'purpose']
+                if any(word in para.lower() for word in abstract_indicators):
+                    return para + '.'
+        
+        # Last resort: return the first few sentences
+        sentences = re.split(r'[.!?]+', content)
+        if sentences:
+            first_sentences = ' '.join(sentences[:5]).strip()  # Take more sentences
+            if len(first_sentences) > 100:
+                return first_sentences
+        
+        return ""
+    
+    def extract_acknowledgement_from_pdf_content(self, content: str) -> str:
+        """Extract acknowledgement section from PDF content with improved patterns"""
+        # Clean the content first
+        content = re.sub(r'\s+', ' ', content)  # Normalize whitespace
+        content = re.sub(r'\n+', ' ', content)  # Replace newlines with spaces
+        
+        # Look for common acknowledgement patterns with more comprehensive matching
+        acknowledgement_patterns = [
+            # Standard acknowledgement patterns
+            r'(?i)acknowledgement[s]?\s*:?\s*(.*?)(?=\s*(?:references|bibliography|appendix|chapter|section|\d+\.|abstract|introduction))',
+            r'(?i)acknowledgment[s]?\s*:?\s*(.*?)(?=\s*(?:references|bibliography|appendix|chapter|section|\d+\.|abstract|introduction))',
+            r'(?i)acknowledgement[s]?\s*:?\s*(.*?)(?=\s*[A-Z][a-z]+\s*:)',
+            r'(?i)acknowledgment[s]?\s*:?\s*(.*?)(?=\s*[A-Z][a-z]+\s*:)',
             
-            # Extract rules only from formatting sections
-            if in_formatting_section and line.startswith('- '):
-                # Clean up markdown formatting and extract meaningful rules
-                clean_line = line.replace('**', '').replace(':', ' -')
+            # Alternative patterns
+            r'(?i)thanks?\s*:?\s*(.*?)(?=\s*(?:references|bibliography|appendix|chapter|section|\d+\.))',
+            r'(?i)gratitude\s*:?\s*(.*?)(?=\s*(?:references|bibliography|appendix|chapter|section|\d+\.))',
+            
+            # Pattern for acknowledgements that start immediately after "Acknowledgement"
+            r'(?i)acknowledgement[s]?\s*:?\s*([^.]+\.[^.]+\.[^.]+\..*)',
+        ]
+        
+        for pattern in acknowledgement_patterns:
+            match = re.search(pattern, content, re.DOTALL | re.MULTILINE)
+            if match:
+                acknowledgement = match.group(1).strip()
+                # Clean up the acknowledgement
+                acknowledgement = re.sub(r'\s+', ' ', acknowledgement)  # Normalize whitespace
+                acknowledgement = re.sub(r'\n+', ' ', acknowledgement)  # Replace newlines with spaces
+                # Remove common artifacts
+                acknowledgement = re.sub(r'^\s*[^\w\s]*\s*', '', acknowledgement)  # Remove leading non-word chars
+                acknowledgement = re.sub(r'\s*[^\w\s]*\s*$', '', acknowledgement)  # Remove trailing non-word chars
                 
-                # Filter for actual formatting rules (avoid structure/content items)
-                formatting_keywords = self.get_structure_keywords()
-                
-                if any(keyword in clean_line.lower() for keyword in formatting_keywords):
-                    rules.append(clean_line)
+                if len(acknowledgement) > 50:  # Ensure it's substantial
+                    return acknowledgement
         
-        # If no rules extracted, fall back to feedback instructions
-        if not rules and self.feedback_instructions:
-            return self._extract_from_feedback_instructions()
-            
-        return "\n".join(rules) if rules else "- No formatting rules extracted"
-    
-    def _extract_from_feedback_instructions(self):
-        """Extract key points from feedback instructions as fallback"""
-        rules = []
-        lines = self.feedback_instructions.split('\n')
+        # If no pattern matches, try to find text between common markers
+        fallback_patterns = [
+            r'(?i)(?:acknowledgement[s]?|acknowledgment[s]?|thanks?)\s*:?\s*(.*?)(?=\s*(?:references|bibliography|appendix|chapter|section))',
+            r'(?i)(?:acknowledgement[s]?|acknowledgment[s]?|thanks?)\s*:?\s*(.*?)(?=\s*\d+\.)',
+        ]
         
-        for line in lines:
-            line = line.strip()
-            if line.startswith('   - ') and ('violation' in line.lower() or 'format' in line.lower()):
-                # Clean up and format as rule
-                clean_line = line.replace('   - ', '- ').replace('violations', 'requirements')
-                rules.append(clean_line)
+        for pattern in fallback_patterns:
+            match = re.search(pattern, content, re.DOTALL | re.MULTILINE)
+            if match:
+                acknowledgement = match.group(1).strip()
+                acknowledgement = re.sub(r'\s+', ' ', acknowledgement)
+                acknowledgement = re.sub(r'\n+', ' ', acknowledgement)
+                acknowledgement = re.sub(r'^\s*[^\w\s]*\s*', '', acknowledgement)
+                acknowledgement = re.sub(r'\s*[^\w\s]*\s*$', '', acknowledgement)
+                if len(acknowledgement) > 50:
+                    return acknowledgement
         
-        return "\n".join(rules) if rules else "- No rules extracted from feedback instructions"
+        return ""
     
-    def get_structure_keywords(self):
-        """Extract structure/formatting keywords dynamically from feedback_instructions.txt"""
-        if not self.feedback_instructions:
-            return []
-        
-        keywords = []
-        lines = self.feedback_instructions.split('\n')
-        for line in lines:
-            line = line.strip()
-            # Extract words from error category descriptions
-            if 'structure problems' in line.lower() or 'format violations' in line.lower():
-                # Extract actual keywords mentioned in the line
-                words = line.lower().replace('-', ' ').replace('(', ' ').replace(')', ' ').split()
-                keywords.extend([word for word in words if len(word) > 3 and word.isalpha()])
-        return list(set(keywords))  # Remove duplicates
-    
-    def get_grammar_keywords(self):
-        """Extract grammar keywords dynamically from feedback_instructions.txt"""
-        if not self.feedback_instructions:
-            return []
-            
-        keywords = []
-        lines = self.feedback_instructions.split('\n')
-        for line in lines:
-            line = line.strip()
-            if 'grammar' in line.lower() or 'spelling' in line.lower() or 'warning' in line.lower():
-                words = line.lower().replace('-', ' ').replace('(', ' ').replace(')', ' ').split()
-                keywords.extend([word for word in words if len(word) > 3 and word.isalpha()])
-        return list(set(keywords))
-    
-    def get_error_keywords(self):
-        """Extract error keywords dynamically from feedback_instructions.txt"""
-        if not self.feedback_instructions:
-            return []
-            
-        keywords = []
-        lines = self.feedback_instructions.split('\n')
-        for line in lines:
-            line = line.strip()
-            if '[ERROR]' in line or 'critical issues' in line.lower() or 'must fix' in line.lower():
-                words = line.lower().replace('-', ' ').replace('(', ' ').replace(')', ' ').split()
-                keywords.extend([word for word in words if len(word) > 3 and word.isalpha()])
-        return list(set(keywords))
-    
-    def get_warning_keywords(self):
-        """Extract warning keywords dynamically from feedback_instructions.txt"""
-        if not self.feedback_instructions:
-            return []
-            
-        keywords = []
-        lines = self.feedback_instructions.split('\n')
-        for line in lines:
-            line = line.strip()
-            if '[WARNING]' in line or 'important issues' in line.lower() or 'should fix' in line.lower():
-                words = line.lower().replace('-', ' ').replace('(', ' ').replace(')', ' ').split()
-                keywords.extend([word for word in words if len(word) > 3 and word.isalpha()])
-        return list(set(keywords))
-    
-    def get_suggestion_keywords(self):
-        """Extract suggestion keywords dynamically from feedback_instructions.txt"""
-        if not self.feedback_instructions:
-            return []
-            
-        keywords = []
-        lines = self.feedback_instructions.split('\n')
-        for line in lines:
-            line = line.strip()
-            if '[SUGGESTION]' in line or 'enhancement ideas' in line.lower() or 'optional' in line.lower():
-                words = line.lower().replace('-', ' ').replace('(', ' ').replace(')', ' ').split()
-                keywords.extend([word for word in words if len(word) > 3 and word.isalpha()])
-        return list(set(keywords))
-    
-    def get_no_violations_phrase(self):
-        """Extract no violations phrase from feedback_instructions.txt"""
-        if not self.feedback_instructions:
-            return "No violations detected"
-        
-        lines = self.feedback_instructions.split('\n')
-        for line in lines:
-            if 'no violations found' in line.lower() and 'respond:' in line.lower():
-                # Extract the phrase after "respond:"
-                if '"' in line:
-                    start = line.find('"') + 1
-                    end = line.rfind('"')
-                    if start > 0 and end > start:
-                        return line[start:end]
-        return "No violations detected"
-    
-    def get_violation_indicators(self):
-        """Extract violation indicators from feedback_instructions.txt"""
-        if not self.feedback_instructions:
-            return []
-        
-        indicators = []
-        lines = self.feedback_instructions.split('\n')
-        for line in lines:
-            # Extract words from error and warning descriptions
-            if any(category in line.lower() for category in ['error', 'warning', 'suggestion']):
-                words = line.lower().replace('-', ' ').replace('(', ' ').replace(')', ' ').split()
-                indicators.extend([word for word in words if len(word) > 3 and word.isalpha()])
-        return list(set(indicators))
-    
-    def get_single_page_analysis_prompt(self, page, text):
-        """Get formatted single page analysis prompt using feedback_instructions.txt"""
-        if not self.tu_rules or not self.feedback_instructions:
-            logging.error("Failed to load base prompt templates")
-            return None
-        
-        # Use feedback instructions content directly
-        return f"""You are a TU format analyzer. Analyze page {page} for format violations.
+    def get_acknowledgement_analysis_prompt(self, acknowledgement: str) -> str:
+        """Generate analysis prompt for acknowledgement evaluation"""
+        return f"""
+You are an expert academic reviewer specializing in technical university report evaluation. Analyze the following acknowledgement section to determine if each required element is PRESENT or MISSING, and provide detailed feedback.
 
-{self.feedback_instructions}
+EVALUATION CRITERIA - Check if these elements are PRESENT or MISSING:
 
-PAGE {page} CONTENT:
-{text[:800]}{"..." if len(text) > 800 else ""}
+1. STUDENT_INFO: Look for student name, roll number, and date
+   - Keywords to look for: "name", "roll", "number", "date", "student", "id", "registration"
+   - Must include: [Student Name], [Roll No.:-], [Date:-] or similar format
+   - Should be clearly identifiable student information
 
-ANALYZE AGAINST THESE RULES:
-{self.analysis_rules}"""
-    
-    def get_batch_analysis_prompt(self, pages):
-        """Get formatted batch analysis prompt using feedback_instructions.txt"""
-        if not self.tu_rules or not self.feedback_instructions:
-            logging.error("Failed to load base prompt templates")
-            return None
-        
-        # Use feedback instructions content directly
-        analysis_instruction = f"""You are analyzing a TU academic document for FORMAT COMPLIANCE. Analyze {len(pages)} pages for formatting violations.
+2. GRATITUDE_EXPRESSION: Look for expressions of thanks and appreciation
+   - Keywords to look for: "thank", "grateful", "appreciation", "acknowledge", "indebted", "sincere", "heartfelt"
+   - Must express genuine gratitude and appreciation
+   - Should be professional and sincere in tone
 
-{self.feedback_instructions}
+3. MENTIONED_PARTIES: Look for specific people or organizations mentioned
+   - Keywords to look for: "supervisor", "teacher", "professor", "instructor", "mentor", "family", "friends", "colleagues", "university", "department", "institution"
+   - Must mention specific individuals or groups who contributed
+   - Should include both academic and personal acknowledgements
 
-SPECIFIC FORMAT REQUIREMENTS TO CHECK:
-- Font: Times New Roman 12pt throughout
-- Margins: 1" top/bottom, 1.25" left, 1" right
-- Line spacing: 1.5 throughout
-- Page numbering: Roman for preliminary, Arabic for main content
-- Headings: Chapter 16pt bold centered, Section 14pt bold left
-- Citations: IEEE numbered format [1], [2], etc.
-- Required sections: Cover, Table of Contents, References
+4. CONTRIBUTION_DESCRIPTION: Look for description of how people helped
+   - Keywords to look for: "guidance", "support", "help", "assistance", "encouragement", "advice", "feedback", "resources", "funding", "criticism"
+   - Must describe what specific help or contribution was provided
+   - Should explain the nature of assistance received
 
-PAGES TO ANALYZE:
+ANALYSIS INSTRUCTIONS:
+- Read the acknowledgement carefully and thoroughly
+- Check if each section contains the required elements
+- If elements are present but unclear or incomplete, mark as PRESENT but provide improvement suggestions
+- If elements are completely missing, mark as MISSING
+- Provide specific feedback about what is present, what is missing, and how to improve
+- DO NOT include any overall evaluation or summary - focus only on the four specific sections
+- DO NOT mention "Overall" or provide general assessments
+
+RESPONSE FORMAT (use plain text, NOT Markdown):
+You MUST use this exact format for each section:
+
+STUDENT_INFO: PRESENT - [Detailed analysis of student information presence. Specify what information is present and what is missing]
+GRATITUDE_EXPRESSION: PRESENT - [Detailed analysis of gratitude expressions. Specify what expressions are present and what is missing]
+MENTIONED_PARTIES: PRESENT - [Detailed analysis of mentioned people/organizations. Specify who is mentioned and what is missing]
+CONTRIBUTION_DESCRIPTION: PRESENT - [Detailed analysis of contribution descriptions. Specify what contributions are described and what is missing]
+
+IMPORTANT: 
+- Use PRESENT or MISSING for each section
+- Always include the dash (-) after the status
+- Provide detailed feedback for each section
+- Do not skip any sections
+
+ACKNOWLEDGEMENT TO ANALYZE:
+{acknowledgement}
+
+Please provide a thorough and detailed analysis focusing on academic standards and technical report requirements.
 """
-        
-        # Add page content
-        for page_data in pages:
-            page_num = page_data['page']
-            text = page_data['text'][:800]  # Increased limit for better analysis
-            analysis_instruction += f"""
---- PAGE {page_num} ---
-{text}{"..." if len(text) > 800 else ""}
+    
+    def get_abstract_analysis_prompt(self, abstract: str) -> str:
+        """Generate analysis prompt for abstract evaluation"""
+        return f"""
+You are an expert academic reviewer specializing in technical university report evaluation. Analyze the following abstract to determine if each required section is PRESENT or MISSING, and provide detailed feedback.
+
+EVALUATION CRITERIA - Check if these elements are PRESENT or MISSING:
+
+1. MOTIVATION: Look for clear problem statement, motivation, research gap, or objectives
+   - Keywords to look for: "problem", "challenge", "issue", "aim", "objective", "purpose", "motivation", "need", "gap"
+   - Must clearly state WHAT problem is being solved and WHY
+
+2. METHODS: Look for research methodology, approach, techniques, or procedures used
+   - Keywords to look for: "method", "approach", "technique", "algorithm", "model", "framework", "using", "implemented", "developed", "applied"
+   - Must describe HOW the research was conducted
+
+3. RESULTS: Look for findings, outcomes, achievements, or performance metrics
+   - Keywords to look for: "result", "finding", "outcome", "achieved", "obtained", "performance", "accuracy", "efficiency", "improvement", "success"
+   - Must describe WHAT was accomplished or discovered
+
+4. CONCLUSION: Look for implications, contributions, or future work
+   - Keywords to look for: "conclusion", "implication", "contribution", "benefit", "impact", "significance", "future", "recommendation"
+   - Must describe the SIGNIFICANCE or IMPACT of the work
+
+ANALYSIS INSTRUCTIONS:
+- Read the abstract carefully and thoroughly
+- Check if each section contains the required elements
+- If elements are present but unclear or incomplete, mark as PRESENT but provide improvement suggestions
+- If elements are completely missing, mark as MISSING
+- Provide specific feedback about what is present, what is missing, and how to improve
+- DO NOT include any overall evaluation or summary - focus only on the four specific sections
+- DO NOT mention "Overall" or provide general assessments
+
+RESPONSE FORMAT (use plain text, NOT Markdown):
+MOTIVATION: [PRESENT/MISSING] - [Detailed analysis of problem statement, objectives, and motivation. Specify what is present and what is missing]
+METHODS: [PRESENT/MISSING] - [Detailed analysis of methodology description. Specify what methods are mentioned and what details are missing]
+RESULTS: [PRESENT/MISSING] - [Detailed analysis of findings and outcomes. Specify what results are presented and what is missing]
+CONCLUSION: [PRESENT/MISSING] - [Detailed analysis of conclusions and implications. Specify what conclusions are drawn and what is missing]
+
+ABSTRACT TO ANALYZE:
+{abstract}
+
+Please provide a thorough and detailed analysis focusing on academic standards and technical report requirements.
 """
-        
-        analysis_instruction += f"""
-
-CRITICAL: Each violation MUST include the page number where it was found.
-FORMAT: [CATEGORY] Page X: Description of violation
-
-EXAMPLES:
-[ERROR] Page 2: Font uses Arial instead of required Times New Roman 12pt
-[WARNING] Page 5: Table caption should be above table, currently below
-[SUGGESTION] Page 8: Consider adding more space between sections
-
-FOCUS ON: Document formatting, layout, fonts, spacing, headings, citations, page structure.
-IGNORE: Content topics, software features, business logic.
-RETURN: Only formatting violations with page numbers in the specified format."""
-        
-        return analysis_instruction
-
-
-# Global instance for easy access
-prompt_manager = PromptManager()

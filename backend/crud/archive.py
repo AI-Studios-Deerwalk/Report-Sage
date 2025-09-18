@@ -24,9 +24,7 @@ class CRUDArchive(CRUDBase[Archive, ArchiveCreate, ArchiveUpdate]):
     def create_with_user(self, db: Session, *, obj_in: ArchiveCreate, user_id: int) -> Archive:
         data = obj_in.model_dump()
         data["user_id"] = user_id
-        data["suggestions"] = self._normalize_items(data.get("suggestions")) or []
-        data["warnings"] = self._normalize_items(data.get("warnings")) or []
-        data["errors"] = self._normalize_items(data.get("errors")) or []
+        data["analysis_results"] = self._normalize_items(data.get("analysis_results")) or []
         db_obj = Archive(**data)
         db.add(db_obj)
         db.commit()
@@ -52,12 +50,8 @@ class CRUDArchive(CRUDBase[Archive, ArchiveCreate, ArchiveUpdate]):
 
     def update(self, db: Session, *, db_obj: Archive, obj_in: ArchiveUpdate) -> Archive:
         data = obj_in.model_dump(exclude_unset=True)
-        if "suggestions" in data and data["suggestions"] is not None:
-            data["suggestions"] = self._normalize_items(data["suggestions"]) or []
-        if "warnings" in data and data["warnings"] is not None:
-            data["warnings"] = self._normalize_items(data["warnings"]) or []
-        if "errors" in data and data["errors"] is not None:
-            data["errors"] = self._normalize_items(data["errors"]) or []
+        if "analysis_results" in data and data["analysis_results"] is not None:
+            data["analysis_results"] = self._normalize_items(data["analysis_results"]) or []
         return super().update(db, db_obj=db_obj, obj_in=data)
 
     def update_analysis_results(
@@ -65,25 +59,24 @@ class CRUDArchive(CRUDBase[Archive, ArchiveCreate, ArchiveUpdate]):
         db: Session,
         *,
         archive_id: int,
-        analysis_content: str,
-        suggestions: Optional[List[AnalysisItem]] = None,
-        warnings: Optional[List[AnalysisItem]] = None,
-        errors: Optional[List[AnalysisItem]] = None,
+        analysis_results: Optional[List[AnalysisItem]] = None,
+        summary_data: Optional[Dict[str, Any]] = None,
         status: str = "completed",
     ) -> Optional[Archive]:
         archive = db.query(Archive).filter(Archive.id == archive_id).first()
         if not archive:
             return None
-        archive.analysis_content = analysis_content
+        
         archive.processing_status = status
         if status == "completed":
             archive.error_message = None
-        if suggestions is not None:
-            archive.suggestions = self._normalize_items(suggestions) or []
-        if warnings is not None:
-            archive.warnings = self._normalize_items(warnings) or []
-        if errors is not None:
-            archive.errors = self._normalize_items(errors) or []
+        
+        if analysis_results is not None:
+            archive.analysis_results = self._normalize_items(analysis_results) or []
+        
+        if summary_data is not None:
+            archive.summary_data = summary_data
+        
         db.commit()
         db.refresh(archive)
         return archive
@@ -101,6 +94,66 @@ class CRUDArchive(CRUDBase[Archive, ArchiveCreate, ArchiveUpdate]):
             return None
         archive.processing_status = status
         archive.error_message = error_message
+        db.commit()
+        db.refresh(archive)
+        return archive
+
+    def update_abstract_analysis(
+        self,
+        db: Session,
+        *,
+        archive_id: int,
+        abstract_results: Optional[List[AnalysisItem]] = None,
+        abstract_summary: Optional[Dict[str, Any]] = None,
+        status: str = "completed",
+        error_message: Optional[str] = None,
+    ) -> Optional[Archive]:
+        archive = db.query(Archive).filter(Archive.id == archive_id).first()
+        if not archive:
+            return None
+        
+        archive.abstract_status = status
+        if error_message:
+            archive.abstract_error = error_message
+        else:
+            archive.abstract_error = None
+            
+        if abstract_results is not None:
+            archive.abstract_results = self._normalize_items(abstract_results) or []
+        
+        if abstract_summary is not None:
+            archive.abstract_summary = abstract_summary
+        
+        db.commit()
+        db.refresh(archive)
+        return archive
+
+    def update_acknowledgement_analysis(
+        self,
+        db: Session,
+        *,
+        archive_id: int,
+        acknowledgement_results: Optional[List[AnalysisItem]] = None,
+        acknowledgement_summary: Optional[Dict[str, Any]] = None,
+        status: str = "completed",
+        error_message: Optional[str] = None,
+    ) -> Optional[Archive]:
+        archive = db.query(Archive).filter(Archive.id == archive_id).first()
+        if not archive:
+            return None
+        
+        archive.acknowledgement_status = status
+        if error_message:
+            archive.acknowledgement_error = error_message
+        else:
+            archive.acknowledgement_error = None
+            
+        if acknowledgement_results is not None:
+            archive.acknowledgement_results = self._normalize_items(acknowledgement_results) or []
+        
+        if acknowledgement_summary is not None:
+            archive.acknowledgement_summary = acknowledgement_summary
+        
         db.commit()
         db.refresh(archive)
         return archive

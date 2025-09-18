@@ -274,8 +274,11 @@ export function IssueList() {
                 >
                   <CardContent className="p-0">
                     <button
-                      onClick={() => toggleItem(item.issue_id)}
-                      className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50/50 transition-colors duration-200"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        toggleItem(item.issue_id)
+                      }}
+                      className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50/50 transition-colors duration-200 select-none"
                     >
                       <div className="flex items-center gap-3 flex-1">
                         <div className="flex-1">

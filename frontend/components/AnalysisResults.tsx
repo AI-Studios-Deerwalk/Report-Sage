@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, CheckCircle, XCircle, Lightbulb, Archive, Share2, Copy, Check } from "lucide-react"
+import { AlertTriangle, CheckCircle, XCircle, Lightbulb, Archive, BookOpen, Target, TrendingUp, Award, ChevronDown, ChevronUp } from "lucide-react"
 import { useRouter } from "next/router"
 import { useToast } from "@/hooks/use-toast"
 
@@ -14,11 +14,18 @@ interface AnalysisItem {
 
 interface AnalysisResultsProps {
   results: {
-    suggestions: AnalysisItem[]
-    warnings: AnalysisItem[]
-    errors: AnalysisItem[]
+    analysis_results: AnalysisItem[]
+    summary_data?: {
+      summary: {
+        total_sections: number
+        present: number
+        partially_present: number
+        missing: number
+        score: number
+        quality: string
+      }
+    }
     file_name: string
-    analysis_content?: string
     archive_id?: number
   }
   onBack?: () => void
@@ -27,95 +34,100 @@ interface AnalysisResultsProps {
 export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
   const router = useRouter()
   const { toast } = useToast()
-  const [copied, setCopied] = useState(false)
+  const [isAbstractOpen, setIsAbstractOpen] = useState(false)
+  const [isAcknowledgementOpen, setIsAcknowledgementOpen] = useState(false)
 
   const handleViewArchives = () => {
     router.push('/archive')
   }
 
-  const handleShareResults = async () => {
-    if (results.archive_id) {
-      const shareUrl = `${window.location.origin}/dashboard?archive_id=${results.archive_id}`
-      
-      try {
-        await navigator.clipboard.writeText(shareUrl)
-        setCopied(true)
-        toast({
-          title: "Link Copied!",
-          description: "Analysis results link has been copied to your clipboard.",
-          variant: "default",
-        })
-        
-        // Reset copied state after 2 seconds
-        setTimeout(() => setCopied(false), 2000)
-      } catch (error) {
-        // Fallback for browsers that don't support clipboard API
-        const textArea = document.createElement('textarea')
-        textArea.value = shareUrl
-        document.body.appendChild(textArea)
-        textArea.select()
-        document.execCommand('copy')
-        document.body.removeChild(textArea)
-        
-        setCopied(true)
-        toast({
-          title: "Link Copied!",
-          description: "Analysis results link has been copied to your clipboard.",
-          variant: "default",
-        })
-        
-        setTimeout(() => setCopied(false), 2000)
-      }
-    }
-  }
+
   const getIcon = (type: string) => {
     switch (type.toLowerCase()) {
-      case 'error':
-        return <XCircle className="h-5 w-5 text-red-500" />
-      case 'warning':
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />
-      case 'suggestion':
-        return <Lightbulb className="h-5 w-5 text-blue-500" />
+      case 'motivation':
+        return <Target className="h-5 w-5 text-blue-500" />
+      case 'methods':
+        return <BookOpen className="h-5 w-5 text-green-500" />
+      case 'results':
+        return <TrendingUp className="h-5 w-5 text-purple-500" />
+      case 'conclusion':
+        return <Award className="h-5 w-5 text-orange-500" />
+      case 'student_info':
+        return <CheckCircle className="h-5 w-5 text-cyan-500" />
+      case 'gratitude_expression':
+        return <Award className="h-5 w-5 text-pink-500" />
+      case 'mentioned_parties':
+        return <BookOpen className="h-5 w-5 text-teal-500" />
+      case 'contribution_description':
+        return <TrendingUp className="h-5 w-5 text-amber-500" />
+      case 'overall':
+        return <Archive className="h-5 w-5 text-indigo-500" />
       default:
         return <CheckCircle className="h-5 w-5 text-gray-500" />
     }
   }
 
-  const renderAnalysisItems = (items: AnalysisItem[], title: string, icon: React.ReactNode) => {
+  const getTypeTitle = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'motivation':
+        return 'Motivation / Problem Statement'
+      case 'methods':
+        return 'Methods / Procedure / Approach'
+      case 'results':
+        return 'Results / Findings / Product'
+      case 'conclusion':
+        return 'Conclusion / Implications'
+      case 'student_info':
+        return 'Student Information'
+      case 'gratitude_expression':
+        return 'Gratitude Expression'
+      case 'mentioned_parties':
+        return 'Mentioned Parties'
+      case 'contribution_description':
+        return 'Contribution Description'
+      case 'overall':
+        return 'Overall Evaluation'
+      default:
+        return type
+    }
+  }
+
+  // Separate analysis items into abstract and acknowledgement sections
+  const getAbstractItems = (items: AnalysisItem[]) => {
+    return items.filter(item => 
+      ['motivation', 'methods', 'results', 'conclusion'].includes(item.type.toLowerCase())
+    )
+  }
+
+  const getAcknowledgementItems = (items: AnalysisItem[]) => {
+    return items.filter(item => 
+      ['student_info', 'gratitude_expression', 'mentioned_parties', 'contribution_description'].includes(item.type.toLowerCase())
+    )
+  }
+
+  const renderAnalysisItems = (items: AnalysisItem[]) => {
     if (items.length === 0) return null
 
     return (
-      <Card className="mb-6 bg-white">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2">
-            {icon}
-            {title} - {items.length}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3 ">
-            {items.map((item, index) => (
-                
-              <div key={index} className="p-3 rounded-lg border bg-white">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <p className="text-sm text-left text-gray-800">{item.message}</p>
-                    {item.page_number && (
-                      <div className="flex gap-2 mt-2">
-                        <Badge variant="outline" className="text-xs">
-                          Page {item.page_number}
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+      <div className="space-y-6">
+        {items.map((item, index) => (
+          <div key={index} className="bg-white p-4 rounded-lg border">
+            <div className="flex items-center gap-2 mb-3">
+              {getIcon(item.type)}
+              <h3 className="text-lg font-semibold text-gray-900">
+                {getTypeTitle(item.type)}
+              </h3>
+            </div>
+            <div className="p-3 rounded-lg border bg-gray-50">
+              <p className="text-sm text-left text-gray-800 whitespace-pre-wrap">{item.message}</p>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        ))}
+      </div>
     )
   }
+
+  const summary = results.summary_data?.summary
 
   return (
     <div className="w-full max-w-4xl mx-auto mt-8">
@@ -131,6 +143,7 @@ export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
           </Button>
         </div>
       )}
+      
       <Card className="mb-6 bg-gradient-to-r from-green-50 to-blue-50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -139,85 +152,106 @@ export function AnalysisResults({ results, onBack }: AnalysisResultsProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-white rounded-lg border">
-              <div className="text-2xl font-bold text-red-600">{results.errors.length}</div>
-              <div className="text-sm text-gray-600">Errors Found</div>
-            </div>
-            <div className="text-center p-4 bg-white rounded-lg border">
-              <div className="text-2xl font-bold text-yellow-600">{results.warnings.length}</div>
-              <div className="text-sm text-gray-600">Warnings</div>
-            </div>
-            <div className="text-center p-4 bg-white rounded-lg border">
-              <div className="text-2xl font-bold text-blue-600">{results.suggestions.length}</div>
-              <div className="text-sm text-gray-600">Suggestions</div>
-            </div>
-          </div>
-          <div className="mt-4 text-center">
+          <div className="text-center">
             <p className="text-sm text-gray-600">
               Analysis completed for: <strong>{results.file_name}</strong>
             </p>
-            {results.archive_id && (
-              <div className="mt-3 flex justify-center gap-2">
-                <Button
-                  onClick={handleShareResults}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="h-4 w-4" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Share2 className="h-4 w-4" />
-                      Share Results
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
+            <p className="text-sm text-gray-600 mt-1">
+              Both Abstract and Acknowledgement sections have been analyzed
+            </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Errors Section */}
-      {renderAnalysisItems(
-        results.errors, 
-        "Errors", 
-        <XCircle className="h-5 w-5 text-red-500" />
-      )}
+      {/* Abstract Analysis Section */}
+      <Card className="mb-6">
+        <CardHeader 
+          className="cursor-pointer hover:bg-gray-50 transition-colors select-none"
+          onClick={(e) => {
+            e.preventDefault()
+            setIsAbstractOpen(!isAbstractOpen)
+          }}
+        >
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-blue-500" />
+              Abstract Analysis
+            </span>
+            {isAbstractOpen ? (
+              <ChevronUp className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            )}
+          </CardTitle>
+        </CardHeader>
+        
+        {isAbstractOpen && (
+          <CardContent>
+            {/* Abstract Analysis Results */}
+            {renderAnalysisItems(getAbstractItems(results.analysis_results))}
 
-      {/* Warnings Section */}
-      {renderAnalysisItems(
-        results.warnings, 
-        "Warnings", 
-        <AlertTriangle className="h-5 w-5 text-yellow-500" />
-      )}
-
-      {/* Suggestions Section */}
-      {renderAnalysisItems(
-        results.suggestions, 
-        "Suggestions", 
-        <Lightbulb className="h-5 w-5 text-blue-500" />
-      )}
-
-      {/* No Issues Found */}
-      {results.errors.length === 0 && results.warnings.length === 0 && results.suggestions.length === 0 && (
-        <Card className="bg-green-50">
-          <CardContent className="text-center py-8">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-green-800 mb-2">
-              Excellent! No Issues Found
-            </h3>
-            <p className="text-sm text-green-600">
-              Your document appears to follow all formatting standards correctly.
-            </p>
+            {/* No Abstract Analysis Results */}
+            {getAbstractItems(results.analysis_results).length === 0 && (
+              <Card className="bg-yellow-50">
+                <CardContent className="text-center py-8">
+                  <AlertTriangle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                    No Abstract Analysis Results Available
+                  </h3>
+                  <p className="text-sm text-yellow-600">
+                    The abstract analysis could not be completed. Please try uploading the document again.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </CardContent>
-        </Card>
-      )}
+        )}
+      </Card>
+
+      {/* Acknowledgement Analysis Section */}
+      <Card className="mb-6">
+        <CardHeader 
+          className="cursor-pointer hover:bg-gray-50 transition-colors select-none"
+          onClick={(e) => {
+            e.preventDefault()
+            setIsAcknowledgementOpen(!isAcknowledgementOpen)
+          }}
+        >
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-purple-500" />
+              Acknowledgement Analysis
+            </span>
+            {isAcknowledgementOpen ? (
+              <ChevronUp className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            )}
+          </CardTitle>
+        </CardHeader>
+        
+        {isAcknowledgementOpen && (
+          <CardContent>
+            {/* Acknowledgement Analysis Results */}
+            {renderAnalysisItems(getAcknowledgementItems(results.analysis_results))}
+
+            {/* No Acknowledgement Analysis Results */}
+            {getAcknowledgementItems(results.analysis_results).length === 0 && (
+              <Card className="bg-yellow-50">
+                <CardContent className="text-center py-8">
+                  <AlertTriangle className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                    No Acknowledgement Analysis Results Available
+                  </h3>
+                  <p className="text-sm text-yellow-600">
+                    The acknowledgement analysis could not be completed. Please try uploading the document again.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </CardContent>
+        )}
+      </Card>
     </div>
   )
 }

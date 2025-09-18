@@ -3,18 +3,28 @@ from typing import Optional, List, Any, Dict
 from datetime import datetime
 
 class AnalysisItem(BaseModel):
-    type: str = Field(..., description="Type of analysis item (suggestion, warning, error)")
+    type: str = Field(..., description="Type of analysis item (motivation, methods, results, conclusion, overall)")
     message: str = Field(..., description="The analysis message")
     page_number: Optional[int] = Field(None, description="Page number where issue was found")
 
 class ArchiveBase(BaseModel):
     file_name: str = Field(..., min_length=1, max_length=255)
-    analysis_content: Optional[str] = None
     # Use default_factory to avoid mutable default pitfalls
-    suggestions: List[AnalysisItem] = Field(default_factory=list)
-    warnings: List[AnalysisItem] = Field(default_factory=list)
-    errors: List[AnalysisItem] = Field(default_factory=list)
+    analysis_results: List[AnalysisItem] = Field(default_factory=list)
+    summary_data: Optional[Dict[str, Any]] = None
     processing_status: str = Field(default="pending")
+    
+    # Individual analysis results
+    abstract_results: Optional[List[AnalysisItem]] = None
+    abstract_summary: Optional[Dict[str, Any]] = None
+    acknowledgement_results: Optional[List[AnalysisItem]] = None
+    acknowledgement_summary: Optional[Dict[str, Any]] = None
+    
+    # Individual analysis status
+    abstract_status: str = Field(default="pending")
+    acknowledgement_status: str = Field(default="pending")
+    abstract_error: Optional[str] = None
+    acknowledgement_error: Optional[str] = None
 
 class ArchiveCreate(ArchiveBase):
     file_path: Optional[str] = None
@@ -22,12 +32,22 @@ class ArchiveCreate(ArchiveBase):
 
 class ArchiveUpdate(BaseModel):
     file_name: Optional[str] = None
-    analysis_content: Optional[str] = None
-    suggestions: Optional[List[AnalysisItem]] = None
-    warnings: Optional[List[AnalysisItem]] = None
-    errors: Optional[List[AnalysisItem]] = None
+    analysis_results: Optional[List[AnalysisItem]] = None
+    summary_data: Optional[Dict[str, Any]] = None
     processing_status: Optional[str] = None
     error_message: Optional[str] = None
+    
+    # Individual analysis results
+    abstract_results: Optional[List[AnalysisItem]] = None
+    abstract_summary: Optional[Dict[str, Any]] = None
+    acknowledgement_results: Optional[List[AnalysisItem]] = None
+    acknowledgement_summary: Optional[Dict[str, Any]] = None
+    
+    # Individual analysis status
+    abstract_status: Optional[str] = None
+    acknowledgement_status: Optional[str] = None
+    abstract_error: Optional[str] = None
+    acknowledgement_error: Optional[str] = None
 
 class ArchiveResponse(ArchiveBase):
     id: int
@@ -55,6 +75,4 @@ class ArchiveAnalysisResponse(BaseModel):
     archive_id: int
     status: str
     message: str
-    suggestions_count: int = 0
-    warnings_count: int = 0
-    errors_count: int = 0
+    analysis_results_count: int = 0
