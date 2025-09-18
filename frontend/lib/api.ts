@@ -242,8 +242,26 @@ export const authAPI = {
 export const userAPI = {
   getProfile: () => apiClient.get("/api/v1/users/profile"),
 
-  updateProfile: (userData: { fname?: string; lname?: string }) =>
-    apiClient.put("/api/v1/users/profile", userData),
+  updateProfile: (userData: {
+    fname?: string;
+    lname?: string;
+    phone_number?: string;
+    profile_url?: string;
+  }) => apiClient.put("/api/v1/users/profile", userData),
+
+  // Profile picture upload
+  uploadProfilePicture: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiClient.post("/api/v1/users/profile/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+
+  // Delete profile picture
+  deleteProfilePicture: () => apiClient.delete("/api/v1/users/profile/picture"),
 
   getUsers: (params?: {
     skip?: number;

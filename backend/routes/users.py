@@ -5,7 +5,10 @@ User profile and admin management endpoints
 
 from typing import List, Optional
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+import os
+import shutil
+from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.connection import get_db_session
@@ -57,6 +60,109 @@ async def update_user_profile(
         )
     
     return updated_user
+
+
+@router.post("/profile/upload", response_model=dict)
+async def upload_profile_picture(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Upload profile picture for current user
+    
+    - **file**: Image file (JPEG, PNG, GIF)
+    
+    Requires authentication
+    """
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/gif"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file type. Only JPEG, PNG, and GIF images are allowed."
+        )
+    
+    # Validate file size (5MB limit)
+    max_size = 5 * 1024 * 1024  # 5MB
+    file_content = await file.read()
+    if len(file_content) > max_size:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File too large. Maximum size is 5MB."
+        )
+    
+    # Create uploads directory if it doesn't exist
+    upload_dir = "uploads/profile_images"
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    # Generate unique filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    filename = f"{timestamp}_{current_user.uid}.{file_extension}"
+    file_path = os.path.join(upload_dir, filename)
+    
+    # Save file
+    with open(file_path, "wb") as buffer:
+        buffer.write(file_content)
+    
+    # Generate URL path
+    profile_url = f"/uploads/profile_images/{filename}"
+    
+    # Update user profile with new image URL
+    user_update = UserUpdate(profile_url=profile_url)
+    updated_user = await user_crud.update(session, current_user.uid, user_update)
+    
+    if not updated_user:
+        # Clean up uploaded file if database update fails
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update profile picture"
+        )
+    
+    return {
+        "message": "Profile picture uploaded successfully",
+        "profile_url": profile_url
+    }
+
+
+@router.delete("/profile/picture", response_model=dict)
+async def delete_profile_picture(
+    current_user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Delete current user's profile picture
+    
+    Requires authentication
+    """
+    if not current_user.profile_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No profile picture found"
+        )
+    
+    # Remove file from filesystem
+    file_path = current_user.profile_url.lstrip('/')
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except OSError:
+            pass  # Continue even if file deletion fails
+    
+    # Update user profile to remove image URL
+    user_update = UserUpdate(profile_url=None)
+    updated_user = await user_crud.update(session, current_user.uid, user_update)
+    
+    if not updated_user:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to remove profile picture"
+        )
+    
+    return {"message": "Profile picture deleted successfully"}
 
 
 @router.get("/", response_model=List[UserResponse])
