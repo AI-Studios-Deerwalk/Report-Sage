@@ -20,6 +20,7 @@ from models.admin import Admin
 from models.faq import FAQ
 from models.issue import Issue
 from models.user_otp import UserOTP
+from models.document_rules import DocumentRule
 from database.config import db_config
 
 # this is the Alembic Config object, which provides

@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { useAuth } from '@/contexts/AuthContext';
-import { Sidebar } from '@/components/Sidebar';
-import { archiveAPI } from '@/lib/api';
-import { useToast } from '@/components/ui/use-toast';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import { useAuth } from "@/contexts/AuthContext";
+import { Sidebar } from "@/components/Sidebar";
+import { archiveAPI } from "@/lib/api";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,27 +28,14 @@ import {
 import {
   FileText,
   Calendar,
-  AlertTriangle,
-  AlertCircle,
-  CheckCircle,
   Trash2,
   RefreshCw,
-  Download,
-  Eye,
   Clock,
   XCircle,
-  Loader2
-} from 'lucide-react';
-import { format } from 'date-fns';
-
-interface AnalysisItem {
-  type: string;
-  message: string;
-  severity: string;
-  category?: string;
-  page_number?: number;
-  section?: string;
-}
+  Loader2,
+  CheckCircle,
+} from "lucide-react";
+import { format } from "date-fns";
 
 interface Archive {
   id: number;
@@ -56,10 +43,6 @@ interface Archive {
   file_path?: string;
   file_size?: number;
   processing_status: string;
-  analysis_content?: string;
-  suggestions: AnalysisItem[];
-  warnings: AnalysisItem[];
-  errors: AnalysisItem[];
   error_message?: string;
   created_at: string;
   updated_at?: string;
@@ -86,13 +69,13 @@ const ArchivePage: React.FC = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
     fetchArchives();
   }, [isAuthenticated, router]);
 
-  const fetchArchives = async (pageNum = 1, append = false) => {
+  const fetchArchives = async (pageNum = 1, append = false, retryCount = 0) => {
     try {
       setLoading(!append);
       const response = await archiveAPI.getArchives({
@@ -104,11 +87,12 @@ const ArchivePage: React.FC = () => {
       // Sort by created_at date (newest first)
       const sortByDateDesc = (list: Archive[]) =>
         [...list].sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
 
       if (append) {
-        setArchives(prev => sortByDateDesc([...prev, ...data.archives]));
+        setArchives((prev) => sortByDateDesc([...prev, ...data.archives]));
       } else {
         setArchives(sortByDateDesc(data.archives));
       }
@@ -117,10 +101,24 @@ const ArchivePage: React.FC = () => {
       setPage(pageNum);
       setHasMore(pageNum < data.total_pages);
     } catch (error: any) {
-      console.error('Error fetching archives:', error);
+      console.error("Error fetching archives:", error);
+
+      // Retry logic for timeout errors
+      if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
+        if (retryCount < 2) {
+          console.log(`Retrying archive fetch (attempt ${retryCount + 1})...`);
+          setTimeout(() => {
+            fetchArchives(pageNum, append, retryCount + 1);
+          }, 2000 * (retryCount + 1)); // Exponential backoff
+          return;
+        }
+      }
+
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to fetch archives",
+        description:
+          error.response?.data?.detail ||
+          "Failed to fetch archives. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -137,14 +135,14 @@ const ArchivePage: React.FC = () => {
   const handleDeleteArchive = async (archiveId: number) => {
     try {
       await archiveAPI.deleteArchive(archiveId);
-      setArchives(prev => prev.filter(archive => archive.id !== archiveId));
-      setTotalCount(prev => prev - 1);
+      setArchives((prev) => prev.filter((archive) => archive.id !== archiveId));
+      setTotalCount((prev) => prev - 1);
       toast({
         title: "Success",
         description: "Archive deleted successfully",
       });
     } catch (error: any) {
-      console.error('Error deleting archive:', error);
+      console.error("Error deleting archive:", error);
       toast({
         title: "Error",
         description: error.response?.data?.detail || "Failed to delete archive",
@@ -155,15 +153,21 @@ const ArchivePage: React.FC = () => {
 
   const handleReanalyze = async (archiveId: number) => {
     try {
-      setReanalyzingIds(prev => new Set(prev).add(archiveId));
+      setReanalyzingIds((prev) => new Set(prev).add(archiveId));
       await archiveAPI.reanalyzeArchive(archiveId);
-      
+
       // Update the archive status locally
-      setArchives(prev => prev.map(archive => 
-        archive.id === archiveId 
-          ? { ...archive, processing_status: 'processing', error_message: undefined }
-          : archive
-      ));
+      setArchives((prev) =>
+        prev.map((archive) =>
+          archive.id === archiveId
+            ? {
+                ...archive,
+                processing_status: "processing",
+                error_message: undefined,
+              }
+            : archive
+        )
+      );
 
       toast({
         title: "Reanalysis Started",
@@ -175,14 +179,15 @@ const ArchivePage: React.FC = () => {
         fetchArchives();
       }, 2000);
     } catch (error: any) {
-      console.error('Error reanalyzing archive:', error);
+      console.error("Error reanalyzing archive:", error);
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Failed to start reanalysis",
+        description:
+          error.response?.data?.detail || "Failed to start reanalysis",
         variant: "destructive",
       });
     } finally {
-      setReanalyzingIds(prev => {
+      setReanalyzingIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(archiveId);
         return newSet;
@@ -192,13 +197,13 @@ const ArchivePage: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed':
+      case "completed":
         return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'processing':
+      case "processing":
         return <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />;
-      case 'pending':
+      case "pending":
         return <Clock className="h-4 w-4 text-yellow-600" />;
-      case 'failed':
+      case "failed":
         return <XCircle className="h-4 w-4 text-red-600" />;
       default:
         return <FileText className="h-4 w-4 text-gray-600" />;
@@ -207,14 +212,27 @@ const ArchivePage: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      completed: { variant: 'default' as const, className: 'bg-green-100 text-green-800' },
-      processing: { variant: 'secondary' as const, className: 'bg-blue-100 text-blue-800' },
-      pending: { variant: 'outline' as const, className: 'bg-yellow-100 text-yellow-800' },
-      failed: { variant: 'destructive' as const, className: 'bg-red-100 text-red-800' },
+      completed: {
+        variant: "default" as const,
+        className: "bg-green-100 text-green-800",
+      },
+      processing: {
+        variant: "secondary" as const,
+        className: "bg-blue-100 text-blue-800",
+      },
+      pending: {
+        variant: "outline" as const,
+        className: "bg-yellow-100 text-yellow-800",
+      },
+      failed: {
+        variant: "destructive" as const,
+        className: "bg-red-100 text-red-800",
+      },
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
-    
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+
     return (
       <Badge variant={config.variant} className={config.className}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -222,88 +240,18 @@ const ArchivePage: React.FC = () => {
     );
   };
 
-  const getSeverityIcon = (severity: string) => {
-    switch (severity.toLowerCase()) {
-      case 'high':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
-      case 'medium':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case 'low':
-        return <AlertCircle className="h-4 w-4 text-blue-500" />;
-      default:
-        return <AlertCircle className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
   const formatFileSize = (bytes?: number) => {
-    if (!bytes) return 'Unknown size';
-    const units = ['B', 'KB', 'MB', 'GB'];
+    if (!bytes) return "Unknown size";
+    const units = ["B", "KB", "MB", "GB"];
     let size = bytes;
     let unitIndex = 0;
-    
+
     while (size >= 1024 && unitIndex < units.length - 1) {
       size /= 1024;
       unitIndex++;
     }
-    
+
     return `${size.toFixed(1)} ${units[unitIndex]}`;
-  };
-
-  const renderAnalysisItems = (items: AnalysisItem[], title: string, icon: React.ReactNode, emptyMessage: string) => {
-    if (!items || items.length === 0) {
-      return (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 font-semibold text-gray-700">
-            {icon}
-            <span>{title}</span>
-            <Badge variant="outline" className="ml-auto">0</Badge>
-          </div>
-          <p className="text-sm text-gray-500 italic">{emptyMessage}</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 font-semibold text-gray-700">
-          {icon}
-          <span>{title}</span>
-          <Badge variant="outline" className="ml-auto">{items.length}</Badge>
-        </div>
-        <div className="space-y-2">
-          {items.map((item, index) => (
-            <Card key={index} className="p-3 border-l-4 border-l-current">
-              <div className="flex items-start gap-2">
-                {getSeverityIcon(item.severity)}
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{item.message}</p>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    <Badge variant="outline" className="text-xs">
-                      {item.severity} severity
-                    </Badge>
-                    {item.category && (
-                      <Badge variant="outline" className="text-xs">
-                        {item.category}
-                      </Badge>
-                    )}
-                    {item.page_number && (
-                      <Badge variant="outline" className="text-xs">
-                        Page {item.page_number}
-                      </Badge>
-                    )}
-                    {item.section && (
-                      <Badge variant="outline" className="text-xs">
-                        {item.section}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
   };
 
   if (!isAuthenticated) {
@@ -342,187 +290,89 @@ const ArchivePage: React.FC = () => {
           ) : archives.length === 0 ? (
             <Card className="p-8 text-center">
               <FileText className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No archives found</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No archives found
+              </h3>
               <p className="text-gray-500 mb-4">
                 You haven't uploaded any documents yet.
               </p>
-              <Button className='border hover:bg-gray-200' onClick={() => router.push('/dashboard')}>
+              <Button
+                className="border hover:bg-gray-200"
+                onClick={() => router.push("/dashboard")}
+              >
                 Upload Your First Document
               </Button>
             </Card>
           ) : (
-              <div className="space-y-4 ">
-                <Accordion type="single" collapsible className="space-y-4" disabled>
-                  {archives.map((archive) => (
-                    <AccordionItem key={archive.id} value={archive.id.toString()}>
-                      <div className="transform duration-200 hover:[scale:1.02] cursor-pointer" onClick={() => {router.push(`/archive/${archive.id}`)}}>
-                       
-                        <Card>
-                        {/* <AccordionTrigger className="[&>svg]:hidden px-4 py-2 hover:no-underline cursor-pointer"> */}
-                          <CardHeader className="flex-1 pb-4">
-                            <div className="flex items-center justify-between w-full">
-                              <div className="flex items-center gap-3">
-                                {getStatusIcon(archive.processing_status)}
-                                <div className="text-left">
-                                  <CardTitle className="text-lg font-semibold text-gray-900">
-                                    {archive.file_name}
-                                  </CardTitle>
-                                  <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                                    <div className="flex items-center gap-1">
-                                      <Calendar className="h-3 w-3" />
-                                      {format(new Date(archive.created_at), 'MMM dd, yyyy HH:mm')}
-                                    </div>
-                                    <span>{formatFileSize(archive.file_size)}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {getStatusBadge(archive.processing_status)}
-                                {archive.processing_status === 'completed' && (
-                                  <div className="flex items-center gap-1 text-xs text-gray-500">
-                                    <span className="text-red-600">{archive.errors?.length || 0} errors</span>
-                                    <span className="text-yellow-600">{archive.warnings?.length || 0} warnings</span>
-                                    <span className="text-blue-600">{archive.suggestions?.length || 0} suggestions</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </CardHeader>
-                        {/* </AccordionTrigger> */}
-                        {/* <AccordionContent>
-                          <CardContent className="pt-0">
-                            {archive.processing_status === 'failed' && archive.error_message && (
-                              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                                <div className="flex items-center gap-2 text-red-800">
-                                  <XCircle className="h-4 w-4" />
-                                  <span className="font-medium">Processing Failed</span>
-                                </div>
-                                <p className="text-sm text-red-700 mt-1">{archive.error_message}</p>
-                              </div>
-                            )}
-
-                            {archive.processing_status === 'processing' && (
-                              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                                <div className="flex items-center gap-2 text-blue-800">
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                  <span className="font-medium">Analysis in Progress</span>
-                                </div>
-                                <p className="text-sm text-blue-700 mt-1">
-                                  Your document is being analyzed. This may take a few minutes.
-                                </p>
-                              </div>
-                            )}
-
-                            {archive.processing_status === 'pending' && (
-                              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                                <div className="flex items-center gap-2 text-yellow-800">
-                                  <Clock className="h-4 w-4" />
-                                  <span className="font-medium">Waiting for Analysis</span>
-                                </div>
-                                <p className="text-sm text-yellow-700 mt-1">
-                                  Your document is queued for analysis.
-                                </p>
-                              </div>
-                            )}
-
-                            {archive.processing_status === 'completed' && (
-                              <div className="space-y-6">
-                                {renderAnalysisItems(
-                                  archive.errors || [],
-                                  "Errors",
-                                  <AlertTriangle className="h-4 w-4 text-red-600" />,
-                                  "No errors found in this document."
-                                )}
-
-                                {renderAnalysisItems(
-                                  archive.warnings || [],
-                                  "Warnings",
-                                  <AlertCircle className="h-4 w-4 text-yellow-600" />,
-                                  "No warnings found in this document."
-                                )}
-
-                                {renderAnalysisItems(
-                                  archive.suggestions || [],
-                                  "Suggestions",
-                                  <CheckCircle className="h-4 w-4 text-blue-600" />,
-                                  "No suggestions available for this document."
-                                )}
-                              </div>
-                            )}
-
-                            <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
-                              {(archive.processing_status === 'failed' || archive.processing_status === 'completed') && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleReanalyze(archive.id)}
-                                  disabled={reanalyzingIds.has(archive.id)}
-                                  className='group hover:scale-105 transition-transform duration-100'
-                                >
-                                  {reanalyzingIds.has(archive.id) ? (
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                  ) : (
-                                    <RefreshCw className="h-4 w-4 mr-2 group-hover:animate-spin" />
-                                  )}
-                                  Reanalyze
-                                </Button>
-                              )}
-                              
-                              <AlertDialog >
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:scale-105 transition-transform duration-100">
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent className='bg-white'>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Archive</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to delete "{archive.file_name}"? This action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDeleteArchive(archive.id)}
-                                      className="bg-red-600 hover:bg-red-700 text-white"
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </CardContent>
-                        </AccordionContent> */}
-                      </Card>
-                      </div>
-                      
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-
-                {hasMore && (
-                  <div className="flex justify-center mt-6">
-                    <Button
-                      variant="outline"
-                      onClick={handleLoadMore}
-                      disabled={loading}
+            <div className="space-y-4 ">
+              <Accordion
+                type="single"
+                collapsible
+                className="space-y-4"
+                disabled
+              >
+                {archives.map((archive) => (
+                  <AccordionItem key={archive.id} value={archive.id.toString()}>
+                    <div
+                      className="transform duration-200 hover:[scale:1.02] cursor-pointer"
+                      onClick={() => {
+                        router.push(`/archive/${archive.id}`);
+                      }}
                     >
-                      {loading ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : null}
-                      Load More
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+                      <Card>
+                        {/* <AccordionTrigger className="[&>svg]:hidden px-4 py-2 hover:no-underline cursor-pointer"> */}
+                        <CardHeader className="flex-1 pb-4">
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-3">
+                              {getStatusIcon(archive.processing_status)}
+                              <div className="text-left">
+                                <CardTitle className="text-lg font-semibold text-gray-900">
+                                  {archive.file_name}
+                                </CardTitle>
+                                <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    {format(
+                                      new Date(archive.created_at),
+                                      "MMM dd, yyyy HH:mm"
+                                    )}
+                                  </div>
+                                  <span>
+                                    {formatFileSize(archive.file_size)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {getStatusBadge(archive.processing_status)}
+                            </div>
+                          </div>
+                        </CardHeader>
+                      </Card>
+                    </div>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+
+              {hasMore && (
+                <div className="flex justify-center mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={handleLoadMore}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : null}
+                    Load More
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
-      
+    </div>
   );
 };
 

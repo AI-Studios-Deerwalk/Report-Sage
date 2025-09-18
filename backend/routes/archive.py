@@ -10,6 +10,7 @@ from sqlalchemy import and_
 from database.connection import get_db, db_manager
 from routes.dependencies import get_current_user
 from models.user import User
+from models.archive import Archive
 from schemas.archive import (
     ArchiveCreate, 
     ArchiveUpdate, 
@@ -23,6 +24,7 @@ from crud.archive import archive as crud_archive
 from utils.pdf_reader import PDFReader
 from utils.ollama_client import OllamaClient
 from prompt.result_formatter import ResultFormatter
+from prompt import prompt_manager
 from models.archive import Archive
 
 router = APIRouter(prefix="", tags=["archives"])
@@ -32,14 +34,16 @@ UPLOAD_DIR = Path(__file__).parent.parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 print(f"Upload directory created/verified at: {UPLOAD_DIR.absolute()}")
 
-async def process_document_analysis(archive_id: int, file_path: str):
-    """Background task to process document analysis"""
+async def process_document_analysis_sequential(archive_id: int, file_path: str):
+    """Background task to process document analysis in parallel"""
+    print(f"Starting parallel analysis for archive {archive_id}, file: {file_path}")
     db: Session = db_manager.get_sync_session()
     try:
-        # Update status to processing
+        # Update overall status to processing
         crud_archive.update_processing_status(
             db, archive_id=archive_id, status="processing"
         )
+        print(f"Updated processing status to 'processing' for archive {archive_id}")
         
         # Read PDF content
         pdf_reader = PDFReader()
@@ -52,81 +56,249 @@ async def process_document_analysis(archive_id: int, file_path: str):
             )
             return
         
-        # Analyze with Ollama
-        ollama_client = OllamaClient()
-        analysis_result = await ollama_client.analyze_document(content)
+        # Extract abstract and acknowledgement from PDF content
+        abstract = prompt_manager.extract_abstract_from_pdf_content(content)
+        acknowledgement = prompt_manager.extract_acknowledgement_from_pdf_content(content)
         
-        # Parse analysis results
-        formatter = ResultFormatter()
-        parsed_results = formatter.parse_analysis_result(analysis_result)
+        # Start analyses sequentially - abstract first, then acknowledgement
+        await process_abstract_analysis(archive_id, abstract, db)
+        await process_acknowledgement_analysis(archive_id, acknowledgement, db)
         
-        # Convert to AnalysisItem objects
-        suggestions = []
-        for item in parsed_results.get("suggestions", []):
-            if isinstance(item, dict):
-                suggestions.append(AnalysisItem(
-                    type="suggestion",
-                    message=item.get("message", ""),
-                    severity=item.get("severity", "medium"),
-                    category=item.get("category", "general"),
-                    page_number=item.get("page_number"),
-                    section=item.get("section")
-                ))
-        
-        warnings = []
-        for item in parsed_results.get("warnings", []):
-            if isinstance(item, dict):
-                warnings.append(AnalysisItem(
-                    type="warning",
-                    message=item.get("message", ""),
-                    severity=item.get("severity", "medium"),
-                    category=item.get("category", "general"),
-                    page_number=item.get("page_number"),
-                    section=item.get("section")
-                ))
-        
-        errors = []
-        for item in parsed_results.get("errors", []):
-            if isinstance(item, dict):
-                errors.append(AnalysisItem(
-                    type="error",
-                    message=item.get("message", ""),
-                    severity=item.get("severity", "high"),
-                    category=item.get("category", "general"),
-                    page_number=item.get("page_number"),
-                    section=item.get("section")
-                ))
-        
-        # Update archive with results
-        updated_archive = crud_archive.update_analysis_results(
-            db,
-            archive_id=archive_id,
-            analysis_content=analysis_result,
-            suggestions=suggestions,
-            warnings=warnings,
-            errors=errors,
-            status="completed"
+        # Update overall status to completed
+        crud_archive.update_processing_status(
+            db, archive_id=archive_id, status="completed"
         )
         
-        if updated_archive:
-            print(f"Analysis completed for archive {archive_id}. Found {len(suggestions)} suggestions, {len(warnings)} warnings, {len(errors)} errors.")
-        else:
-            print(f"Failed to update archive {archive_id} with analysis results.")
+    except Exception as e:
+        import logging
+        logging.error(f"Error processing document analysis: {str(e)}")
+        crud_archive.update_processing_status(
+            db, archive_id=archive_id, status="failed", 
+            error_message=f"Analysis failed: {str(e)}"
+        )
+
+async def process_abstract_analysis(archive_id: int, abstract: str, db: Session):
+    """Process abstract analysis independently"""
+    try:
+        print(f"Starting abstract analysis for archive {archive_id}")
+        crud_archive.update_abstract_analysis(
+            db, archive_id=archive_id, status="processing"
+        )
+        print(f"Updated abstract status to 'processing' for archive {archive_id}")
+        
+        if not abstract.strip():
+            crud_archive.update_abstract_analysis(
+                db, archive_id=archive_id, status="failed", 
+                error_message="Could not extract abstract from PDF"
+            )
+            return
+        
+        # Analyze abstract with Ollama
+        ollama_client = OllamaClient()
+        analysis_prompt = prompt_manager.get_abstract_analysis_prompt(abstract)
+        print(f"Calling Ollama for abstract analysis...")
+        analysis_result = await ollama_client.analyze_document_async(analysis_prompt)
+        print(f"Received analysis result from Ollama: {analysis_result[:200]}...")
+        
+        # Parse abstract analysis results
+        formatter = ResultFormatter()
+        parsed_results = formatter.parse_abstract_analysis_result(analysis_result)
+        summary = formatter.create_abstract_analysis_summary(parsed_results)
+        
+        # Convert to AnalysisItem objects for abstract
+        abstract_items = []
+        
+        # Add motivation analysis
+        motivation = parsed_results.get("motivation", {})
+        abstract_items.append(AnalysisItem(
+            type="motivation",
+            message=f"Status: {motivation.get('status', 'unknown').upper()}\n{motivation.get('feedback', 'No feedback available')}",
+            page_number=None
+        ))
+        
+        # Add methods analysis
+        methods = parsed_results.get("methods", {})
+        abstract_items.append(AnalysisItem(
+            type="methods",
+            message=f"Status: {methods.get('status', 'unknown').upper()}\n{methods.get('feedback', 'No feedback available')}",
+            page_number=None
+        ))
+        
+        # Add results analysis
+        results = parsed_results.get("results", {})
+        abstract_items.append(AnalysisItem(
+            type="results",
+            message=f"Status: {results.get('status', 'unknown').upper()}\n{results.get('feedback', 'No feedback available')}",
+            page_number=None
+        ))
+        
+        # Add conclusion analysis
+        conclusion = parsed_results.get("conclusion", {})
+        abstract_items.append(AnalysisItem(
+            type="conclusion",
+            message=f"Status: {conclusion.get('status', 'unknown').upper()}\n{conclusion.get('feedback', 'No feedback available')}",
+            page_number=None
+        ))
+        
+        # Update abstract analysis results
+        print(f"Storing abstract results for archive {archive_id}: {len(abstract_items)} items")
+        print(f"Abstract items: {[item.model_dump() for item in abstract_items]}")
+        crud_archive.update_abstract_analysis(
+            db, 
+            archive_id=archive_id, 
+            status="completed",
+            abstract_results=abstract_items,
+            abstract_summary=summary
+        )
+        print(f"Successfully stored abstract results for archive {archive_id}")
         
     except Exception as e:
-        print(f"Analysis failed for archive {archive_id}: {str(e)}")
-        try:
-            crud_archive.update_processing_status(
-                db, archive_id=archive_id, status="failed", 
-                error_message=str(e)
+        import logging
+        logging.error(f"Error processing abstract analysis: {str(e)}")
+        crud_archive.update_abstract_analysis(
+            db, archive_id=archive_id, status="failed", 
+            error_message=f"Abstract analysis failed: {str(e)}"
+        )
+
+async def process_acknowledgement_analysis(archive_id: int, acknowledgement: str, db: Session):
+    """Process acknowledgement analysis independently"""
+    try:
+        print(f"Starting acknowledgement analysis for archive {archive_id}")
+        crud_archive.update_acknowledgement_analysis(
+            db, archive_id=archive_id, status="processing"
+        )
+        print(f"Updated acknowledgement status to 'processing' for archive {archive_id}")
+        
+        if not acknowledgement.strip():
+            # No acknowledgement found, mark as completed with empty results
+            crud_archive.update_acknowledgement_analysis(
+                db, archive_id=archive_id, status="completed",
+                acknowledgement_results=[], acknowledgement_summary={}
             )
-        except Exception:
-            pass
-    finally:
-        try:
-            db.close()
-        except Exception:
-            pass
+            return
+        
+        # Analyze acknowledgement with Ollama
+        ollama_client = OllamaClient()
+        acknowledgement_prompt = prompt_manager.get_acknowledgement_analysis_prompt(acknowledgement)
+        print(f"Calling Ollama for acknowledgement analysis...")
+        acknowledgement_result = await ollama_client.analyze_document_async(acknowledgement_prompt)
+        print(f"Received acknowledgement result from Ollama: {acknowledgement_result[:200]}...")
+        
+        # Parse acknowledgement analysis results
+        formatter = ResultFormatter()
+        acknowledgement_parsed = formatter.parse_acknowledgement_analysis_result(acknowledgement_result)
+        acknowledgement_summary = formatter.create_acknowledgement_analysis_summary(acknowledgement_parsed)
+        
+        # Convert to AnalysisItem objects for acknowledgement
+        acknowledgement_items = []
+        
+        # Add acknowledgement analysis items
+        student_info = acknowledgement_parsed.get("student_info", {})
+        acknowledgement_items.append(AnalysisItem(
+            type="student_info",
+            message=f"Status: {student_info.get('status', 'unknown').upper()}\n{student_info.get('feedback', 'No feedback available')}",
+            page_number=None
+        ))
+        
+        gratitude_expression = acknowledgement_parsed.get("gratitude_expression", {})
+        acknowledgement_items.append(AnalysisItem(
+            type="gratitude_expression",
+            message=f"Status: {gratitude_expression.get('status', 'unknown').upper()}\n{gratitude_expression.get('feedback', 'No feedback available')}",
+            page_number=None
+        ))
+        
+        mentioned_parties = acknowledgement_parsed.get("mentioned_parties", {})
+        acknowledgement_items.append(AnalysisItem(
+            type="mentioned_parties",
+            message=f"Status: {mentioned_parties.get('status', 'unknown').upper()}\n{mentioned_parties.get('feedback', 'No feedback available')}",
+            page_number=None
+        ))
+        
+        contribution_description = acknowledgement_parsed.get("contribution_description", {})
+        acknowledgement_items.append(AnalysisItem(
+            type="contribution_description",
+            message=f"Status: {contribution_description.get('status', 'unknown').upper()}\n{contribution_description.get('feedback', 'No feedback available')}",
+            page_number=None
+        ))
+        
+        # Update acknowledgement analysis results
+        print(f"Storing acknowledgement results for archive {archive_id}: {len(acknowledgement_items)} items")
+        print(f"Acknowledgement items: {[item.model_dump() for item in acknowledgement_items]}")
+        crud_archive.update_acknowledgement_analysis(
+            db, 
+            archive_id=archive_id, 
+            status="completed",
+            acknowledgement_results=acknowledgement_items,
+            acknowledgement_summary=acknowledgement_summary
+        )
+        print(f"Successfully stored acknowledgement results for archive {archive_id}")
+        
+    except Exception as e:
+        import logging
+        logging.error(f"Error processing acknowledgement analysis: {str(e)}")
+        crud_archive.update_acknowledgement_analysis(
+            db, archive_id=archive_id, status="failed", 
+            error_message=f"Acknowledgement analysis failed: {str(e)}"
+        )
+
+# Keep the old function for backward compatibility
+async def process_document_analysis(archive_id: int, file_path: str):
+    """Legacy background task to process document analysis (simultaneous)"""
+    # This function is kept for backward compatibility
+    # It will be replaced by the sequential version
+    await process_document_analysis_sequential(archive_id, file_path)
+
+@router.post("/upload-test", response_model=ArchiveResponse)
+async def upload_document_test(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """Upload and analyze a document (test endpoint without authentication)"""
+    # Use test user for testing
+    from models.user import User
+    current_user = db.query(User).filter(User.uid == 5).first()
+    if not current_user:
+        raise HTTPException(status_code=500, detail="Test user not found")
+    
+    # Validate file type
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only PDF files are allowed"
+        )
+    
+    # Save file to uploads directory
+    upload_dir = Path("uploads")
+    upload_dir.mkdir(exist_ok=True)
+    
+    file_path = upload_dir / f"{current_user.uid}_{file.filename}"
+    
+    try:
+        with open(file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save file: {str(e)}"
+        )
+    
+    # Create archive record
+    from schemas.archive import ArchiveCreate
+    archive_data = ArchiveCreate(
+        file_name=file.filename,
+        file_path=str(file_path),
+        file_size=len(content),
+        processing_status="pending"
+    )
+    
+    archive = crud_archive.create_with_user(db, obj_in=archive_data, user_id=current_user.uid)
+    
+    # Start background analysis
+    background_tasks.add_task(process_document_analysis_sequential, archive.id, str(file_path))
+    
+    return archive
 
 @router.post("/upload", response_model=ArchiveResponse)
 async def upload_document(
@@ -170,9 +342,9 @@ async def upload_document(
             db, obj_in=archive_create, user_id=current_user.uid
         )
         
-        # Start background analysis
+        # Start background sequential analysis
         background_tasks.add_task(
-            process_document_analysis, 
+            process_document_analysis_sequential, 
             archive.id, 
             str(file_path)
         )
@@ -393,9 +565,9 @@ async def reanalyze_archive(
             detail="Original file not found"
         )
     
-    # Start background analysis
+    # Start background sequential analysis
     background_tasks.add_task(
-        process_document_analysis, 
+        process_document_analysis_sequential, 
         archive.id, 
         archive.file_path
     )
@@ -405,3 +577,106 @@ async def reanalyze_archive(
         status="processing",
         message="Reanalysis started"
     )
+
+@router.get("/{archive_id}/abstract-status")
+def get_abstract_status(
+    archive_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get abstract analysis status and results"""
+    archive = crud_archive.get_by_user_and_id(
+        db, user_id=current_user.uid, archive_id=archive_id
+    )
+    
+    if not archive:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Archive not found"
+        )
+    
+    result = {
+        "archive_id": archive_id,
+        "abstract_status": archive.abstract_status,
+        "abstract_results": archive.abstract_results or [],
+        "abstract_summary": archive.abstract_summary or {},
+        "abstract_error": archive.abstract_error
+    }
+    
+    # Debug logging
+    print(f"Abstract status response for archive {archive_id}:")
+    print(f"  Status: {archive.abstract_status}")
+    print(f"  Results type: {type(archive.abstract_results)}")
+    print(f"  Results: {archive.abstract_results}")
+    print(f"  Results length: {len(archive.abstract_results) if archive.abstract_results else 0}")
+    
+    return result
+
+@router.get("/{archive_id}/acknowledgement-status")
+def get_acknowledgement_status(
+    archive_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get acknowledgement analysis status and results"""
+    archive = crud_archive.get_by_user_and_id(
+        db, user_id=current_user.uid, archive_id=archive_id
+    )
+    
+    if not archive:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Archive not found"
+        )
+    
+    result = {
+        "archive_id": archive_id,
+        "acknowledgement_status": archive.acknowledgement_status,
+        "acknowledgement_results": archive.acknowledgement_results or [],
+        "acknowledgement_summary": archive.acknowledgement_summary or {},
+        "acknowledgement_error": archive.acknowledgement_error
+    }
+    
+    # Debug logging
+    print(f"Acknowledgement status response for archive {archive_id}:")
+    print(f"  Status: {archive.acknowledgement_status}")
+    print(f"  Results type: {type(archive.acknowledgement_results)}")
+    print(f"  Results: {archive.acknowledgement_results}")
+    print(f"  Results length: {len(archive.acknowledgement_results) if archive.acknowledgement_results else 0}")
+    
+    return result
+
+# Test endpoints without authentication
+@router.get("/{archive_id}/abstract-status-test")
+def get_abstract_status_test(
+    archive_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get abstract analysis status and results (test endpoint without authentication)"""
+    archive = db.query(Archive).filter(Archive.id == archive_id).first()
+    if not archive:
+        raise HTTPException(status_code=404, detail="Archive not found")
+    
+    return {
+        "abstract_status": archive.abstract_status,
+        "abstract_results": archive.abstract_results or [],
+        "abstract_summary": archive.abstract_summary or {},
+        "abstract_error": archive.abstract_error
+    }
+
+@router.get("/{archive_id}/acknowledgement-status-test")
+def get_acknowledgement_status_test(
+    archive_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get acknowledgement analysis status and results (test endpoint without authentication)"""
+    archive = db.query(Archive).filter(Archive.id == archive_id).first()
+    if not archive:
+        raise HTTPException(status_code=404, detail="Archive not found")
+    
+    return {
+        "acknowledgement_status": archive.acknowledgement_status,
+        "acknowledgement_results": archive.acknowledgement_results or [],
+        "acknowledgement_summary": archive.acknowledgement_summary or {},
+        "acknowledgement_error": archive.acknowledgement_error
+    }

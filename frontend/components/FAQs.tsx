@@ -228,8 +228,11 @@ export function FAQSection() {
             > 
               <CardContent className="p-0">
                                  <button
-                   onClick={() => toggleItem(index)}
-                   className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50/50 transition-colors duration-200"
+                   onClick={(e) => {
+                     e.preventDefault()
+                     toggleItem(index)
+                   }}
+                   className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50/50 transition-colors duration-200 select-none"
                  >
                    <div className="flex items-center gap-3 flex-1">
                      <h3 className="text-lg font-semibold text-gray-900">{item.question}</h3>

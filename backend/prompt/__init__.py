@@ -1,9 +1,6 @@
-"""
-Prompt handling package for TU Report Analyzer
-Contains utilities for saving and managing AI prompts
-"""
+from .prompt_manager import PromptManager
+from .result_formatter import ResultFormatter
 
-from prompt.prompt_manager import prompt_manager
-from prompt.result_formatter import result_formatter
-
-__all__ = ['prompt_manager', 'result_formatter']
+# Create instances for easy importing
+prompt_manager = PromptManager()
+result_formatter = ResultFormatter()

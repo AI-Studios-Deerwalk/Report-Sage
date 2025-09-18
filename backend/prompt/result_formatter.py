@@ -1,211 +1,218 @@
-"""
-Result Formatter Module
-Handles formatting of TU format analysis results and summaries
-"""
-
-import logging
 import re
-from . import prompt_manager
-
+from typing import Dict, Any, List
 
 class ResultFormatter:
-    """Formats analysis results into user-friendly summaries"""
+    """Formats and parses analysis results from AI responses"""
     
-    @staticmethod
-    def parse_analysis_result(analysis_text: str) -> dict:
-        """
-        Parse Ollama analysis result into structured data
+    def parse_abstract_analysis_result(self, analysis_result: str) -> Dict[str, Any]:
+        """Parse AI analysis result into structured format"""
+        result = {
+            "motivation": {"status": "unknown", "feedback": ""},
+            "methods": {"status": "unknown", "feedback": ""},
+            "results": {"status": "unknown", "feedback": ""},
+            "conclusion": {"status": "unknown", "feedback": ""}
+        }
         
-        Args:
-            analysis_text: Raw text output from Ollama
-            
-        Returns:
-            Dict containing structured suggestions, warnings, and errors
-        """
-        try:
-            result = {"suggestions": [], "warnings": [], "errors": []}
-
-            if not analysis_text or not analysis_text.strip():
-                return result
-
-            # Normalize newlines and split
-            lines = [ln.strip() for ln in analysis_text.splitlines()]
-
-            # Patterns
-            header_re = re.compile(r"^(SUGGESTIONS?|WARNINGS?|ERRORS?)\s*:?$", re.IGNORECASE)
-            bullet_re = re.compile(r"^(-|\*|•|\d+[.)])\s+(.*)$")
-            inline_tag_re = re.compile(r"^\[(ERROR|WARNING|SUGGESTION)\]\s*[:\-]?\s*(.*)$", re.IGNORECASE)
-            severity_re = re.compile(r"(?:\(|\[)(low|medium|high)(?:\)|\])", re.IGNORECASE)
-
-            current_section = None
-
-            def push(target: str, text: str):
-                if not text:
-                    return
-                # Try to extract severity tokens like (high) or [medium]
-                severity = None
-                sev_match = severity_re.search(text)
-                if sev_match:
-                    severity = sev_match.group(1).lower()
-                    # remove the matched token from message
-                    text_local = severity_re.sub("", text).strip(" -:•.\t")
-                else:
-                    text_local = text
-
-                # Default severity: high for errors, medium for warnings, low/medium for suggestions
-                if not severity:
-                    if target == "errors":
-                        severity = "high"
-                    elif target == "warnings":
-                        severity = "medium"
-                    else:
-                        severity = "low"
-
-                result[target].append({
-                    "message": text_local.strip(),
-                    "severity": severity,
-                    "category": "general",
-                    "page_number": None,
-                    "section": None,
-                })
-
-            for raw in lines:
-                if not raw:
-                    continue
-
-                # Inline tag like [ERROR]: something
-                m_inline = inline_tag_re.match(raw)
-                if m_inline:
-                    tag = m_inline.group(1).lower()
-                    text = m_inline.group(2).strip()
-                    mapping = {"error": "errors", "warning": "warnings", "suggestion": "suggestions"}
-                    push(mapping.get(tag, "warnings"), text)
-                    continue
-
-                # Section header
-                m_hdr = header_re.match(raw)
-                if m_hdr:
-                    hdr = m_hdr.group(1).upper()
-                    if hdr.startswith("SUGGEST"):
-                        current_section = "suggestions"
-                    elif hdr.startswith("WARN"):
-                        current_section = "warnings"
-                    elif hdr.startswith("ERROR"):
-                        current_section = "errors"
-                    else:
-                        current_section = None
-                    continue
-
-                # Bullet under a current section
-                m_bullet = bullet_re.match(raw)
-                if m_bullet and current_section:
-                    push(current_section, m_bullet.group(2).strip())
-                    continue
-
-                # If there's no explicit bullet but we are in a section, treat as a continuation/item
-                if current_section:
-                    push(current_section, raw)
-
-            return result
-
-        except Exception as e:
-            logging.error(f"Error parsing analysis result: {str(e)}")
-            return {"suggestions": [], "warnings": [], "errors": []}
-    
-    @staticmethod
-    def create_analysis_summary(successful_results, all_error_messages, categorized_errors, phase_summary):
-        """
-        Create formatted summary of TU format analysis results
+        # Parse each section
+        sections = {
+            "motivation": r"MOTIVATION:\s*([A-Z]+)\s*-\s*(.*?)(?=\n[A-Z]+:|$)",
+            "methods": r"METHODS:\s*([A-Z]+)\s*-\s*(.*?)(?=\n[A-Z]+:|$)",
+            "results": r"RESULTS:\s*([A-Z]+)\s*-\s*(.*?)(?=\n[A-Z]+:|$)",
+            "conclusion": r"CONCLUSION:\s*([A-Z]+)\s*-\s*(.*?)(?=\n[A-Z]+:|$)"
+        }
         
-        Args:
-            successful_results: List of successful page analysis results
-            all_error_messages: List of all error messages found
-            categorized_errors: Dict of errors categorized by phase
-            phase_summary: Summary information by phase
-            
-        Returns:
-            Dict containing formatted summary and analysis data
-        """
-        try:
-            # Create overall summary with the new format
-            if all_error_messages:
-                # Count errors by phase
-                structure_count = len(categorized_errors["structure"])
-                grammar_count = len(categorized_errors["grammar"])
-                enhancement_count = len(categorized_errors["enhancement"])
+        for section, pattern in sections.items():
+            match = re.search(pattern, analysis_result, re.DOTALL | re.IGNORECASE)
+            if match:
+                status = match.group(1).strip().upper()
+                feedback = match.group(2).strip()
                 
-                overall_summary = f"""TU FORMAT ANALYSIS COMPLETE
-
-📊 SUMMARY:
-• Total Pages Analyzed: {len(successful_results)}
-• Total Issues Found: {len(all_error_messages)}
-
-🔍 PHASE BREAKDOWN:
-• Phase 1 (Structure): {structure_count} critical issues
-• Phase 2 (Grammar): {grammar_count} language issues  
-• Phase 3 (Enhancement): {enhancement_count} improvement suggestions
-
-💡 RECOMMENDATIONS:
-• Address Phase 1 issues first (critical structure problems)
-• Fix Phase 2 grammar and spelling errors
-• Consider Phase 3 suggestions for content improvement"""
-            else:
-                overall_summary = f"""TU FORMAT ANALYSIS COMPLETE
-
-📊 SUMMARY:
-• Total Pages Analyzed: {len(successful_results)}
-• Total Issues Found: 0
-• Compliance Rate: 100%
-
-✅ EXCELLENT! {prompt_manager.prompt_manager.get_no_violations_phrase()}
-
-Your document appears to follow TU format standards correctly."""
-            
-            return {
-                "overall_summary": overall_summary,
-                "total_pages_analyzed": len(successful_results),
-                "total_errors_found": len(all_error_messages),
-                "categorized_results": categorized_errors,
-                "phase_summary": phase_summary,
-                "results": successful_results
-            }
-        except Exception as e:
-            logging.exception("Analysis summary formatting failed")
-            return {"error": f"Summary formatting failed: {str(e)}"}
-
-    @staticmethod
-    def format_error_list(errors, max_display=10):
-        """Format a list of errors for display"""
-        if not errors:
-            return "No errors found."
+                # Clean up feedback to remove overall mentions
+                feedback = re.sub(r'\n\nOverall.*$', '', feedback, flags=re.DOTALL | re.IGNORECASE)
+                feedback = re.sub(r'\nOverall.*$', '', feedback, flags=re.DOTALL | re.IGNORECASE)
+                feedback = feedback.strip()
+                
+                result[section] = {
+                    "status": "present" if status == "PRESENT" else "missing",
+                    "feedback": feedback
+                }
         
-        formatted = []
-        for i, error in enumerate(errors[:max_display]):
-            formatted.append(f"{i+1}. {error}")
-        
-        if len(errors) > max_display:
-            formatted.append(f"... and {len(errors) - max_display} more issues")
-        
-        return "\n".join(formatted)
+        return result
     
-    @staticmethod
-    def format_phase_summary(phase_summary):
-        """Format phase summary information"""
-        if not phase_summary:
-            return "No phase summary available."
+    def create_abstract_analysis_summary(self, parsed_results: Dict[str, Any]) -> Dict[str, Any]:
+        """Create summary statistics from parsed results"""
+        summary = {
+            "total_sections": 4,
+            "passed_sections": 0,
+            "failed_sections": 0,
+            "overall_score": 0.0,
+            "recommendations": []
+        }
         
-        formatted = "📋 DETAILED PHASE ANALYSIS:\n\n"
-        for phase, details in phase_summary.items():
-            formatted += f"🔹 {phase.upper()}:\n"
-            if isinstance(details, dict):
-                for key, value in details.items():
-                    formatted += f"  • {key}: {value}\n"
-            else:
-                formatted += f"  • {details}\n"
-            formatted += "\n"
+        sections = ["motivation", "methods", "results", "conclusion"]
         
-        return formatted
-
-
-# Global instance for easy access
-result_formatter = ResultFormatter()
+        for section in sections:
+            if section in parsed_results and isinstance(parsed_results[section], dict):
+                status = parsed_results[section].get("status", "unknown")
+                if status == "present":
+                    summary["passed_sections"] += 1
+                elif status == "missing":
+                    summary["failed_sections"] += 1
+        
+        # Calculate overall score
+        if summary["total_sections"] > 0:
+            summary["overall_score"] = (summary["passed_sections"] / summary["total_sections"]) * 100
+        
+        # Generate recommendations based on missing sections
+        for section in sections:
+            if section in parsed_results and isinstance(parsed_results[section], dict):
+                status = parsed_results[section].get("status", "unknown")
+                if status == "missing":
+                    section_name = section.capitalize()
+                    summary["recommendations"].append(f"Add {section_name} section based on feedback provided")
+        
+        return summary
+    
+    def format_analysis_for_display(self, parsed_results: Dict[str, Any]) -> List[Dict[str, str]]:
+        """Format analysis results for frontend display"""
+        formatted_results = []
+        
+        sections = [
+            ("motivation", "Motivation & Objectives"),
+            ("methods", "Methods & Approach"),
+            ("results", "Results & Findings"),
+            ("conclusion", "Conclusion & Implications")
+        ]
+        
+        for section_key, section_name in sections:
+            if section_key in parsed_results and isinstance(parsed_results[section_key], dict):
+                section_data = parsed_results[section_key]
+                status = section_data.get("status", "unknown")
+                feedback = section_data.get("feedback", "No feedback available")
+                
+                formatted_results.append({
+                    "section": section_name,
+                    "status": status.upper(),
+                    "feedback": feedback,
+                    "icon": "✅" if status == "present" else "❌"
+                })
+        
+        return formatted_results
+    
+    def parse_acknowledgement_analysis_result(self, analysis_result: str) -> Dict[str, Any]:
+        """Parse AI analysis result for acknowledgement into structured format"""
+        result = {
+            "student_info": {"status": "unknown", "feedback": ""},
+            "gratitude_expression": {"status": "unknown", "feedback": ""},
+            "mentioned_parties": {"status": "unknown", "feedback": ""},
+            "contribution_description": {"status": "unknown", "feedback": ""}
+        }
+        
+        # More flexible regex patterns to handle different AI response formats
+        sections = {
+            "student_info": [
+                r"STUDENT_INFO:\s*([A-Z]+)\s*-\s*(.*?)(?=\n[A-Z_]+:|$)",
+                r"STUDENT_INFO:\s*([A-Z]+)\s*(.*?)(?=\n[A-Z_]+:|$)",
+                r"STUDENT_INFO[:\s]*([A-Z]+)[\s-]*(.*?)(?=\n[A-Z_]+:|$)"
+            ],
+            "gratitude_expression": [
+                r"GRATITUDE_EXPRESSION:\s*([A-Z]+)\s*-\s*(.*?)(?=\n[A-Z_]+:|$)",
+                r"GRATITUDE_EXPRESSION:\s*([A-Z]+)\s*(.*?)(?=\n[A-Z_]+:|$)",
+                r"GRATITUDE_EXPRESSION[:\s]*([A-Z]+)[\s-]*(.*?)(?=\n[A-Z_]+:|$)"
+            ],
+            "mentioned_parties": [
+                r"MENTIONED_PARTIES:\s*([A-Z]+)\s*-\s*(.*?)(?=\n[A-Z_]+:|$)",
+                r"MENTIONED_PARTIES:\s*([A-Z]+)\s*(.*?)(?=\n[A-Z_]+:|$)",
+                r"MENTIONED_PARTIES[:\s]*([A-Z]+)[\s-]*(.*?)(?=\n[A-Z_]+:|$)"
+            ],
+            "contribution_description": [
+                r"CONTRIBUTION_DESCRIPTION:\s*([A-Z]+)\s*-\s*(.*?)(?=\n[A-Z_]+:|$)",
+                r"CONTRIBUTION_DESCRIPTION:\s*([A-Z]+)\s*(.*?)(?=\n[A-Z_]+:|$)",
+                r"CONTRIBUTION_DESCRIPTION[:\s]*([A-Z]+)[\s-]*(.*?)(?=\n[A-Z_]+:|$)"
+            ]
+        }
+        
+        for section, patterns in sections.items():
+            matched = False
+            for i, pattern in enumerate(patterns):
+                match = re.search(pattern, analysis_result, re.DOTALL | re.IGNORECASE)
+                if match:
+                    status = match.group(1).strip().upper()
+                    feedback = match.group(2).strip()
+                    
+                    # Clean up feedback to remove overall mentions
+                    feedback = re.sub(r'\n\nOverall.*$', '', feedback, flags=re.DOTALL | re.IGNORECASE)
+                    feedback = re.sub(r'\nOverall.*$', '', feedback, flags=re.DOTALL | re.IGNORECASE)
+                    feedback = feedback.strip()
+                    
+                    # Handle different status formats
+                    if status in ["PRESENT", "MISSING"]:
+                        result[section] = {
+                            "status": "present" if status == "PRESENT" else "missing",
+                            "feedback": feedback
+                        }
+                        matched = True
+                    break  # Stop trying other patterns once we find a match
+            
+        
+        return result
+    
+    def create_acknowledgement_analysis_summary(self, parsed_results: Dict[str, Any]) -> Dict[str, Any]:
+        """Create summary statistics from parsed acknowledgement results"""
+        summary = {
+            "total_sections": 4,
+            "passed_sections": 0,
+            "failed_sections": 0,
+            "overall_score": 0.0,
+            "recommendations": []
+        }
+        
+        sections = ["student_info", "gratitude_expression", "mentioned_parties", "contribution_description"]
+        
+        for section in sections:
+            if section in parsed_results and isinstance(parsed_results[section], dict):
+                status = parsed_results[section].get("status", "unknown")
+                if status == "present":
+                    summary["passed_sections"] += 1
+                elif status == "missing":
+                    summary["failed_sections"] += 1
+        
+        # Calculate overall score
+        if summary["total_sections"] > 0:
+            summary["overall_score"] = (summary["passed_sections"] / summary["total_sections"]) * 100
+        
+        # Generate recommendations based on missing sections
+        for section in sections:
+            if section in parsed_results and isinstance(parsed_results[section], dict):
+                status = parsed_results[section].get("status", "unknown")
+                if status == "missing":
+                    section_name = section.replace("_", " ").title()
+                    summary["recommendations"].append(f"Add {section_name} section based on feedback provided")
+        
+        return summary
+    
+    def format_acknowledgement_analysis_for_display(self, parsed_results: Dict[str, Any]) -> List[Dict[str, str]]:
+        """Format acknowledgement analysis results for frontend display"""
+        formatted_results = []
+        
+        sections = [
+            ("student_info", "Student Information"),
+            ("gratitude_expression", "Gratitude Expression"),
+            ("mentioned_parties", "Mentioned Parties"),
+            ("contribution_description", "Contribution Description")
+        ]
+        
+        for section_key, section_name in sections:
+            if section_key in parsed_results and isinstance(parsed_results[section_key], dict):
+                section_data = parsed_results[section_key]
+                status = section_data.get("status", "unknown")
+                feedback = section_data.get("feedback", "No feedback available")
+                
+                formatted_results.append({
+                    "section": section_name,
+                    "status": status.upper(),
+                    "feedback": feedback,
+                    "icon": "✅" if status == "present" else "❌"
+                })
+        
+        return formatted_results
