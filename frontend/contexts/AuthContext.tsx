@@ -21,6 +21,7 @@ interface User {
   created_at: string;
   phone_number?: string;
   profile_url?: string;
+  notifications_enabled: boolean;
 }
 
 interface RegistrationResult {

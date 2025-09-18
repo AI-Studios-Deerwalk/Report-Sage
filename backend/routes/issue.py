@@ -19,7 +19,7 @@ router = APIRouter()
 
 
 MAX_IMAGE_SIZE_MB = 2
-UPLOADS_DIR = "uploads/images"
+UPLOADS_DIR = "uploads/issues"
 
 # Ensure uploads directory exists
 os.makedirs(UPLOADS_DIR, exist_ok=True)

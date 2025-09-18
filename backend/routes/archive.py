@@ -26,12 +26,13 @@ from utils.ollama_client import OllamaClient
 from prompt.result_formatter import ResultFormatter
 from prompt import prompt_manager
 from models.archive import Archive
+from utils.email_service import send_analysis_completion_email
 
 router = APIRouter(prefix="", tags=["archives"])
 
 # Create uploads directory if it doesn't exist
-UPLOAD_DIR = Path(__file__).parent.parent / "uploads"
-UPLOAD_DIR.mkdir(exist_ok=True)
+UPLOAD_DIR = Path(__file__).parent.parent / "uploads" / "reports"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 print(f"Upload directory created/verified at: {UPLOAD_DIR.absolute()}")
 
 async def process_document_analysis_sequential(archive_id: int, file_path: str):
@@ -69,6 +70,9 @@ async def process_document_analysis_sequential(archive_id: int, file_path: str):
             db, archive_id=archive_id, status="completed"
         )
         
+        # Send notification email if user has notifications enabled
+        await send_analysis_completion_notification(archive_id, db)
+        
     except Exception as e:
         import logging
         logging.error(f"Error processing document analysis: {str(e)}")
@@ -76,6 +80,43 @@ async def process_document_analysis_sequential(archive_id: int, file_path: str):
             db, archive_id=archive_id, status="failed", 
             error_message=f"Analysis failed: {str(e)}"
         )
+
+
+async def send_analysis_completion_notification(archive_id: int, db: Session):
+    """Send notification email when analysis is completed"""
+    try:
+        # Get archive details
+        archive = crud_archive.get(db, archive_id)
+        if not archive:
+            print(f"Archive {archive_id} not found for notification")
+            return
+        
+        # Get user details
+        user = archive.user
+        if not user:
+            print(f"User not found for archive {archive_id}")
+            return
+        
+        # Check if user has notifications enabled
+        if not user.notifications_enabled:
+            print(f"Notifications disabled for user {user.uid}, skipping email")
+            return
+        
+        # Send notification email
+        success = await send_analysis_completion_email(
+            recipient_email=user.email,
+            recipient_name=f"{user.fname} {user.lname}",
+            document_name=archive.file_name,
+            archive_id=archive_id
+        )
+        
+        if success:
+            print(f"Analysis completion notification sent to {user.email}")
+        else:
+            print(f"Failed to send analysis completion notification to {user.email}")
+            
+    except Exception as e:
+        print(f"Error sending analysis completion notification: {e}")
 
 async def process_abstract_analysis(archive_id: int, abstract: str, db: Session):
     """Process abstract analysis independently"""
@@ -269,8 +310,8 @@ async def upload_document_test(
         )
     
     # Save file to uploads directory
-    upload_dir = Path("uploads")
-    upload_dir.mkdir(exist_ok=True)
+    upload_dir = Path("uploads/reports")
+    upload_dir.mkdir(parents=True, exist_ok=True)
     
     file_path = upload_dir / f"{current_user.uid}_{file.filename}"
     

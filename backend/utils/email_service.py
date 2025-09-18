@@ -424,3 +424,185 @@ async def send_email(
     except Exception as e:
         logger.error(f"Failed to send email to {to_email}: {e}")
         return False
+
+
+async def send_analysis_completion_email(
+    recipient_email: str,
+    recipient_name: str,
+    document_name: str,
+    archive_id: int
+) -> bool:
+    """
+    Send analysis completion notification email
+    
+    Args:
+        recipient_email: Email address to send to
+        recipient_name: Name of the recipient
+        document_name: Name of the analyzed document
+        archive_id: ID of the archive for linking
+        
+    Returns:
+        True if email sent successfully, False otherwise
+    """
+    if not email_service._validate_config():
+        logger.warning(f"SMTP not configured. Would send analysis completion email to {recipient_email}")
+        return False
+    
+    try:
+        # Create message
+        message = MIMEMultipart("alternative")
+        message["Subject"] = f"Analysis Complete: {document_name}"
+        message["From"] = f"{email_service.from_name} <{email_service.from_email}>"
+        message["To"] = recipient_email
+        
+        # Create HTML content
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Analysis Complete</title>
+            <style>
+                body {{
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #f4f4f4;
+                }}
+                .container {{
+                    background-color: white;
+                    padding: 30px;
+                    border-radius: 10px;
+                    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                }}
+                .header {{
+                    text-align: center;
+                    margin-bottom: 30px;
+                }}
+                .logo {{
+                    color: #10b981;
+                    font-size: 24px;
+                    font-weight: bold;
+                    margin-bottom: 10px;
+                }}
+                .success-icon {{
+                    color: #10b981;
+                    font-size: 48px;
+                    margin-bottom: 20px;
+                }}
+                .content {{
+                    margin-bottom: 30px;
+                }}
+                .button {{
+                    display: inline-block;
+                    background-color: #10b981;
+                    color: white;
+                    padding: 12px 24px;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    font-weight: bold;
+                    margin: 20px 0;
+                }}
+                .button:hover {{
+                    background-color: #059669;
+                }}
+                .footer {{
+                    text-align: center;
+                    margin-top: 30px;
+                    padding-top: 20px;
+                    border-top: 1px solid #eee;
+                    color: #666;
+                    font-size: 14px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <div class="logo">📊 Report Rage</div>
+                    <div class="success-icon">✅</div>
+                    <h1>Analysis Complete!</h1>
+                </div>
+                
+                <div class="content">
+                    <p>Hello <strong>{recipient_name}</strong>!</p>
+                    
+                    <p>Great news! Your document analysis for <strong>"{document_name}"</strong> has been completed successfully.</p>
+                    
+                    <p>You can now view your detailed analysis results, including:</p>
+                    <ul>
+                        <li>📝 Abstract analysis and feedback</li>
+                        <li>🙏 Acknowledgement section review</li>
+                        <li>📊 Overall document quality assessment</li>
+                        <li>💡 Improvement suggestions</li>
+                    </ul>
+                    
+                    <div style="text-align: center;">
+                        <a href="http://localhost:3000/archive/{archive_id}" class="button">
+                            View Analysis Results
+                        </a>
+                    </div>
+                    
+                    <p>If you have any questions about your analysis results, feel free to contact our support team.</p>
+                </div>
+                
+                <div class="footer">
+                    <p>Best regards,<br>The Report Rage Team</p>
+                    <p><small>This is an automated notification. Please do not reply to this email.</small></p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Create text content
+        text_content = f"""
+        Analysis Complete - {document_name}
+        
+        Hello {recipient_name}!
+        
+        Great news! Your document analysis for "{document_name}" has been completed successfully.
+        
+        You can now view your detailed analysis results, including:
+        - Abstract analysis and feedback
+        - Acknowledgement section review
+        - Overall document quality assessment
+        - Improvement suggestions
+        
+        View your results: http://localhost:3000/archive/{archive_id}
+        
+        If you have any questions about your analysis results, feel free to contact our support team.
+        
+        Best regards,
+        The Report Rage Team
+        
+        This is an automated notification. Please do not reply to this email.
+        """
+        
+        # Create MIME parts
+        text_part = MIMEText(text_content, "plain")
+        html_part = MIMEText(html_content, "html")
+        
+        # Add parts to message
+        message.attach(text_part)
+        message.attach(html_part)
+        
+        # Send email
+        server = email_service._create_smtp_connection()
+        if not server:
+            return False
+        
+        text = message.as_string()
+        server.sendmail(email_service.from_email, recipient_email, text)
+        server.quit()
+        
+        logger.info(f"Analysis completion email sent successfully to {recipient_email}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send analysis completion email to {recipient_email}: {e}")
+        return False
