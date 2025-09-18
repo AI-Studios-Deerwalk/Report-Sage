@@ -419,7 +419,7 @@ export function Sidebar() {
                   <div
                     key={archive.id}
                     className={`group flex items-center justify-between rounded-md px-3 py-1 text-sm hover:bg-gray-100 transition-colors ${
-                      router.asPath === `/archive/${archive.id}`
+                      router.asPath === `/sequential-analysis?archive_id=${archive.id}&file_name=${encodeURIComponent(archive.file_name)}`
                         ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
                         : "text-sidebar-foreground hover:bg-gray-100"
                     }`}
@@ -432,7 +432,7 @@ export function Sidebar() {
                               "flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
                             }
                             onClick={() =>
-                              router.push(`/archive/${archive.id}`)
+                              router.push(`/sequential-analysis?archive_id=${archive.id}&file_name=${encodeURIComponent(archive.file_name)}`)
                             }
                           >
                             <FileText className="h-3 w-3 text-gray-400 flex-shrink-0" />

@@ -15,6 +15,7 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  ChevronLeft,
 } from "lucide-react";
 import { useRouter } from "next/router";
 import { useToast } from "@/hooks/use-toast";
@@ -496,16 +497,24 @@ export function SequentialAnalysisResults({
             onClick={onBack}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-10 hover:w-40 group transition-all duration-300 ease-in-out overflow-hidden group"
           >
-            ← Back to Upload
+            {/* Arrow stays visible */}
+            <ChevronLeft className="fixed group-hover:relative" />
+
+            {/* Text appears on hover */}
+            <span className="whitespace-nowrap relative -top-px leading-none opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out group-hover:translate-x-1">
+              Back to upload
+            </span>
           </Button>
         </div>
       )}
 
+      <h1 className="text-xl font-bold my-6">{fileName}</h1>
+
       {/* Abstract Analysis Section */}
       <Card
-        className={`mb-6 transition-opacity duration-300 ${
+        className={`mb-6 transition-opacity duration-300 rounded-lg ${
           abstractStatus === "completed" || abstractStatus === "processing"
             ? "opacity-100"
             : abstractStatus === "pending" || abstractLoading
@@ -516,7 +525,7 @@ export function SequentialAnalysisResults({
         <CardHeader
           className={`transition-colors select-none ${
             abstractStatus === "completed"
-              ? "cursor-pointer hover:bg-gray-50"
+              ? "cursor-pointer hover:bg-gray-50 rounded-lg"
               : "cursor-not-allowed opacity-60"
           }`}
           onClick={(e) => {
@@ -555,8 +564,8 @@ export function SequentialAnalysisResults({
               abstractStatus === "processing") && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-green-600 mb-4">
-                  <CheckCircle className="h-5 w-5" />
-                  <span className="font-medium">
+                  <CheckCircle className="h-5 w-5 mt-2" />
+                  <span className="font-medium mt-2">
                     {abstractStatus === "completed"
                       ? "Abstract Analysis Completed"
                       : "Abstract Analysis In Progress"}
@@ -591,7 +600,7 @@ export function SequentialAnalysisResults({
 
       {/* Acknowledgement Analysis Section */}
       <Card
-        className={`mb-6 transition-opacity duration-300 ${
+        className={`mb-6 rounded-lg transition-opacity duration-300 ${
           acknowledgementStatus === "completed" ||
           acknowledgementStatus === "processing"
             ? "opacity-100"
@@ -603,7 +612,7 @@ export function SequentialAnalysisResults({
         <CardHeader
           className={`transition-colors select-none ${
             acknowledgementStatus === "completed"
-              ? "cursor-pointer hover:bg-gray-50"
+              ? "cursor-pointer hover:bg-gray-50 rounded-lg"
               : "cursor-not-allowed opacity-60"
           }`}
           onClick={(e) => {
@@ -643,8 +652,8 @@ export function SequentialAnalysisResults({
               acknowledgementStatus === "processing") && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-green-600 mb-4">
-                  <CheckCircle className="h-5 w-5" />
-                  <span className="font-medium">
+                  <CheckCircle className="h-5 w-5 mt-2" />
+                  <span className="font-medium mt-2">
                     {acknowledgementStatus === "completed"
                       ? "Acknowledgement Analysis Completed"
                       : "Acknowledgement Analysis In Progress"}

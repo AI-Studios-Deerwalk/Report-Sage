@@ -14,7 +14,8 @@ import {
   Mail,
   Activity,
   CheckCircle,
-  RefreshCw
+  RefreshCw,
+  ChevronDown
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -430,7 +431,7 @@ export default function AdminUsersPage() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="h-11 px-4 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 rounded-xl bg-white"
+                  className="h-11 px-4 pr-10 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 rounded-xl bg-white appearance-none"
                 >
                   <option value="all">All Status</option>
                   <option value="new">New This Month</option>
@@ -438,6 +439,7 @@ export default function AdminUsersPage() {
                   <option value="verified">Verified</option>
                   <option value="unverified">Unverified</option>
                 </select>
+                <ChevronDown className="absolute right-8 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none h-4 w-4" />
               </div>
             </CardContent>
           </Card>

@@ -238,20 +238,20 @@ export function FileUpload({ setResults }: FileUploadProps) {
           <h1 className="text-4xl font-bold text-gray-800 mb-4">
             Upload Your Research Papers
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          {/* <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Get instant AI-powered analysis of your research papers. Upload PDF
             files and receive detailed insights on abstract and acknowledgement
             sections.
-          </p>
+          </p> */}
         </div>
 
-        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-2xl">
-          <CardHeader className="text-center pb-4">
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+          {/* <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl font-semibold text-gray-800 flex items-center justify-center gap-2">
               <Upload className="h-8 w-8 text-emerald-600" />
               Drag & Drop Your Files
             </CardTitle>
-          </CardHeader>
+          </CardHeader> */}
           <CardContent className="p-8">
             {error && (
               <Alert className="mb-6 border-red-200 bg-red-50">
