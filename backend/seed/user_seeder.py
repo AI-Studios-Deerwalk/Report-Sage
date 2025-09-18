@@ -47,6 +47,22 @@ class UserSeeder:
                 fname="Alice", 
                 lname="Jones",
                 phone_number="555-456-7890"
+            ),
+            UserCreate(
+                email="hardikshakya17@gmail.com",
+                password="Hardik@123",
+                fname="Hardik",
+                lname="Shakya",
+                phone_number="555-000-0001",
+                is_verified=True
+            ),
+            UserCreate(
+                email="ason.gautam2580@gmail.com",
+                password="#asonG12",
+                fname="Ason",
+                lname="Gautam",
+                phone_number="555-000-0002",
+                is_verified=True
             )
         ]
     
