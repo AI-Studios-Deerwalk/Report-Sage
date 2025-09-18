@@ -15,6 +15,7 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  Eye,
 } from "lucide-react";
 import { useRouter } from "next/router";
 import { useToast } from "@/hooks/use-toast";
@@ -211,6 +212,95 @@ export function SequentialAnalysisResults({
 
   const handleViewArchives = () => {
     router.push("/archive");
+  };
+
+  // Utility function to extract relative path from full file path
+  const extractRelativePath = (fullPath: string): string => {
+    console.log("Original file path:", fullPath);
+
+    // Handle different path formats
+    if (!fullPath) return "";
+
+    // Method 1: Look for 'uploads/' directory
+    const uploadsIndex = fullPath.indexOf("uploads/");
+    if (uploadsIndex !== -1) {
+      const relativePath = fullPath.substring(uploadsIndex);
+      console.log("Extracted relative path (method 1):", relativePath);
+      return relativePath;
+    }
+
+    // Method 2: Look for 'uploads\\' directory (Windows)
+    const uploadsIndexWin = fullPath.indexOf("uploads\\");
+    if (uploadsIndexWin !== -1) {
+      const relativePath = fullPath
+        .substring(uploadsIndexWin)
+        .replace(/\\/g, "/");
+      console.log("Extracted relative path (method 2):", relativePath);
+      return relativePath;
+    }
+
+    // Method 3: If it's already a relative path starting with uploads
+    if (fullPath.startsWith("uploads/") || fullPath.startsWith("uploads\\")) {
+      const relativePath = fullPath.replace(/\\/g, "/");
+      console.log("Already relative path:", relativePath);
+      return relativePath;
+    }
+
+    // Method 4: Extract filename and construct path
+    const filename = fullPath.split(/[/\\]/).pop();
+    if (filename) {
+      const relativePath = `uploads/reports/${filename}`;
+      console.log("Constructed path from filename:", relativePath);
+      return relativePath;
+    }
+
+    console.log("Using original path as fallback:", fullPath);
+    return fullPath;
+  };
+
+  const handleViewReport = async () => {
+    try {
+      console.log("Starting handleViewReport with archiveId:", archiveId);
+      console.log("User ID:", user?.uid);
+      console.log("File name:", fileName);
+
+      // Get the archive details to get the actual file path
+      const archiveResponse = await archiveAPI.getArchive(archiveId);
+      const archive = archiveResponse.data;
+
+      console.log("Archive data received:", archive);
+
+      if (archive && archive.file_path) {
+        // Extract the relative path from the full file path
+        const relativePath = extractRelativePath(archive.file_path);
+
+        // Construct the full URL for the static file serving
+        const backendUrl =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const fileUrl = `${backendUrl}/${relativePath}`;
+
+        console.log("Constructed file URL:", fileUrl);
+
+        // Open the PDF in a new tab
+        window.open(fileUrl, "_blank");
+      } else {
+        console.log("No file_path found, using fallback method");
+        // Fallback: construct URL based on user ID and filename
+        const backendUrl =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const fileUrl = `${backendUrl}/uploads/reports/${user?.uid}_${fileName}`;
+        console.log("Fallback file URL:", fileUrl);
+        window.open(fileUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error fetching archive details:", error);
+      // Fallback: construct URL based on user ID and filename
+      const backendUrl =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const fileUrl = `${backendUrl}/uploads/reports/${user?.uid}_${fileName}`;
+      console.log("Error fallback file URL:", fileUrl);
+      window.open(fileUrl, "_blank");
+    }
   };
 
   const getIcon = (type: string) => {
@@ -490,8 +580,8 @@ export function SequentialAnalysisResults({
 
   return (
     <div className="w-full max-w-4xl mx-auto mt-8">
-      {onBack && (
-        <div className="mb-4">
+      <div className="mb-4 flex gap-3">
+        {onBack && (
           <Button
             onClick={onBack}
             variant="outline"
@@ -500,8 +590,17 @@ export function SequentialAnalysisResults({
           >
             ← Back to Upload
           </Button>
-        </div>
-      )}
+        )}
+        <Button
+          onClick={handleViewReport}
+          variant="default"
+          size="sm"
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+        >
+          <Eye className="h-4 w-4" />
+          View Report
+        </Button>
+      </div>
 
       {/* Abstract Analysis Section */}
       <Card
