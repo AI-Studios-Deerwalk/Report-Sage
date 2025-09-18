@@ -44,6 +44,9 @@ class User(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     is_blocked = Column(Boolean, default=False, nullable=False)  # New column for admin blocking
     
+    # Notification preferences
+    notifications_enabled = Column(Boolean, default=True, nullable=False)  # User's notification preference
+    
     # Relationships
     otps = relationship("UserOTP", back_populates="user")
     
@@ -63,7 +66,8 @@ class User(Base):
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "is_active": self.is_active,
-            "is_blocked": self.is_blocked
+            "is_blocked": self.is_blocked,
+            "notifications_enabled": self.notifications_enabled
         }
     
     def to_public_dict(self):

@@ -4,6 +4,15 @@ import { tokenStorage } from "./jwt";
 // API Base Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// Utility function to construct full profile image URL
+export const getProfileImageUrl = (profileUrl?: string | null): string => {
+  if (!profileUrl) return "";
+  // If it's already a full URL, return as is
+  if (profileUrl.startsWith("http")) return profileUrl;
+  // If it's a relative path, prepend the API base URL
+  return `${API_BASE_URL}${profileUrl}`;
+};
+
 // Create axios instance
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -247,7 +256,14 @@ export const userAPI = {
     lname?: string;
     phone_number?: string;
     profile_url?: string;
+    notifications_enabled?: boolean;
   }) => apiClient.put("/api/v1/users/profile", userData),
+
+  // Update notification settings
+  updateNotificationSettings: (notificationsEnabled: boolean) =>
+    apiClient.put("/api/v1/users/notifications", {
+      notifications_enabled: notificationsEnabled,
+    }),
 
   // Profile picture upload
   uploadProfilePicture: (file: File) => {

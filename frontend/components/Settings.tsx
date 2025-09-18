@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { authAPI, userAPI, OTPPurpose } from "@/lib/api";
+import { authAPI, userAPI, OTPPurpose, getProfileImageUrl } from "@/lib/api";
 import {
   Camera,
   Edit3,
@@ -39,7 +39,9 @@ export default function Settings({ className }: SettingsProps) {
   const { user, refreshUser } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true); // Default to true
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    user?.notifications_enabled ?? true
+  );
 
   // Name change states
   const [firstName, setFirstName] = useState(user?.fname || "");
@@ -72,6 +74,13 @@ export default function Settings({ className }: SettingsProps) {
   // Profile picture states
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync notification state with user data
+  useEffect(() => {
+    if (user?.notifications_enabled !== undefined) {
+      setNotificationsEnabled(user.notifications_enabled);
+    }
+  }, [user?.notifications_enabled]);
 
   // Handle name change
   const handleNameChange = async () => {
@@ -443,6 +452,40 @@ export default function Settings({ className }: SettingsProps) {
     }
   };
 
+  // Handle notification toggle change
+  const handleNotificationToggle = async (enabled: boolean) => {
+    setIsLoading(true);
+    try {
+      await userAPI.updateNotificationSettings(enabled);
+
+      // Update local state
+      setNotificationsEnabled(enabled);
+
+      // Refresh user data to get updated notification preference
+      await refreshUser();
+
+      toast({
+        title: "Success",
+        description: `Notifications ${
+          enabled ? "enabled" : "disabled"
+        } successfully.`,
+      });
+    } catch (error: any) {
+      // Revert the toggle on error
+      setNotificationsEnabled(!enabled);
+
+      toast({
+        title: "Error",
+        description:
+          error.response?.data?.detail ||
+          "Failed to update notification settings.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 flex items-center justify-center p-4 pb-16">
       {/* Animated floating geometric shapes - same as FAQ page */}
@@ -579,7 +622,7 @@ export default function Settings({ className }: SettingsProps) {
             <div className="w-32 h-32 rounded-full bg-white shadow-lg flex items-center justify-center overflow-hidden border-4 border-emerald-200">
               {profileImage || user?.profile_url ? (
                 <img
-                  src={profileImage || user?.profile_url}
+                  src={profileImage || getProfileImageUrl(user?.profile_url)}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
@@ -1057,7 +1100,8 @@ export default function Settings({ className }: SettingsProps) {
                 </div>
                 <Switch
                   checked={notificationsEnabled}
-                  onCheckedChange={setNotificationsEnabled}
+                  onCheckedChange={handleNotificationToggle}
+                  disabled={isLoading}
                 />
               </div>
             </div>

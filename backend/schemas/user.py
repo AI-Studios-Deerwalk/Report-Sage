@@ -41,6 +41,7 @@ class UserUpdate(BaseModel):
     phone_number: Optional[str] = Field(None, max_length=20)
     profile_url: Optional[str] = Field(None, max_length=500)
     is_active: Optional[bool] = None
+    notifications_enabled: Optional[bool] = None
 
 
 class UserResponse(UserBase):
@@ -49,6 +50,7 @@ class UserResponse(UserBase):
     is_email_verified: bool = Field(..., description="Whether email is verified")
     created_at: datetime = Field(..., description="When the user was created")
     is_active: bool = Field(..., description="Whether the user account is active")
+    notifications_enabled: bool = Field(..., description="Whether notifications are enabled")
     
     class Config:
         from_attributes = True
@@ -120,3 +122,8 @@ class PasswordReset(BaseModel):
         if not any(c.isdigit() for c in v):
             raise ValueError('Password must contain at least one digit')
         return v
+
+
+class NotificationSettingsUpdate(BaseModel):
+    """Schema for updating notification settings"""
+    notifications_enabled: bool = Field(..., description="Whether notifications are enabled")

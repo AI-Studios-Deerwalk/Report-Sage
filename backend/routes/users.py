@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.connection import get_db_session
 from crud import user_crud
-from schemas.user import UserResponse, UserUpdate, UserResponsePrivate
+from schemas.user import UserResponse, UserUpdate, UserResponsePrivate, NotificationSettingsUpdate
 from models.user import User
 from .dependencies import (
     get_current_active_user,
@@ -62,6 +62,34 @@ async def update_user_profile(
     return updated_user
 
 
+@router.put("/notifications", response_model=dict)
+async def update_notification_settings(
+    settings: NotificationSettingsUpdate,
+    current_user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Update user's notification preferences
+    
+    - **notifications_enabled**: Whether to enable notifications (true/false)
+    
+    Requires authentication
+    """
+    user_update = UserUpdate(notifications_enabled=settings.notifications_enabled)
+    updated_user = await user_crud.update(session, current_user.uid, user_update)
+    
+    if not updated_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    return {
+        "message": "Notification settings updated successfully",
+        "notifications_enabled": updated_user.notifications_enabled
+    }
+
+
 @router.post("/profile/upload", response_model=dict)
 async def upload_profile_picture(
     file: UploadFile = File(...),
@@ -93,21 +121,25 @@ async def upload_profile_picture(
         )
     
     # Create uploads directory if it doesn't exist
-    upload_dir = "uploads/profile_images"
+    upload_dir = "uploads/profiles"
     os.makedirs(upload_dir, exist_ok=True)
     
-    # Generate unique filename
+    # Generate unique filename - ensure it's a flat filename without subdirectories
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
-    filename = f"{timestamp}_{current_user.uid}.{file_extension}"
+    # Use string representation of uid to avoid path issues
+    user_id_str = str(current_user.uid).replace('-', '')  # Remove hyphens from UUID
+    filename = f"{timestamp}_{user_id_str}.{file_extension}"
     file_path = os.path.join(upload_dir, filename)
     
     # Save file
     with open(file_path, "wb") as buffer:
         buffer.write(file_content)
     
-    # Generate URL path
-    profile_url = f"/uploads/profile_images/{filename}"
+    # Generate URL path - use absolute URL with API base
+    from fastapi import Request
+    # For now, use relative path that will be served by static files
+    profile_url = f"/uploads/profiles/{filename}"
     
     # Update user profile with new image URL
     user_update = UserUpdate(profile_url=profile_url)
