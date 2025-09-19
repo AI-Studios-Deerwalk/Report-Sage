@@ -16,6 +16,7 @@ import {
   ChevronUp,
   Loader2,
   Eye,
+  ChevronLeft,
 } from "lucide-react";
 import { useRouter } from "next/router";
 import { useToast } from "@/hooks/use-toast";
@@ -588,10 +589,15 @@ export function SequentialAnalysisResults({
             size="sm"
             className="flex items-center gap-2 w-10 hover:w-40 group transition-all duration-300 ease-in-out overflow-hidden group"
           >
-            ← Back to Upload
+            <ChevronLeft className="fixed group-hover:relative"/>
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 pb-1">
+              Back to Upload
+            </span>
+             
           </Button>
-        </div>
+        
       )}
+      </div>
 
       {/* Abstract Analysis Section */}
       <Card
