@@ -304,7 +304,7 @@ const ArchivePage: React.FC = () => {
               </Button>
             </Card>
           ) : (
-            <div className="space-y-4 ">
+            <div className="space-y-4">
               <Accordion
                 type="single"
                 collapsible
@@ -312,7 +312,7 @@ const ArchivePage: React.FC = () => {
                 disabled
               >
                 {archives.map((archive) => (
-                  <AccordionItem key={archive.id} value={archive.id.toString()}>
+                  <AccordionItem key={archive.id} value={archive.id.toString()} className="border-b-0">
                     <div
                       className="transform duration-200 hover:[scale:1.02] cursor-pointer"
                       onClick={() => {

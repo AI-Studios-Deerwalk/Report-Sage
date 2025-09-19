@@ -586,25 +586,16 @@ export function SequentialAnalysisResults({
             onClick={onBack}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-10 hover:w-40 group transition-all duration-300 ease-in-out overflow-hidden group"
           >
             ← Back to Upload
           </Button>
-        )}
-        <Button
-          onClick={handleViewReport}
-          variant="default"
-          size="sm"
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-        >
-          <Eye className="h-4 w-4" />
-          View Report
-        </Button>
-      </div>
+        </div>
+      )}
 
       {/* Abstract Analysis Section */}
       <Card
-        className={`mb-6 transition-opacity duration-300 ${
+        className={`mb-6 transition-opacity duration-300 rounded-lg ${
           abstractStatus === "completed" || abstractStatus === "processing"
             ? "opacity-100"
             : abstractStatus === "pending" || abstractLoading
@@ -615,7 +606,7 @@ export function SequentialAnalysisResults({
         <CardHeader
           className={`transition-colors select-none ${
             abstractStatus === "completed"
-              ? "cursor-pointer hover:bg-gray-50"
+              ? "cursor-pointer hover:bg-gray-50 rounded-lg"
               : "cursor-not-allowed opacity-60"
           }`}
           onClick={(e) => {
@@ -654,8 +645,8 @@ export function SequentialAnalysisResults({
               abstractStatus === "processing") && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-green-600 mb-4">
-                  <CheckCircle className="h-5 w-5" />
-                  <span className="font-medium">
+                  <CheckCircle className="h-5 w-5 mt-2" />
+                  <span className="font-medium mt-2">
                     {abstractStatus === "completed"
                       ? "Abstract Analysis Completed"
                       : "Abstract Analysis In Progress"}
@@ -690,7 +681,7 @@ export function SequentialAnalysisResults({
 
       {/* Acknowledgement Analysis Section */}
       <Card
-        className={`mb-6 transition-opacity duration-300 ${
+        className={`mb-6 rounded-lg transition-opacity duration-300 ${
           acknowledgementStatus === "completed" ||
           acknowledgementStatus === "processing"
             ? "opacity-100"
@@ -702,7 +693,7 @@ export function SequentialAnalysisResults({
         <CardHeader
           className={`transition-colors select-none ${
             acknowledgementStatus === "completed"
-              ? "cursor-pointer hover:bg-gray-50"
+              ? "cursor-pointer hover:bg-gray-50 rounded-lg"
               : "cursor-not-allowed opacity-60"
           }`}
           onClick={(e) => {
@@ -742,8 +733,8 @@ export function SequentialAnalysisResults({
               acknowledgementStatus === "processing") && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-green-600 mb-4">
-                  <CheckCircle className="h-5 w-5" />
-                  <span className="font-medium">
+                  <CheckCircle className="h-5 w-5 mt-2" />
+                  <span className="font-medium mt-2">
                     {acknowledgementStatus === "completed"
                       ? "Acknowledgement Analysis Completed"
                       : "Acknowledgement Analysis In Progress"}

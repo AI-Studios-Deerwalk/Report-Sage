@@ -224,178 +224,181 @@ const IndividualArchivePage: React.FC = () => {
       </div>
     );
   }
-
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-h-screen">
-        <div className="flex-1 p-6 overflow-y-auto">
-          {/* Header */}
-          <div className="mb-10">
-            <div className="flex items-center gap-3 mb-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push("/archive")}
-                className="p-2 hover:scale-110 transition-transform duration-100"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {archive.file_name}
-                </h1>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
-            {/* Redirecting to sequential analysis page */}
-            <div className="lg:col-span-2 space-y-6 h-full flex flex-col">
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                    Redirecting to Analysis...
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Taking you to the detailed analysis view
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column - File Information */}
-            <div className="lg:col-span-1 space-y-6 h-full flex flex-col">
-              {/* File Information Card */}
-              <Card className="flex-1">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <File className="h-5 w-5" />
-                    File Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">
-                      {archive.file_name}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <HardDrive className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">
-                      {formatFileSize(archive.file_size)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <Calendar className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">
-                      {format(
-                        new Date(archive.created_at),
-                        "MMM dd, yyyy HH:mm"
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="h-4 w-4 text-gray-400 flex items-center justify-center">
-                      {getStatusIcon(archive.processing_status)}
-                    </div>
-                    <span className="text-sm text-gray-600">
-                      Status: {archive.processing_status}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Status Messages */}
-              {archive.processing_status === "failed" &&
-                archive.error_message && (
-                  <Card className="border-red-200 bg-red-50">
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-2 text-red-800 mb-2">
-                        <XCircle className="h-5 w-5" />
-                        <span className="font-medium">Processing Failed</span>
-                      </div>
-                      <p className="text-sm text-red-700">
-                        {archive.error_message}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-
-              {archive.processing_status === "processing" && (
-                <Card className="border-blue-200 bg-blue-50">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-2 text-blue-800 mb-2">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span className="font-medium">Analysis in Progress</span>
-                    </div>
-                    <p className="text-sm text-blue-700">
-                      Your document is being analyzed. This may take a few
-                      minutes.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {archive.processing_status === "pending" && (
-                <Card className="border-yellow-200 bg-yellow-50">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-2 text-yellow-800 mb-2">
-                      <Clock className="h-5 w-5" />
-                      <span className="font-medium">Waiting for Analysis</span>
-                    </div>
-                    <p className="text-sm text-yellow-700">
-                      Your document is queued for analysis.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Delete Button */}
-              <Card>
-                <CardContent className="pt-6">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full text-red-600 hover:text-red-700 hover:scale-105 transition-transform duration-100"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete Archive
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="bg-white">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Archive</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{archive.file_name}"?
-                          This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleDeleteArchive}
-                          className="bg-red-600 hover:bg-red-700 text-white"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <>{console.log("ID is visited")}</>
   );
+  // return (
+
+  //   <div className="flex min-h-screen bg-gray-50">
+  //     <Sidebar />
+  //     <div className="flex-1 flex flex-col min-h-screen">
+  //       <div className="flex-1 p-6 overflow-y-auto">
+  //         {/* Header */}
+  //         <div className="mb-10">
+  //           <div className="flex items-center gap-3 mb-4">
+  //             <Button
+  //               variant="ghost"
+  //               size="sm"
+  //               onClick={() => router.push("/archive")}
+  //               className="p-2 hover:scale-110 transition-transform duration-100"
+  //             >
+  //               <ArrowLeft className="h-4 w-4" />
+  //             </Button>
+  //             <div>
+  //               <h1 className="text-3xl font-bold text-gray-900">
+  //                 {archive.file_name}
+  //               </h1>
+  //             </div>
+  //           </div>
+  //         </div>
+
+  //         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
+  //           {/* Redirecting to sequential analysis page */}
+  //           <div className="lg:col-span-2 space-y-6 h-full flex flex-col">
+  //             <div className="flex items-center justify-center py-12">
+  //               <div className="text-center">
+  //                 <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+  //                 <h3 className="text-lg font-semibold text-gray-700 mb-2">
+  //                   Redirecting to Analysis...
+  //                 </h3>
+  //                 <p className="text-sm text-gray-500">
+  //                   Taking you to the detailed analysis view
+  //                 </p>
+  //               </div>
+  //             </div>
+  //           </div>
+
+  //           {/* Right Column - File Information */}
+  //           <div className="lg:col-span-1 space-y-6 h-full flex flex-col">
+  //             {/* File Information Card */}
+  //             <Card className="flex-1">
+  //               <CardHeader>
+  //                 <CardTitle className="flex items-center gap-2">
+  //                   <File className="h-5 w-5" />
+  //                   File Information
+  //                 </CardTitle>
+  //               </CardHeader>
+  //               <CardContent className="space-y-4">
+  //                 <div className="flex items-center gap-3">
+  //                   <FileText className="h-4 w-4 text-gray-400" />
+  //                   <span className="text-sm text-gray-600">
+  //                     {archive.file_name}
+  //                   </span>
+  //                 </div>
+
+  //                 <div className="flex items-center gap-3">
+  //                   <HardDrive className="h-4 w-4 text-gray-400" />
+  //                   <span className="text-sm text-gray-600">
+  //                     {formatFileSize(archive.file_size)}
+  //                   </span>
+  //                 </div>
+
+  //                 <div className="flex items-center gap-3">
+  //                   <Calendar className="h-4 w-4 text-gray-400" />
+  //                   <span className="text-sm text-gray-600">
+  //                     {format(
+  //                       new Date(archive.created_at),
+  //                       "MMM dd, yyyy HH:mm"
+  //                     )}
+  //                   </span>
+  //                 </div>
+
+  //                 <div className="flex items-center gap-3">
+  //                   <div className="h-4 w-4 text-gray-400 flex items-center justify-center">
+  //                     {getStatusIcon(archive.processing_status)}
+  //                   </div>
+  //                   <span className="text-sm text-gray-600">
+  //                     Status: {archive.processing_status}
+  //                   </span>
+  //                 </div>
+  //               </CardContent>
+  //             </Card>
+
+  //             {/* Status Messages */}
+  //             {archive.processing_status === "failed" &&
+  //               archive.error_message && (
+  //                 <Card className="border-red-200 bg-red-50">
+  //                   <CardContent className="pt-6">
+  //                     <div className="flex items-center gap-2 text-red-800 mb-2">
+  //                       <XCircle className="h-5 w-5" />
+  //                       <span className="font-medium">Processing Failed</span>
+  //                     </div>
+  //                     <p className="text-sm text-red-700">
+  //                       {archive.error_message}
+  //                     </p>
+  //                   </CardContent>
+  //                 </Card>
+  //               )}
+
+  //             {archive.processing_status === "processing" && (
+  //               <Card className="border-blue-200 bg-blue-50">
+  //                 <CardContent className="pt-6">
+  //                   <div className="flex items-center gap-2 text-blue-800 mb-2">
+  //                     <Loader2 className="h-5 w-5 animate-spin" />
+  //                     <span className="font-medium">Analysis in Progress</span>
+  //                   </div>
+  //                   <p className="text-sm text-blue-700">
+  //                     Your document is being analyzed. This may take a few
+  //                     minutes.
+  //                   </p>
+  //                 </CardContent>
+  //               </Card>
+  //             )}
+
+  //             {archive.processing_status === "pending" && (
+  //               <Card className="border-yellow-200 bg-yellow-50">
+  //                 <CardContent className="pt-6">
+  //                   <div className="flex items-center gap-2 text-yellow-800 mb-2">
+  //                     <Clock className="h-5 w-5" />
+  //                     <span className="font-medium">Waiting for Analysis</span>
+  //                   </div>
+  //                   <p className="text-sm text-yellow-700">
+  //                     Your document is queued for analysis.
+  //                   </p>
+  //                 </CardContent>
+  //               </Card>
+  //             )}
+
+  //             {/* Delete Button */}
+  //             <Card>
+  //               <CardContent className="pt-6">
+  //                 <AlertDialog>
+  //                   <AlertDialogTrigger asChild>
+  //                     <Button
+  //                       variant="outline"
+  //                       className="w-full text-red-600 hover:text-red-700 hover:scale-105 transition-transform duration-100"
+  //                     >
+  //                       <Trash2 className="h-4 w-4 mr-2" />
+  //                       Delete Archive
+  //                     </Button>
+  //                   </AlertDialogTrigger>
+  //                   <AlertDialogContent className="bg-white">
+  //                     <AlertDialogHeader>
+  //                       <AlertDialogTitle>Delete Archive</AlertDialogTitle>
+  //                       <AlertDialogDescription>
+  //                         Are you sure you want to delete "{archive.file_name}"?
+  //                         This action cannot be undone.
+  //                       </AlertDialogDescription>
+  //                     </AlertDialogHeader>
+  //                     <AlertDialogFooter>
+  //                       <AlertDialogCancel>Cancel</AlertDialogCancel>
+  //                       <AlertDialogAction
+  //                         onClick={handleDeleteArchive}
+  //                         className="bg-red-600 hover:bg-red-700 text-white"
+  //                       >
+  //                         Delete
+  //                       </AlertDialogAction>
+  //                     </AlertDialogFooter>
+  //                   </AlertDialogContent>
+  //                 </AlertDialog>
+  //               </CardContent>
+  //             </Card>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 };
 
 export default IndividualArchivePage;
