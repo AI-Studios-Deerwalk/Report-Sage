@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/contexts/AuthContext";
-import { archiveAPI } from "@/lib/api";
+import { archiveAPI, getProfileImageUrl } from "@/lib/api";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -91,6 +91,17 @@ export function Sidebar() {
 
   const { user, logout } = useAuth();
   const router = useRouter();
+
+  // Debug: Log user data changes
+  useEffect(() => {
+    console.log("Sidebar: User data updated:", {
+      uid: user?.uid,
+      fname: user?.fname,
+      lname: user?.lname,
+      profile_url: user?.profile_url,
+      email: user?.email,
+    });
+  }, [user]);
 
   // Fetch archives when component mounts
   useEffect(() => {
@@ -295,30 +306,47 @@ export function Sidebar() {
           collapsed ? "justify-center" : "justify-between"
         }`}
       >
-        {!collapsed && (
-          <div className="px-1">
-            <Image
-              src="/Logo.png"
-              alt="Report Rage Logo"
-              width={50}
-              height={50}
-              className="object-contain"
-            />
-          </div>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleCollapsed}
-          className="h-8 w-8 rounded-md border border-sidebar-border bg-white text-slate-700 shadow-sm hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-200 transition-all"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        {/* Logo - Clickable */}
+        <button
+          onClick={() => router.push("/dashboard")}
+          className={`px-1 hover:opacity-80 transition-opacity duration-200 ${
+            collapsed ? "flex justify-center" : ""
+          }`}
+          aria-label="Go to Dashboard"
         >
-          {collapsed ? (
-            <ChevronRight className="h-4 w-4 text-slate-600" />
-          ) : (
+          <Image
+            src="/Logo.png"
+            alt="Report Rage Logo"
+            width={collapsed ? 32 : 50}
+            height={collapsed ? 32 : 50}
+            className="object-contain cursor-pointer"
+          />
+        </button>
+
+        {/* Toggle Button - Only show when not collapsed or when collapsed */}
+        {!collapsed && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleCollapsed}
+            className="h-8 w-8 rounded-md border border-sidebar-border bg-white text-slate-700 shadow-sm hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-200 transition-all"
+            aria-label="Collapse sidebar"
+          >
             <ChevronLeft className="h-4 w-4 text-slate-600" />
-          )}
-        </Button>
+          </Button>
+        )}
+
+        {collapsed && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleCollapsed}
+            className="h-8 w-8 rounded-md border border-sidebar-border bg-white text-slate-700 shadow-sm hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-200 transition-all"
+            aria-label="Expand sidebar"
+          >
+            <ChevronRight className="h-4 w-4 text-slate-600" />
+          </Button>
+        )}
       </div>
       <div className="mt-3 mb-3 border-t border-sidebar-border" />
 
@@ -784,11 +812,36 @@ export function Sidebar() {
               collapsed ? "justify-center" : ""
             }`}
           >
-            <Avatar className="h-8 w-8 rounded-full border-2 border-sidebar-border flex-col items-center justify-center">
-              {/* <AvatarImage src="/professional-headshot.png" alt={fullName} /> */}
-              {/* <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full"> */}
-              <User className="h-4 w-4" />
-              {/* </AvatarFallback> */}
+            <Avatar className="h-8 w-8 rounded-full border-2 border-sidebar-border">
+              {user?.profile_url ? (
+                <AvatarImage
+                  src={getProfileImageUrl(user.profile_url)}
+                  alt={fullName}
+                  className="object-cover"
+                  onError={(e) => {
+                    console.log(
+                      "Profile image failed to load:",
+                      user?.profile_url,
+                      "Constructed URL:",
+                      getProfileImageUrl(user?.profile_url)
+                    );
+                    e.currentTarget.style.display = "none";
+                  }}
+                  onLoad={() => {
+                    console.log(
+                      "Profile image loaded successfully:",
+                      user?.profile_url,
+                      "Constructed URL:",
+                      getProfileImageUrl(user?.profile_url)
+                    );
+                  }}
+                />
+              ) : (
+                <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-semibold">
+                  {user?.fname?.[0]?.toUpperCase()}
+                  {user?.lname?.[0]?.toUpperCase()}
+                </AvatarFallback>
+              )}
             </Avatar>
             <div className={`${collapsed ? "hidden" : "block"} min-w-0`}>
               <h3 className="text-xs font-medium text-sidebar-foreground truncate">
