@@ -77,8 +77,8 @@ export default function Settings({ className }: SettingsProps) {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  //error handling for profile image
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+
 
 
   // Sync notification state with user data
@@ -333,16 +333,13 @@ export default function Settings({ className }: SettingsProps) {
         "image/png",
         "image/gif",
       ];
-      if (!allowedTypes.includes(file.type)) {
-         const message = "Invalid file type. Only JPEG, PNG, and GIF images are allowed.";
-         setErrorMessage(message);
+      if (!allowedTypes.includes(file.type)) {    
         toast({
           title: "Error",
           description:
             "Invalid file type. Only JPEG, PNG, and GIF images are allowed.",
           variant: "destructive",
         });
-        setTimeout(() => setErrorMessage(null), 5000);
         return;
       }
 
@@ -369,8 +366,6 @@ export default function Settings({ className }: SettingsProps) {
       } catch (error: any) {
         console.error("Profile picture upload error:", error);
         const message = error.response?.data?.detail || "Failed to upload profile picture.";
-        setErrorMessage(message);
-        setTimeout(() => setErrorMessage(null), 5000);
         toast({
           title: "Error",
           description:
