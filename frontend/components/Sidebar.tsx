@@ -95,11 +95,11 @@ export function Sidebar() {
   // Debug: Log user data changes
   useEffect(() => {
     console.log("Sidebar: User data updated:", {
-      uid: user?.uid,
-      fname: user?.fname,
-      lname: user?.lname,
-      profile_url: user?.profile_url,
-      email: user?.email,
+      id: user?.id,
+      firstName: user?.firstName,
+      lastName: user?.lastName,
+      imageUrl: user?.imageUrl,
+      email: user?.emailAddresses?.[0]?.emailAddress,
     });
   }, [user]);
 
@@ -233,8 +233,9 @@ export function Sidebar() {
     });
   };
 
-  const fullName = `${user?.fname} ${user?.lname}`;
-  const roleLabel = user?.email.toLowerCase().includes("deerwalk.edu.np")
+  const fullName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
+  const email = user?.emailAddresses?.[0]?.emailAddress || '';
+  const roleLabel = email.toLowerCase().includes("deerwalk.edu.np")
     ? "DWIT User"
     : "User";
   const initials = (() => {
@@ -813,33 +814,29 @@ export function Sidebar() {
             }`}
           >
             <Avatar className="h-8 w-8 rounded-full border-2 border-sidebar-border">
-              {user?.profile_url ? (
+              {user?.imageUrl ? (
                 <AvatarImage
-                  src={getProfileImageUrl(user.profile_url)}
+                  src={user.imageUrl}
                   alt={fullName}
                   className="object-cover"
                   onError={(e) => {
                     console.log(
                       "Profile image failed to load:",
-                      user?.profile_url,
-                      "Constructed URL:",
-                      getProfileImageUrl(user?.profile_url)
+                      user?.imageUrl
                     );
                     e.currentTarget.style.display = "none";
                   }}
                   onLoad={() => {
                     console.log(
                       "Profile image loaded successfully:",
-                      user?.profile_url,
-                      "Constructed URL:",
-                      getProfileImageUrl(user?.profile_url)
+                      user?.imageUrl
                     );
                   }}
                 />
               ) : (
                 <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-semibold">
-                  {user?.fname?.[0]?.toUpperCase()}
-                  {user?.lname?.[0]?.toUpperCase()}
+                  {user?.firstName?.[0]?.toUpperCase()}
+                  {user?.lastName?.[0]?.toUpperCase()}
                 </AvatarFallback>
               )}
             </Avatar>

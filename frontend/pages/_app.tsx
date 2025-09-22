@@ -6,6 +6,7 @@ import { useRouter } from 'next/router'
 import { AuthProvider } from "@/contexts/AuthContext"
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { ClerkProvider } from '@clerk/nextjs'
 
 // Create a client
 const queryClient = new QueryClient({
@@ -44,12 +45,14 @@ function MyApp({ Component, pageProps }: AppProps) {
         <link rel="apple-touch-icon" href="/Logo.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <Component {...pageProps} />
-        </AuthProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
+      <ClerkProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <Component {...pageProps} />
+          </AuthProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </ClerkProvider>
     </>
   )
 }

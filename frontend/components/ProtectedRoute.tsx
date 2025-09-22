@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
-import { useAuth } from '@/contexts/AuthContext'
+import { useUser } from '@clerk/nextjs'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -15,17 +15,17 @@ export default function ProtectedRoute({
   requireAuth = true, 
   redirectTo = '/login' 
 }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isSignedIn, isLoaded } = useUser()
   const router = useRouter()
 
   useEffect(() => {
     // Add a small delay to prevent rapid redirects during auth initialization
     const redirectTimer = setTimeout(() => {
-      if (!isLoading) {
-        if (requireAuth && !isAuthenticated) {
+      if (isLoaded) {
+        if (requireAuth && !isSignedIn) {
           console.log('Redirecting to login: user not authenticated');
           router.push(redirectTo);
-        } else if (!requireAuth && isAuthenticated) {
+        } else if (!requireAuth && isSignedIn) {
           console.log('Redirecting to home: user already authenticated');
           router.push('/dashboard');
         }
@@ -33,10 +33,10 @@ export default function ProtectedRoute({
     }, 100);
 
     return () => clearTimeout(redirectTimer);
-  }, [isAuthenticated, isLoading, requireAuth, redirectTo, router])
+  }, [isSignedIn, isLoaded, requireAuth, redirectTo, router])
 
   // Show loading state while auth is being initialized
-  if (isLoading) {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0f5288]"></div>
@@ -45,7 +45,7 @@ export default function ProtectedRoute({
   }
 
   // Don't render anything while redirect is happening
-  if (requireAuth && !isAuthenticated) {
+  if (requireAuth && !isSignedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0f5288]"></div>
@@ -53,7 +53,7 @@ export default function ProtectedRoute({
     );
   }
 
-  if (!requireAuth && isAuthenticated) {
+  if (!requireAuth && isSignedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0f5288]"></div>
