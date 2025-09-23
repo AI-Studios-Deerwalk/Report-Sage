@@ -306,19 +306,19 @@ export default function IssueReportPage() {
                              {/* Issue Form */}
                <Card className="bg-white shadow-md border border-gray-200 rounded-2xl overflow-hidden">
                  {success && (
-                   <div className="bg-green-50 border-b border-green-200 p-4">
+                   <div className="bg-emerald-50 border-b border-emerald-200 p-4">
                      <div className="flex items-center justify-center gap-3">
                        <CheckCircle className="h-6 w-6 text-green-600" />
                        <div className="text-center">
-                         <h3 className="text-lg font-semibold text-green-800">Issue Successfully Submitted!</h3>
-                         <p className="text-sm text-green-700">Thank you for your feedback. We'll review it and get back to you soon.</p>
+                         <h3 className="text-lg font-semibold text-emerald-800">Issue Successfully Submitted!</h3>
+                         <p className="text-sm text-emerald-700">Thank you for your feedback. We'll review it and get back to you soon.</p>
                        </div>
                      </div>
                    </div>
                  )}
                  <CardHeader className="bg-gray-50 border-b border-gray-200">
                    <CardTitle className="flex items-center gap-2 text-gray-900">
-                     <AlertTriangle className="h-5 w-5 text-emerald-500" />
+                     <AlertTriangle className="h-5 w-5 text-blue-500" />
                      Issue Details
                    </CardTitle>
                  </CardHeader>
@@ -336,7 +336,7 @@ export default function IssueReportPage() {
                         value={formData.title}
                         onChange={handleInputChange}
                         placeholder="Brief description of the issue"
-                        className="w-full border-gray-200 focus:border-emerald-500 focus:ring-emerald-500"
+                        className="w-full border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                         required
                       />
                     </div>
@@ -353,7 +353,7 @@ export default function IssueReportPage() {
                         onChange={handleInputChange}
                         placeholder="Please provide detailed information about the issue, including steps to reproduce if applicable..."
                         rows={5}
-                        className="w-full border-gray-200 focus:border-emerald-500 focus:ring-emerald-500"
+                        className="w-full border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                         required
                       />
                     </div>
@@ -421,9 +421,9 @@ export default function IssueReportPage() {
                     )}
                     
                     {success && (
-                      <Alert className="border-green-200 bg-green-50 border-2">
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                        <AlertDescription className="text-green-800 font-medium">
+                      <Alert className="border-emerald-200 bg-emerald-50 border-2 align-middle justify-center">
+                        <CheckCircle className="h-5 w-5 text-emerald-600" />
+                        <AlertDescription className="text-emerald-800 font-medium">
                           {success}
                         </AlertDescription>
                       </Alert>
@@ -434,10 +434,10 @@ export default function IssueReportPage() {
                       <Button
                         type="submit"
                         disabled={isSubmitting || !!success}
-                        className={`flex-1 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 ${
+                        className={`flex-1 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 ${
                           success 
-                            ? 'bg-gradient-to-r from-green-600 to-green-700 cursor-not-allowed' 
-                            : 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800'
+                            ? 'bg-gradient-to-r from-green-600 to-emerald-700 cursor-not-allowed' 
+                            : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
                         } text-white`}
                       >
                         {isSubmitting ? (
@@ -473,25 +473,25 @@ export default function IssueReportPage() {
               </Card>
 
               {/* Help Information */}
-              <Card className="mt-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-0 rounded-2xl shadow-sm">
+              <Card className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-0 rounded-2xl shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-lg text-gray-900">Need Help?</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                     <p className="text-sm text-gray-600">
                       <strong>Be specific:</strong> Include steps to reproduce the issue and any error messages you see.
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                     <p className="text-sm text-gray-600">
                       <strong>Add context:</strong> Screenshots help us understand the issue better.
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                     <p className="text-sm text-gray-600">
                       <strong>Check FAQs first:</strong> Your question might already be answered in our FAQ section.
                     </p>
@@ -500,7 +500,7 @@ export default function IssueReportPage() {
               </Card>
 
               {/* Contact section */}
-              <Card className="mt-8 bg-gradient-to-r from-emerald-50 to-teal-50 border-0 rounded-2xl shadow-sm">
+              <Card className="mt-8 border-0 rounded-2xl shadow-none">
                 <CardContent className="p-8 text-center">
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Still need assistance?</h3>
                   <p className="text-gray-600 mb-4">Can't find what you're looking for? We're here to help you get back on track.</p>
