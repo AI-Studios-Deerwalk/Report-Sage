@@ -12,6 +12,7 @@
   
   html {
     font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    scrollbar-gutter: stable;
   }
   
   body {

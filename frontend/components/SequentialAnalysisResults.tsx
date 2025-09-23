@@ -17,6 +17,7 @@ import {
   Loader2,
   Eye,
   ChevronLeft,
+  Trash2,
 } from "lucide-react";
 import { useRouter } from "next/router";
 import { useToast } from "@/hooks/use-toast";
@@ -581,6 +582,7 @@ export function SequentialAnalysisResults({
 
   return (
     <div className="w-full max-w-4xl mx-auto mt-8">
+      
       <div className="mb-4 flex gap-3">
         {onBack && (
           <Button
@@ -598,7 +600,22 @@ export function SequentialAnalysisResults({
         
       )}
       </div>
-      <h1 className="mb-5">{fileName}</h1>
+      <div className="my-9 flex items-center justify-between ">
+        <div>
+              <h1 className="font-inter font-semibold text-2xl">{fileName}</h1>
+              <button className="border p-2 px-5 rounded-md mt-3 bg-blue-600 text-white shadow-md hover:bg-blue-700 transition">
+                View Report {/* Need to add Functionality */}
+              </button>
+        </div>
+        <div>
+          <button className="border p-2 rounded-md mt-3 bg-red-100 hover:bg-red-200 transition flex items-center hover:scale-105">
+            <Trash2 className="text-red-600"/> {/* Need to add Functionality */}
+          </button>
+            
+        </div>
+        
+      </div>
+     
 
       {/* Abstract Analysis Section */}
       <Card
