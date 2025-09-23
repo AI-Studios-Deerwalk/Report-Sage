@@ -598,6 +598,7 @@ export function SequentialAnalysisResults({
         
       )}
       </div>
+      <h1 className="mb-5">{fileName}</h1>
 
       {/* Abstract Analysis Section */}
       <Card

@@ -59,6 +59,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Segoe UI', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'Roboto', 'sans-serif'],
+        inter: ['"Inter"', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.2s ease-in-out',

@@ -223,14 +223,41 @@ export function FileUpload({ setResults }: FileUploadProps) {
   // The dashboard will show SequentialAnalysisResults when showUpload is false
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 flex items-center justify-center p-4 w-full">
-      {/* Animated floating geometric shapes */}
+    <div className="min-h-screen relative overflow-hidden bg-white flex items-center justify-center p-4 w-full">
+      {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-20 h-20 bg-emerald-200 rounded-full opacity-20 animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-16 h-16 bg-teal-200 rounded-full opacity-30 animate-bounce"></div>
-        <div className="absolute bottom-32 left-1/4 w-12 h-12 bg-green-200 rounded-full opacity-25 animate-pulse"></div>
-        <div className="absolute bottom-20 right-1/3 w-24 h-24 bg-emerald-100 rounded-full opacity-20 animate-bounce"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-teal-100 rounded-full opacity-15 animate-pulse"></div>
+        {/* Geometric patterns */}
+        <div className="absolute top-10 left-10 w-32 h-32 border-2 border-blue-200/30 rotate-12 animate-spin"
+             style={{ animationDuration: "20s", animationDirection: "reverse" }}></div>
+        
+        <div className="absolute top-1/4 right-16 w-24 h-24 border-2 border-indigo-300/40 -rotate-45 animate-pulse"
+             style={{ animationDuration: "3s" }}></div>
+
+        {/* Floating elements */}
+        <div className="absolute top-1/3 left-1/4 w-16 h-16 rounded-full bg-gradient-to-r from-blue-300/20 to-indigo-300/20 animate-bounce"
+             style={{ animationDuration: "4s" }}>
+          <div className="w-full h-full rounded-full bg-gradient-to-r from-blue-400/30 to-indigo-400/30 animate-pulse"></div>
+        </div>
+
+        {/* Security-themed elements */}
+        <div className="absolute bottom-1/4 right-1/3 w-12 h-12 rounded-full bg-gradient-to-r from-slate-300/25 to-blue-300/25 animate-bounce"
+             style={{ animationDuration: "3.5s", animationDelay: "1s" }}>
+          <div className="w-full h-full rounded-full bg-gradient-to-r from-slate-400/35 to-blue-400/35 animate-pulse"></div>
+        </div>
+
+        {/* Particle system */}
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 bg-blue-400/30 rounded-full animate-ping"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 2}s`,
+            }}
+          />
+        ))}
       </div>
 
       <div className="relative z-10 w-full max-w-4xl mx-auto">
@@ -245,7 +272,7 @@ export function FileUpload({ setResults }: FileUploadProps) {
           </p> */}
         </div>
 
-        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-[0_0_20px_rgba(16,185,129,0.15)]">
+        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-[0_0_5px_rgba(59,130,246,0.15)]">
           {/* <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl font-semibold text-gray-800 flex items-center justify-center gap-2">
               <Upload className="h-8 w-8 text-emerald-600" />
@@ -265,19 +292,19 @@ export function FileUpload({ setResults }: FileUploadProps) {
             <div
               {...getRootProps()}
               className={`
-                border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all duration-300
+                border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all duration-300 hover:scale-[1.03]
                 ${
                   isDragActive
-                    ? "border-emerald-500 bg-emerald-50 scale-105"
-                    : "border-gray-300 hover:border-emerald-400 hover:bg-emerald-50"
+                    ? "border-blue-500/30 bg-blue-50 scale-105"
+                    : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
                 }
               `}
             >
               <input {...getInputProps()} />
 
-              <div className="flex flex-col items-center space-y-4">
-                <div className="p-4 bg-emerald-100 rounded-full">
-                  <Upload className="h-12 w-12 text-emerald-600" />
+              <div className="flex flex-col items-center space-y-5">
+                <div className="p-4 bg-blue-100 rounded-xl">
+                  <Upload className="h-12 w-12 text-blue-900" />
                 </div>
 
                 <div>
@@ -289,7 +316,7 @@ export function FileUpload({ setResults }: FileUploadProps) {
                   <p className="text-gray-500 mb-4">or click to browse files</p>
                   <Badge
                     variant="outline"
-                    className="text-emerald-600 border-emerald-200"
+                    className="text-blue-600 border-blue-200"
                   >
                     PDF files only • Max 10MB each • Up to 5 files
                   </Badge>

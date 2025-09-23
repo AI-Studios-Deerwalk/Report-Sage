@@ -297,8 +297,8 @@ export function Sidebar() {
   return (
     <div
       className={`${
-        collapsed ? "w-16 p-2" : "w-64 p-4"
-      } sticky top-0 shrink-0 flex flex-col h-screen overflow-hidden bg-[#F9FCF9] border-r border-sidebar-border transition-all duration-200 z-50`}
+        collapsed ? "w-16 p-2" : "w-80 p-4"
+      } sticky top-0 shrink-0 flex flex-col h-screen overflow-hidden bg-[#FAFBFF] border-r border-sidebar-border transition-all duration-200 z-50`}
     >
       {/* Top Section - Brand + Collapse/Expand Toggle */}
       <div
@@ -307,6 +307,7 @@ export function Sidebar() {
         }`}
       >
         {/* Logo - Clickable */}
+        {!collapsed && (
         <button
           onClick={() => router.push("/dashboard")}
           className={`px-1 hover:opacity-80 transition-opacity duration-200 ${
@@ -314,15 +315,18 @@ export function Sidebar() {
           }`}
           aria-label="Go to Dashboard"
         >
-          <Image
-            src="/Logo.png"
-            alt="Report Rage Logo"
-            width={collapsed ? 32 : 50}
-            height={collapsed ? 32 : 50}
-            className="object-contain cursor-pointer"
-          />
+          <div className="flex items-center gap-2">
+            <Image
+              src="/Logo.png"
+              alt="Report Rage Logo"
+              width={collapsed ? 32 : 50}
+              height={collapsed ? 32 : 50}
+              className="object-contain cursor-pointer"
+            />
+            <h1 className="font-semibold font-inter">ACADEMIA</h1>
+          </div>
         </button>
-
+        )}
         {/* Toggle Button - Only show when not collapsed or when collapsed */}
         {!collapsed && (
           <Button
@@ -802,13 +806,13 @@ export function Sidebar() {
         {/* User Profile */}
 
         <Button
-          className={`text-left hover:bg-gray-100 w-full flex items-center justify-start ${
+          className={`text-left hover:bg-gray-100 w-full py-6 flex items-center justify-start ${
             collapsed ? "justify-center" : ""
           }`}
           onClick={() => setMenuOpen((prev) => !prev)}
         >
           <div
-            className={`flex items-center gap-3 p-2 ${
+            className={`flex items-center gap-5 p-2 ${
               collapsed ? "justify-center" : ""
             }`}
           >
@@ -853,7 +857,7 @@ export function Sidebar() {
                 </p>
               )}
             </div>
-            {!collapsed && <MoreVertical className="h-5 w-5 ml-9" />}
+            {!collapsed && <MoreVertical className="h-5 w-5 ml-20" />}
           </div>
         </Button>
       </div>
