@@ -645,7 +645,7 @@ export default function Settings({ className }: SettingsProps) {
             </div>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full flex items-center justify-center"
+              className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacityounded-full flex items-center justify-center"
             >
               <Camera className="w-6 h-6 text-white" />
             </button>
@@ -677,9 +677,8 @@ export default function Settings({ className }: SettingsProps) {
         </div>
 
         {/* Settings Sections */}
-        <div className="space-y-4 pb-12 ">
-          {/* Name Change */}
-          <div className="bg-white/95 backdrop-blur-sm border-0 rounded-2xl overflow-hidden duration-200  ">
+        <div className="space-y-4 pb-12 bg-white backdrop-blur-sm bg-opacity-30 rounded-2xl">
+          <div className=" border-0 rounded-2xl overflow-hidden">
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -772,7 +771,7 @@ export default function Settings({ className }: SettingsProps) {
           </div>
             <hr/>
           {/* Email Verification */}
-          <div className="bg-white/95 backdrop-blur-sm border-0 rounded-2xl overflow-hidden duration-200  ">
+          <div className=" border-0 rounded-2xl overflow-hidden">
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -810,7 +809,7 @@ export default function Settings({ className }: SettingsProps) {
           </div>
                 <hr/>
           {/* Password Change */}
-          <div className="bg-white/95 backdrop-blur-sm border-0 rounded-2xl overflow-hidden duration-200">
+          <div className=" border-0 rounded-2xl overflow-hidden">
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -987,7 +986,7 @@ export default function Settings({ className }: SettingsProps) {
           </div>
                       <hr/>
           {/* Phone Number Change */}
-          <div className="bg-white/95 backdrop-blur-sm border-0 rounded-2xl overflow-hidden duration-200  ">
+          <div className=" border-0 rounded-2xl overflow-hidden">
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -1095,7 +1094,7 @@ export default function Settings({ className }: SettingsProps) {
           </div>
                             <hr/>
           {/* Notification Settings */}
-          <div className="bg-white/95 backdrop-blur-sm border-0 rounded-2xl overflow-hidden duration-200  ">
+          <div className=" border-0 rounded-2xl overflow-hidden">
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">

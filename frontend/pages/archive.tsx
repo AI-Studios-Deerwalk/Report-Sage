@@ -34,6 +34,7 @@ import {
   XCircle,
   Loader2,
   CheckCircle,
+  PlusIcon,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -259,7 +260,7 @@ const ArchivePage: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-white">
       <Sidebar />
       <div className="flex-1 overflow-auto">
         <div className="p-6">
@@ -371,6 +372,14 @@ const ArchivePage: React.FC = () => {
             </div>
           )}
         </div>
+        <hr className="mx-5 my-2"/>
+         <div className="align-middle flex justify-center p-4">
+          <button
+          onClick={() => router.push("/dashboard")} 
+          className="border p-4 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition hover:scale-105">
+            <PlusIcon />
+          </button>
+         </div>
       </div>
     </div>
   );
