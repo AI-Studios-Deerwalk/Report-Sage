@@ -591,7 +591,7 @@ export function SequentialAnalysisResults({
             size="sm"
             className="flex items-center gap-2 w-10 hover:w-40 group transition-all duration-300 ease-in-out overflow-hidden group"
           >
-            <ChevronLeft className="fixed group-hover:relative"/>
+            <ChevronLeft className="absolute group-hover:relative"/>
             <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 pb-1">
               Back to Upload
             </span>
