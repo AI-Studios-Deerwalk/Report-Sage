@@ -35,6 +35,7 @@ import {
   Loader2,
   CheckCircle,
   PlusIcon,
+  Archive,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -260,12 +261,16 @@ const ArchivePage: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-white ">
       <Sidebar />
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto m-5 mx-20">
         <div className="p-6">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Archive</h1>
+            <div className="flex items-center gap-3 mb-5">
+              <Archive className="" />
+              <h1 className="text-3xl font-bold text-gray-900">Archive</h1>
+            </div>
+
             <p className="text-gray-600 mt-2">
               View and manage your uploaded documents and their analysis results
             </p>
