@@ -223,7 +223,7 @@ export function FileUpload({ setResults }: FileUploadProps) {
   // The dashboard will show SequentialAnalysisResults when showUpload is false
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-white flex items-center justify-center p-4 w-full">
+    <div className="min-h-screen relative overflow-hidden bg-[#FCF8F8] flex items-center justify-center p-4 w-full">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Geometric patterns */}
